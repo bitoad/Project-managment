@@ -1,0 +1,1324 @@
+{
+  "meta": {
+    "projectName": "Block B Gas Project",
+    "contractor": "Golden Point Co., Ltd",
+    "client": "PTSC M&C (via Hà Quang)",
+    "location": "Vung Tau, Vietnam",
+    "address": "69/20 Nguyen Gia Tri, Thanh My Tay, HCM",
+    "phone": "(84) 08-2216 9998 / 2219 0888",
+    "fax": "(84) 08-2217 7633",
+    "createdAt": "2026-04-01T00:00:00.000Z"
+  },
+  "settings": {
+    "statusProgress": {
+      "Engineering": 0.1,
+      "Approved": 0.2,
+      "Procurement": 0.3,
+      "Fabrication": 0.6,
+      "Delivery": 0.8,
+      "Installation": 0.9,
+      "Completed": 1
+    },
+    "costTypes": [
+      {
+        "code": "Material",
+        "description": "Material → vật tư"
+      },
+      {
+        "code": "Fabrication",
+        "description": "Fabrication → gia công"
+      },
+      {
+        "code": "Installation",
+        "description": "Installation → nhân công lắp đặt"
+      },
+      {
+        "code": "Logistics",
+        "description": "Logistics → vận chuyển"
+      },
+      {
+        "code": "Equipment",
+        "description": "Equipment → máy móc thuê/mua"
+      },
+      {
+        "code": "Subcontractor",
+        "description": "Subcontractor → thầu phụ"
+      },
+      {
+        "code": "Overhead",
+        "description": "Overhead → chi phí quản lý"
+      },
+      {
+        "code": "Design",
+        "description": "Design → bản vẽ, shopdrawing"
+      },
+      {
+        "code": "Testing & Inspection",
+        "description": "Testing & Inspection → test, QC"
+      },
+      {
+        "code": "Temporary Work",
+        "description": "Temporary Work → giàn giáo, bảo vệ"
+      },
+      {
+        "code": "Contingency",
+        "description": "Contingency → dự phòng"
+      }
+    ]
+  },
+  "ports": [
+    {
+      "id": "PORT 1",
+      "name": "PORT 1",
+      "description": "Structure & Ceiling Works",
+      "status": "Fabrication",
+      "progress": 30,
+      "contractValue": 0,
+      "paymentReceived": 0,
+      "plannedProgress": 35,
+      "budget": 0,
+      "actual": 0,
+      "color": "#1677ff"
+    },
+    {
+      "id": "PORT 2",
+      "name": "PORT 2",
+      "description": "Baffles & Special Ceiling",
+      "status": "Fabrication",
+      "progress": 20,
+      "contractValue": 0,
+      "paymentReceived": 0,
+      "plannedProgress": 30,
+      "budget": 0,
+      "actual": 0,
+      "color": "#52c41a"
+    },
+    {
+      "id": "PORT 3",
+      "name": "PORT 3",
+      "description": "Procurement Package",
+      "status": "Procurement",
+      "progress": 25,
+      "contractValue": 0,
+      "paymentReceived": 0,
+      "plannedProgress": 30,
+      "budget": 0,
+      "actual": 0,
+      "color": "#faad14"
+    },
+    {
+      "id": "PORT 4",
+      "name": "PORT 4",
+      "description": "Creativation Room Works",
+      "status": "Engineering",
+      "progress": 10,
+      "contractValue": 0,
+      "paymentReceived": 0,
+      "plannedProgress": 20,
+      "budget": 0,
+      "actual": 0,
+      "color": "#eb2f96"
+    },
+    {
+      "id": "PORT 5",
+      "name": "PORT 5",
+      "description": "Installation & Packing",
+      "status": "Engineering",
+      "progress": 5,
+      "contractValue": 0,
+      "paymentReceived": 0,
+      "plannedProgress": 15,
+      "budget": 0,
+      "actual": 0,
+      "color": "#722ed1"
+    },
+    {
+      "id": "PORT 6",
+      "name": "PORT 6",
+      "description": "Logistics & Painting",
+      "status": "Engineering",
+      "progress": 5,
+      "contractValue": 0,
+      "paymentReceived": 0,
+      "plannedProgress": 15,
+      "budget": 0,
+      "actual": 0,
+      "color": "#13c2c2"
+    },
+    {
+      "id": "PORT 7",
+      "name": "PORT 7",
+      "description": "Overhead & Testing",
+      "status": "Engineering",
+      "progress": 0,
+      "contractValue": 0,
+      "paymentReceived": 0,
+      "plannedProgress": 10,
+      "budget": 0,
+      "actual": 0,
+      "color": "#fa8c16"
+    }
+  ],
+  "items": [
+    {
+      "code": "A001",
+      "name": "Beam Ceiling - Exercise",
+      "port": "PORT 1",
+      "qty": 14,
+      "unit": "spm",
+      "unitCost": 1250000,
+      "unitPrice": 2437500,
+      "status": "Installation",
+      "progress": 30,
+      "startDate": "2026-04-01",
+      "endDate": "2026-06-13",
+      "drawingCode": "BB1-LQM-A09-CD0001"
+    },
+    {
+      "code": "A002",
+      "name": "Beam Ceiling - Mesh Room",
+      "port": "PORT 1",
+      "qty": 17,
+      "unit": "spm",
+      "unitCost": 1250000,
+      "unitPrice": 2437500,
+      "status": "Installation",
+      "progress": 25,
+      "startDate": "2026-04-02",
+      "endDate": "2026-06-14",
+      "drawingCode": "BB1-LQM-A09-CD0002"
+    },
+    {
+      "code": "A003",
+      "name": "Baffles Ceiling - Mesh Room",
+      "port": "PORT 2",
+      "qty": 13,
+      "unit": "pcs",
+      "unitCost": 3550000,
+      "unitPrice": 5025000,
+      "status": "Fabrication",
+      "progress": 20,
+      "startDate": "2026-04-07",
+      "endDate": "2026-05-22",
+      "drawingCode": "BB1-LQM-A09-CD0003"
+    },
+    {
+      "code": "A004",
+      "name": "Beam Ceiling - Corridor",
+      "port": "PORT 2",
+      "qty": 38.4,
+      "unit": "md",
+      "unitCost": 1050000,
+      "unitPrice": 2925000,
+      "status": "Fabrication",
+      "progress": 20,
+      "startDate": "2026-04-07",
+      "endDate": "2026-05-22",
+      "drawingCode": "BB1-LQM-A09-CD0004"
+    },
+    {
+      "code": "A005",
+      "name": "Baffles Ceiling - Corridor (Type A)",
+      "port": "PORT 3",
+      "qty": 121,
+      "unit": "pcs",
+      "unitCost": 3350000,
+      "unitPrice": 4275000,
+      "status": "Procurement",
+      "progress": 30,
+      "startDate": "2026-04-22",
+      "endDate": "2026-06-07",
+      "drawingCode": "BB1-LQM-A09-CD0005"
+    },
+    {
+      "code": "A006",
+      "name": "Baffles Ceiling - Corridor (Type B)",
+      "port": "PORT 3",
+      "qty": 17,
+      "unit": "pcs",
+      "unitCost": 3350000,
+      "unitPrice": 5025000,
+      "status": "Procurement",
+      "progress": 25,
+      "startDate": "2026-04-22",
+      "endDate": "2026-06-07",
+      "drawingCode": "BB1-LQM-A09-CD0006"
+    },
+    {
+      "code": "A007",
+      "name": "Beam Ceiling - Creativation Room (A)",
+      "port": "PORT 4",
+      "qty": 43,
+      "unit": "m",
+      "unitCost": 1050000,
+      "unitPrice": 2925000,
+      "status": "Engineering",
+      "progress": 10,
+      "startDate": "2026-05-01",
+      "endDate": "2026-07-03",
+      "drawingCode": "BB1-LQM-A09-CD0007"
+    },
+    {
+      "code": "A008",
+      "name": "Beam Ceiling - Creativation Room (B)",
+      "port": "PORT 4",
+      "qty": 25,
+      "unit": "m",
+      "unitCost": 1050000,
+      "unitPrice": 3600000,
+      "status": "Engineering",
+      "progress": 10,
+      "startDate": "2026-05-01",
+      "endDate": "2026-07-03",
+      "drawingCode": "BB1-LQM-A09-CD0008"
+    },
+    {
+      "code": "A009",
+      "name": "Packing",
+      "port": "PORT 5",
+      "qty": 1,
+      "unit": "set",
+      "unitCost": 35000000,
+      "unitPrice": 35000000,
+      "status": "Engineering",
+      "progress": 5,
+      "startDate": "2026-05-23",
+      "endDate": "2026-06-13",
+      "drawingCode": ""
+    },
+    {
+      "code": "A010",
+      "name": "Installation (Main)",
+      "port": "PORT 5",
+      "qty": 1,
+      "unit": "set",
+      "unitCost": 55000000,
+      "unitPrice": 285000000,
+      "status": "Engineering",
+      "progress": 5,
+      "startDate": "2026-06-06",
+      "endDate": "2026-07-11",
+      "drawingCode": ""
+    },
+    {
+      "code": "A011",
+      "name": "Transport",
+      "port": "PORT 6",
+      "qty": 1,
+      "unit": "trip",
+      "unitCost": 15000000,
+      "unitPrice": 15000000,
+      "status": "Engineering",
+      "progress": 5,
+      "startDate": "2026-05-23",
+      "endDate": "2026-06-13",
+      "drawingCode": ""
+    },
+    {
+      "code": "A012",
+      "name": "Painting",
+      "port": "PORT 6",
+      "qty": 1,
+      "unit": "set",
+      "unitCost": 150000000,
+      "unitPrice": 180000000,
+      "status": "Engineering",
+      "progress": 5,
+      "startDate": "2026-06-18",
+      "endDate": "2026-07-11",
+      "drawingCode": ""
+    },
+    {
+      "code": "A013",
+      "name": "Gia cong son",
+      "port": "PORT 7",
+      "qty": 4,
+      "unit": "human",
+      "unitCost": 35000000,
+      "unitPrice": 50000000,
+      "status": "Engineering",
+      "progress": 0,
+      "startDate": "2026-06-18",
+      "endDate": "2026-07-11",
+      "drawingCode": ""
+    }
+  ],
+  "suppliers": [
+    {
+      "id": "SUP-001",
+      "name": "Golden Point (In-house)",
+      "type": "Fabrication / Installation",
+      "port": "All",
+      "contact": "Internal",
+      "phone": "(84) 08-2216 9998",
+      "email": "info@goldenpoint.com.vn",
+      "rating": 5,
+      "status": "active"
+    },
+    {
+      "id": "SUP-002",
+      "name": "TVT Inox",
+      "type": "Gia công sắt kẽm Z275",
+      "port": "PORT 2",
+      "contact": "TVT",
+      "phone": "",
+      "email": "",
+      "rating": 4,
+      "status": "active",
+      "note": "Đơn vị gia công & thi công chính - 490tr tổng giá sx"
+    },
+    {
+      "id": "SUP-003",
+      "name": "Fushion Finishing",
+      "type": "Sơn tĩnh điện",
+      "port": "PORT 2",
+      "contact": "Fushion",
+      "phone": "",
+      "email": "",
+      "rating": 4,
+      "status": "active",
+      "note": "Khâu hoàn thiện cuối (giá sơn chưa tính hỗ trợ)"
+    },
+    {
+      "id": "SUP-004",
+      "name": "Tín Ân",
+      "type": "In ấn / Nameplate",
+      "port": "PORT 3",
+      "contact": "Tín Ân",
+      "phone": "",
+      "email": "",
+      "rating": 4,
+      "status": "active",
+      "note": "Đơn vị in nameplate"
+    },
+    {
+      "id": "SUP-005",
+      "name": "TVT Inox (Nameplate)",
+      "type": "Cắt tấm Nameplate",
+      "port": "PORT 3",
+      "contact": "TVT",
+      "phone": "",
+      "email": "",
+      "rating": 4,
+      "status": "active",
+      "note": "Cắt tấm cho nameplate"
+    },
+    {
+      "id": "SUP-006",
+      "name": "Lakasa",
+      "type": "Bể tách mỡ",
+      "port": "PORT 6",
+      "contact": "Lakasa",
+      "phone": "",
+      "email": "",
+      "rating": 4,
+      "status": "active",
+      "note": "Nhập 2 bể tách mỡ"
+    },
+    {
+      "id": "SUP-007",
+      "name": "Hà Quang",
+      "type": "Bidder / Prime Contractor",
+      "port": "All",
+      "contact": "Hà Quang",
+      "phone": "",
+      "email": "",
+      "rating": 5,
+      "status": "active",
+      "note": "Bidder của PTSC M&C"
+    },
+    {
+      "id": "SUP-008",
+      "name": "Supplier A",
+      "type": "Quotation Reference",
+      "port": "All",
+      "contact": "",
+      "phone": "",
+      "email": "",
+      "rating": 4,
+      "status": "active",
+      "note": "NCC báo giá tham chiếu A"
+    },
+    {
+      "id": "SUP-009",
+      "name": "Supplier B",
+      "type": "Quotation Reference",
+      "port": "All",
+      "contact": "",
+      "phone": "",
+      "email": "",
+      "rating": 4,
+      "status": "active",
+      "note": "NCC báo giá tham chiếu B"
+    },
+    {
+      "id": "SUP-010",
+      "name": "Supplier C",
+      "type": "Quotation Reference",
+      "port": "All",
+      "contact": "",
+      "phone": "",
+      "email": "",
+      "rating": 4,
+      "status": "active",
+      "note": "NCC báo giá tham chiếu C"
+    }
+  ],
+  "supplierPorts": [
+    {
+      "id": "SP-001",
+      "portId": "PORT 2",
+      "supplierId": "SUP-002",
+      "role": "Gia công & thi công chính",
+      "value": 490000000,
+      "status": "in-progress",
+      "note": "Gia công sắt kẽm Z275"
+    },
+    {
+      "id": "SP-002",
+      "portId": "PORT 2",
+      "supplierId": "SUP-003",
+      "role": "Sơn tĩnh điện",
+      "value": 0,
+      "status": "pending",
+      "note": "Giá sơn chưa tính hỗ trợ"
+    },
+    {
+      "id": "SP-003",
+      "portId": "PORT 3",
+      "supplierId": "SUP-005",
+      "role": "Cắt tấm nameplate",
+      "value": 0,
+      "status": "in-progress",
+      "note": "TVT cắt tấm"
+    },
+    {
+      "id": "SP-004",
+      "portId": "PORT 3",
+      "supplierId": "SUP-004",
+      "role": "In nameplate",
+      "value": 0,
+      "status": "pending",
+      "note": "Tín Ân in"
+    },
+    {
+      "id": "SP-005",
+      "portId": "PORT 6",
+      "supplierId": "SUP-006",
+      "role": "Cung cấp 2 bể tách mỡ",
+      "value": 0,
+      "status": "pending",
+      "note": "Nhập hàng Lakasa"
+    }
+  ],
+  "risks": [
+    {
+      "id": "R-001",
+      "title": "TVT Inox trễ tiến độ sản xuất",
+      "portId": "PORT 2",
+      "category": "Schedule",
+      "probability": 4,
+      "impact": 5,
+      "score": 20,
+      "owner": "Bùi Hoàng Duy",
+      "status": "open",
+      "mitigation": "Theo dõi hàng tuần, yêu cầu cam kết giao hàng, có kế hoạch NCC dự phòng",
+      "createdAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "R-002",
+      "title": "Fushion trễ khâu sơn tĩnh điện",
+      "portId": "PORT 2",
+      "category": "Schedule",
+      "probability": 3,
+      "impact": 3,
+      "score": 9,
+      "owner": "Bùi Hoàng Duy",
+      "status": "open",
+      "mitigation": "Đàm phán giá hỗ trợ, chốt thời gian sơn sớm",
+      "createdAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "R-003",
+      "title": "Bể tách mỡ Lakasa chậm nhập hàng",
+      "portId": "PORT 6",
+      "category": "Procurement",
+      "probability": 3,
+      "impact": 4,
+      "score": 12,
+      "owner": "Nguyễn Thanh Lương",
+      "status": "open",
+      "mitigation": "Đặt hàng sớm, theo dõi lead time nhập khẩu",
+      "createdAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "R-004",
+      "title": "ERP Integration budget at 97.5%",
+      "portId": "PORT 7",
+      "category": "Cost",
+      "probability": 4,
+      "impact": 4,
+      "score": 16,
+      "owner": "Trương Văn Minh",
+      "status": "open",
+      "mitigation": "Monitor closely, kiểm soát chi phí hàng tuần",
+      "createdAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "R-005",
+      "title": "Fabrication start delayed - ảnh hưởng delivery",
+      "portId": "PORT 2",
+      "category": "Schedule",
+      "probability": 3,
+      "impact": 5,
+      "score": 15,
+      "owner": "Trương Thế Đại",
+      "status": "open",
+      "mitigation": "Tăng ca, điều phối nhân lực gia công",
+      "createdAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "R-006",
+      "title": "Chưa ký hợp đồng Port 5",
+      "portId": "PORT 5",
+      "category": "Contract",
+      "probability": 2,
+      "impact": 3,
+      "score": 6,
+      "owner": "Nguyễn Trí Phong",
+      "status": "open",
+      "mitigation": "Đẩy nhanh đàm phán, chốt HĐ trong tháng",
+      "createdAt": "2026-04-01T00:00:00.000Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T001",
+      "title": "Engineering Design & Drawing",
+      "portId": "PORT 1",
+      "itemCode": "A001",
+      "owner": "Bùi Hoàng Duy",
+      "status": "inprogress",
+      "progress": 60,
+      "priority": "high",
+      "startDate": "2026-04-01",
+      "endDate": "2026-05-06",
+      "note": "Bản vẽ thi công"
+    },
+    {
+      "id": "T002",
+      "title": "Material Procurement - Beam",
+      "portId": "PORT 1",
+      "itemCode": "A001",
+      "owner": "Nguyễn Thanh Lương",
+      "status": "inprogress",
+      "progress": 30,
+      "priority": "high",
+      "startDate": "2026-04-11",
+      "endDate": "2026-05-21",
+      "note": "Lead time 3 tuần"
+    },
+    {
+      "id": "T003",
+      "title": "Fabrication - Beam Exercise",
+      "portId": "PORT 1",
+      "itemCode": "A001",
+      "owner": "Trương Văn Minh",
+      "status": "inprogress",
+      "progress": 0,
+      "priority": "medium",
+      "startDate": "2026-05-06",
+      "endDate": "2026-06-11",
+      "note": ""
+    },
+    {
+      "id": "T004",
+      "title": "Fabrication - Beam Mesh Room",
+      "portId": "PORT 1",
+      "itemCode": "A002",
+      "owner": "Trương Văn Minh",
+      "status": "todo",
+      "progress": 0,
+      "priority": "medium",
+      "startDate": "2026-05-06",
+      "endDate": "2026-06-16",
+      "note": ""
+    },
+    {
+      "id": "T005",
+      "title": "Fabrication - Baffles Mesh Room",
+      "portId": "PORT 2",
+      "itemCode": "A003",
+      "owner": "Trương Thế Đại",
+      "status": "todo",
+      "progress": 0,
+      "priority": "high",
+      "startDate": "2026-05-11",
+      "endDate": "2026-07-01",
+      "note": ""
+    },
+    {
+      "id": "T006",
+      "title": "Fabrication - Beam Baffles Corridor",
+      "portId": "PORT 2",
+      "itemCode": "A004",
+      "owner": "Trương Thế Đại",
+      "status": "todo",
+      "progress": 0,
+      "priority": "high",
+      "startDate": "2026-05-11",
+      "endDate": "2026-07-06",
+      "note": ""
+    },
+    {
+      "id": "T007",
+      "title": "Material Procurement - Baffles",
+      "portId": "PORT 3",
+      "itemCode": "A005",
+      "owner": "Nguyễn Thanh Lương",
+      "status": "todo",
+      "progress": 0,
+      "priority": "high",
+      "startDate": "2026-05-16",
+      "endDate": "2026-06-21",
+      "note": ""
+    },
+    {
+      "id": "T008",
+      "title": "Fabrication - Baffles Corridor A",
+      "portId": "PORT 3",
+      "itemCode": "A005",
+      "owner": "Trương Văn Minh",
+      "status": "todo",
+      "progress": 0,
+      "priority": "medium",
+      "startDate": "2026-06-06",
+      "endDate": "2026-07-01",
+      "note": ""
+    },
+    {
+      "id": "T009",
+      "title": "Fabrication - Creativation Room",
+      "portId": "PORT 4",
+      "itemCode": "A007",
+      "owner": "Trương Thế Đại",
+      "status": "todo",
+      "progress": 0,
+      "priority": "medium",
+      "startDate": "2026-06-11",
+      "endDate": "2026-07-12",
+      "note": ""
+    },
+    {
+      "id": "T010",
+      "title": "Packing & Quality Check",
+      "portId": "PORT 5",
+      "itemCode": "A009",
+      "owner": "Hoàng Hữu Ánh",
+      "status": "todo",
+      "progress": 0,
+      "priority": "medium",
+      "startDate": "2026-07-07",
+      "endDate": "2026-07-28",
+      "note": "QC check trước khi đóng gói"
+    },
+    {
+      "id": "T011",
+      "title": "Transport to Site Vung Tau",
+      "portId": "PORT 6",
+      "itemCode": "A011",
+      "owner": "Nguyễn Thanh Lương",
+      "status": "todo",
+      "progress": 0,
+      "priority": "medium",
+      "startDate": "2026-07-23",
+      "endDate": "2026-08-01",
+      "note": ""
+    },
+    {
+      "id": "T012",
+      "title": "Site Installation",
+      "portId": "PORT 5",
+      "itemCode": "A010",
+      "owner": "Nguyễn Thanh Lương",
+      "status": "todo",
+      "progress": 0,
+      "priority": "high",
+      "startDate": "2026-07-27",
+      "endDate": "2026-08-19",
+      "note": "Giám sát thi công"
+    },
+    {
+      "id": "T013",
+      "title": "Painting Works",
+      "portId": "PORT 6",
+      "itemCode": "A012",
+      "owner": "Trương Văn Minh",
+      "status": "todo",
+      "progress": 0,
+      "priority": "high",
+      "startDate": "2026-07-16",
+      "endDate": "2026-08-16",
+      "note": ""
+    },
+    {
+      "id": "T014",
+      "title": "Testing & Final Inspection",
+      "portId": "PORT 7",
+      "itemCode": "A010",
+      "owner": "Hoàng Hữu Ánh",
+      "status": "todo",
+      "progress": 0,
+      "priority": "high",
+      "startDate": "2026-08-11",
+      "endDate": "2026-08-21",
+      "note": "UAT + handover"
+    }
+  ],
+  "costLogs": [
+    {
+      "id": "CL-001",
+      "date": "2026-04-07",
+      "portId": "PORT 1",
+      "itemCode": "A001",
+      "costType": "Material",
+      "description": "Vật tư Beam Ceiling Exercise",
+      "amount": 1000000,
+      "remarks": ""
+    },
+    {
+      "id": "CL-002",
+      "date": "2026-04-08",
+      "portId": "PORT 1",
+      "itemCode": "A002",
+      "costType": "Fabrication",
+      "description": "Gia công Beam Mesh Room",
+      "amount": 3200000,
+      "remarks": ""
+    },
+    {
+      "id": "CL-003",
+      "date": "2026-04-12",
+      "portId": "PORT 1",
+      "itemCode": "A001",
+      "costType": "Fabrication",
+      "description": "Gia công Beam Exercise",
+      "amount": 3000000,
+      "remarks": ""
+    },
+    {
+      "id": "CL-004",
+      "date": "2026-04-15",
+      "portId": "PORT 2",
+      "itemCode": "A003",
+      "costType": "Material",
+      "description": "Vật tư Baffles Ceiling Mesh",
+      "amount": 5500000,
+      "remarks": ""
+    },
+    {
+      "id": "CL-005",
+      "date": "2026-04-18",
+      "portId": "PORT 2",
+      "itemCode": "A004",
+      "costType": "Fabrication",
+      "description": "Gia công Beam Corridor",
+      "amount": 4200000,
+      "remarks": ""
+    },
+    {
+      "id": "CL-006",
+      "date": "2026-04-20",
+      "portId": "PORT 5",
+      "itemCode": "A010",
+      "costType": "Installation",
+      "description": "Nhân công lắp đặt đợt 1",
+      "amount": 12000000,
+      "remarks": "Đợt 1/3"
+    },
+    {
+      "id": "CL-007",
+      "date": "2026-04-21",
+      "portId": "PORT 6",
+      "itemCode": "A011",
+      "costType": "Logistics",
+      "description": "Vận chuyển lô 1",
+      "amount": 3500000,
+      "remarks": ""
+    }
+  ],
+  "supplierQuotations": [
+    {
+      "id": "SQ-001",
+      "no": 1,
+      "itemCode": "A001",
+      "itemName": "Beam Ceiling - Exercise",
+      "unit": "spm",
+      "qty": 14,
+      "supplierA": 1250000,
+      "supplierB": 1312500,
+      "supplierC": 1212500,
+      "selected": "Supplier A"
+    },
+    {
+      "id": "SQ-002",
+      "no": 2,
+      "itemCode": "A002",
+      "itemName": "Beam Ceiling - Mesh Room",
+      "unit": "spm",
+      "qty": 17,
+      "supplierA": 1250000,
+      "supplierB": 1312500,
+      "supplierC": 1212500,
+      "selected": "Supplier A"
+    },
+    {
+      "id": "SQ-003",
+      "no": 3,
+      "itemCode": "A003",
+      "itemName": "Baffles Ceiling - Mesh Room",
+      "unit": "pcs",
+      "qty": 13,
+      "supplierA": 3550000,
+      "supplierB": 3727500,
+      "supplierC": 3443500,
+      "selected": "Supplier A"
+    },
+    {
+      "id": "SQ-004",
+      "no": 4,
+      "itemCode": "A004",
+      "itemName": "Beam Ceiling - Corridor",
+      "unit": "md",
+      "qty": 38.4,
+      "supplierA": 1050000,
+      "supplierB": 1102500,
+      "supplierC": 1018500,
+      "selected": "Supplier A"
+    },
+    {
+      "id": "SQ-005",
+      "no": 5,
+      "itemCode": "A005",
+      "itemName": "Baffles Ceiling - Corridor A",
+      "unit": "pcs",
+      "qty": 121,
+      "supplierA": 3350000,
+      "supplierB": 3517500,
+      "supplierC": 3249500,
+      "selected": "Supplier A"
+    },
+    {
+      "id": "SQ-006",
+      "no": 6,
+      "itemCode": "A006",
+      "itemName": "Baffles Ceiling - Corridor B",
+      "unit": "pcs",
+      "qty": 17,
+      "supplierA": 3350000,
+      "supplierB": 3517500,
+      "supplierC": 3249500,
+      "selected": "Supplier A"
+    },
+    {
+      "id": "SQ-007",
+      "no": 7,
+      "itemCode": "A007",
+      "itemName": "Beam - Creativation Room A",
+      "unit": "m",
+      "qty": 43,
+      "supplierA": 1050000,
+      "supplierB": 1102500,
+      "supplierC": 1018500,
+      "selected": "Supplier A"
+    },
+    {
+      "id": "SQ-008",
+      "no": 8,
+      "itemCode": "A008",
+      "itemName": "Beam - Creativation Room B",
+      "unit": "m",
+      "qty": 25,
+      "supplierA": 1050000,
+      "supplierB": 1102500,
+      "supplierC": 1018500,
+      "selected": "Supplier A"
+    },
+    {
+      "id": "SQ-009",
+      "no": 9,
+      "itemCode": "A009",
+      "itemName": "Packing",
+      "unit": "set",
+      "qty": 1,
+      "supplierA": 35000000,
+      "supplierB": 36750000,
+      "supplierC": 33950000,
+      "selected": "Supplier A"
+    },
+    {
+      "id": "SQ-010",
+      "no": 10,
+      "itemCode": "A012",
+      "itemName": "Painting Works",
+      "unit": "set",
+      "qty": 1,
+      "supplierA": 150000000,
+      "supplierB": 157500000,
+      "supplierC": 145500000,
+      "selected": "Supplier A"
+    }
+  ],
+  "sCurve": [
+    {
+      "week": "W1",
+      "date": "2026-03-30",
+      "planned": 0.5,
+      "actual": 0.5
+    },
+    {
+      "week": "W2",
+      "date": "2026-04-06",
+      "planned": 1,
+      "actual": 1.2
+    },
+    {
+      "week": "W3",
+      "date": "2026-04-13",
+      "planned": 1.5,
+      "actual": 1.3
+    },
+    {
+      "week": "W4",
+      "date": "2026-04-20",
+      "planned": 2,
+      "actual": 0
+    },
+    {
+      "week": "W5",
+      "date": "2026-04-27",
+      "planned": 2.5,
+      "actual": 0
+    },
+    {
+      "week": "W6",
+      "date": "2026-05-04",
+      "planned": 3,
+      "actual": 0
+    },
+    {
+      "week": "W7",
+      "date": "2026-05-11",
+      "planned": 3.5,
+      "actual": 0
+    },
+    {
+      "week": "W8",
+      "date": "2026-05-18",
+      "planned": 4.5,
+      "actual": 0
+    },
+    {
+      "week": "W9",
+      "date": "2026-05-25",
+      "planned": 5.5,
+      "actual": 0
+    },
+    {
+      "week": "W10",
+      "date": "2026-06-01",
+      "planned": 6.5,
+      "actual": 0
+    },
+    {
+      "week": "W11",
+      "date": "2026-06-08",
+      "planned": 7.5,
+      "actual": 0
+    },
+    {
+      "week": "W12",
+      "date": "2026-06-15",
+      "planned": 8.5,
+      "actual": 0
+    }
+  ],
+  "team": [
+    {
+      "id": "TM-001",
+      "name": "Nguyễn Trí Phong",
+      "position": "Managing Director",
+      "idNumber": "079080001295",
+      "phone": "",
+      "role": "Director",
+      "ports": [
+        "All"
+      ],
+      "email": "phong@goldenpoint.com.vn"
+    },
+    {
+      "id": "TM-002",
+      "name": "Nguyễn Ngọc Khôi Nguyên",
+      "position": "Architectural Coordinator",
+      "idNumber": "079089004165",
+      "phone": "",
+      "role": "Coordinator",
+      "ports": [
+        "All"
+      ],
+      "email": ""
+    },
+    {
+      "id": "TM-003",
+      "name": "Bùi Hoàng Duy",
+      "position": "Architectural Lead",
+      "idNumber": "079082000572",
+      "phone": "",
+      "role": "Lead",
+      "ports": [
+        "PORT 1",
+        "PORT 2"
+      ],
+      "email": ""
+    },
+    {
+      "id": "TM-004",
+      "name": "Trần Thị Phụng Anh",
+      "position": "CAD Technician",
+      "idNumber": "087194009245",
+      "phone": "",
+      "role": "CAD",
+      "ports": [
+        "All"
+      ],
+      "email": ""
+    },
+    {
+      "id": "TM-005",
+      "name": "Nguyễn Thanh Lương",
+      "position": "Site Supervisor",
+      "idNumber": "064094005006",
+      "phone": "",
+      "role": "Supervisor",
+      "ports": [
+        "PORT 3",
+        "PORT 5",
+        "PORT 6"
+      ],
+      "email": ""
+    },
+    {
+      "id": "TM-006",
+      "name": "Trương Văn Minh",
+      "position": "Engineering Manager",
+      "idNumber": "046076000216",
+      "phone": "",
+      "role": "Manager",
+      "ports": [
+        "PORT 1",
+        "PORT 3",
+        "PORT 6"
+      ],
+      "email": ""
+    },
+    {
+      "id": "TM-007",
+      "name": "Trương Thế Đại",
+      "position": "Technician",
+      "idNumber": "046089008178",
+      "phone": "",
+      "role": "Technician",
+      "ports": [
+        "PORT 2",
+        "PORT 3",
+        "PORT 4"
+      ],
+      "email": ""
+    },
+    {
+      "id": "TM-008",
+      "name": "Hoàng Hữu Ánh",
+      "position": "Technician",
+      "idNumber": "046092014277",
+      "phone": "",
+      "role": "QC",
+      "ports": [
+        "PORT 5",
+        "PORT 7"
+      ],
+      "email": ""
+    }
+  ],
+  "documents": [
+    {
+      "id": "DOC-001",
+      "name": "MTO Port 2",
+      "type": "MTO",
+      "portId": "PORT 2",
+      "revision": "Rev A",
+      "filePath": "",
+      "note": "File MTO tổng",
+      "uploadedAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "DOC-002",
+      "name": "BOM Port 2 (Tổng giá nhận thầu)",
+      "type": "BOM",
+      "portId": "PORT 2",
+      "revision": "Rev A",
+      "filePath": "",
+      "note": "File tổng giá nhận thầu",
+      "uploadedAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "DOC-003",
+      "name": "BOM Port 2 (Chi tiết SX)",
+      "type": "BOM",
+      "portId": "PORT 2",
+      "revision": "Rev A",
+      "filePath": "",
+      "note": "Các chi tiết sản xuất",
+      "uploadedAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "DOC-004",
+      "name": "BOM Cầu thang",
+      "type": "BOM",
+      "portId": "PORT 4",
+      "revision": "Draft",
+      "filePath": "",
+      "note": "Đang xây dựng bóc tách khối lượng",
+      "uploadedAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "DOC-005",
+      "name": "Bản vẽ Decor",
+      "type": "Drawing",
+      "portId": "PORT 3",
+      "revision": "Rev A",
+      "filePath": "",
+      "note": "Thiết bị điện Decor",
+      "uploadedAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "DOC-006",
+      "name": "Nameplate Spec",
+      "type": "Spec",
+      "portId": "PORT 3",
+      "revision": "Rev A",
+      "filePath": "",
+      "note": "TVT cắt tấm + Tín Ân in",
+      "uploadedAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "DOC-007",
+      "name": "Bể tách mỡ Lakasa - Catalog",
+      "type": "Catalog",
+      "portId": "PORT 6",
+      "revision": "Rev A",
+      "filePath": "",
+      "note": "2 bể tách mỡ",
+      "uploadedAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "DOC-008",
+      "name": "Hợp đồng Port 5 (Draft)",
+      "type": "Contract",
+      "portId": "PORT 5",
+      "revision": "Draft",
+      "filePath": "",
+      "note": "Đang làm hợp đồng",
+      "uploadedAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "DOC-009",
+      "name": "Thiết bị y tế & máy nóng lạnh",
+      "type": "Spec",
+      "portId": "PORT 7",
+      "revision": "Rev A",
+      "filePath": "",
+      "note": "Hệ thống y tá + vật tư ốc vít",
+      "uploadedAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "DOC-010",
+      "name": "BB1-LQM-A09-CD0001",
+      "type": "Shopdrawing",
+      "portId": "PORT 1",
+      "revision": "Rev A",
+      "filePath": "",
+      "note": "Beam Ceiling - Exercise",
+      "uploadedAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "DOC-011",
+      "name": "BB1-LQM-A09-CD0002",
+      "type": "Shopdrawing",
+      "portId": "PORT 1",
+      "revision": "Rev A",
+      "filePath": "",
+      "note": "Beam Ceiling - Mesh Room",
+      "uploadedAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "DOC-012",
+      "name": "BB1-LQM-A09-CD0003",
+      "type": "Shopdrawing",
+      "portId": "PORT 2",
+      "revision": "Rev A",
+      "filePath": "",
+      "note": "Baffles Ceiling - Mesh Room",
+      "uploadedAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "DOC-013",
+      "name": "BB1-LQM-A09-CD0004",
+      "type": "Shopdrawing",
+      "portId": "PORT 2",
+      "revision": "Rev A",
+      "filePath": "",
+      "note": "Beam Ceiling - Corridor",
+      "uploadedAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "DOC-014",
+      "name": "BB1-LQM-A09-CD0005",
+      "type": "Shopdrawing",
+      "portId": "PORT 3",
+      "revision": "Rev A",
+      "filePath": "",
+      "note": "Baffles Ceiling - Corridor A",
+      "uploadedAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "DOC-015",
+      "name": "BB1-LQM-A09-CD0006",
+      "type": "Shopdrawing",
+      "portId": "PORT 3",
+      "revision": "Rev A",
+      "filePath": "",
+      "note": "Baffles Ceiling - Corridor B",
+      "uploadedAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "DOC-016",
+      "name": "BB1-LQM-A09-CD0007",
+      "type": "Shopdrawing",
+      "portId": "PORT 4",
+      "revision": "Rev A",
+      "filePath": "",
+      "note": "Beam Ceiling - Creativation Room A",
+      "uploadedAt": "2026-04-01T00:00:00.000Z"
+    },
+    {
+      "id": "DOC-017",
+      "name": "BB1-LQM-A09-CD0008",
+      "type": "Shopdrawing",
+      "portId": "PORT 4",
+      "revision": "Rev A",
+      "filePath": "",
+      "note": "Beam Ceiling - Creativation Room B",
+      "uploadedAt": "2026-04-01T00:00:00.000Z"
+    }
+  ]
+}
