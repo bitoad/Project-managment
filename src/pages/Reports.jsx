@@ -4,7 +4,7 @@ import {
 } from 'antd';
 import {
   FilePdfOutlined, FileTextOutlined, BarChartOutlined, WarningOutlined,
-  ShopOutlined, DollarOutlined, TeamOutlined,
+  ShopOutlined, DollarOutlined, TeamOutlined, InfoCircleOutlined,
 } from '@ant-design/icons';
 import {
   dashboardApi, portsApi, itemsApi, risksApi, costLogsApi, suppliersApi, metaApi,
@@ -309,8 +309,16 @@ doc.text(`Dia diem: ${m.location || '-'}`, 120, 36);
 
   return (
     <div className="page-container">
-      <Title level={3} style={{ marginBottom: 4 }}><FilePdfOutlined /> Xuất Báo cáo PDF</Title>
-      <Text type="secondary">Chọn loại báo cáo để tải file PDF về máy</Text>
+      <div className="page-header">
+        <div>
+          <Title level={3} style={{ marginBottom: 4 }}><FilePdfOutlined /> Xuất Báo cáo PDF</Title>
+          <Text type="secondary">Chọn loại báo cáo để tải file PDF về máy</Text>
+        </div>
+      </div>
+
+      <div className="ev-guide">
+        <InfoCircleOutlined /> Các báo cáo được tổng hợp tự động từ dữ liệu dự án hiện tại (doanh thu, chi phí, tiến độ, rủi ro, nhà cung cấp). Nhấn vào một thẻ để tạo &amp; tải PDF. Quá trình có thể mất vài giây với dự án lớn.
+      </div>
 
       <Divider />
 

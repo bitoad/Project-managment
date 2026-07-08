@@ -205,6 +205,22 @@ body {
   color: #8c8c8c;
 }
 
+/* Generic explanation banner (S-Curve, etc.) */
+.ev-guide {
+  margin-top: 16px;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  background: #eef3ff;
+  border: 1px solid #d6e2ff;
+  font-size: 13px;
+  color: #42526e;
+  line-height: 1.7;
+}
+.ev-guide .anticon {
+  color: #2F5CE0;
+  margin-right: 4px;
+}
+
 /* ============ CHARTS ============ */
 .chart-container {
   background: var(--color-surface);

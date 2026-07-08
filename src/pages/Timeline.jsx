@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, Typography, Spin, message, Empty, Select, Tag, Segmented, Tooltip } from 'antd';
-import { FieldTimeOutlined } from '@ant-design/icons';
+import { FieldTimeOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { tasksApi, portsApi } from '../api/api.js';
 import { PORT_COLORS, statusColor } from '../components/helpers.js';
 
@@ -134,6 +134,10 @@ export default function Timeline() {
             ]}
           />
         </div>
+      </div>
+
+      <div className="ev-guide">
+        <InfoCircleOutlined /> <b>Biểu đồ Gantt</b>: mỗi thanh là một công việc, vị trí &amp; độ dài thể hiện thời gian bắt đầu → kết thúc. Màu thanh = trạng thái (Cần làm / Đang làm / Kiểm tra / Hoàn thành). Dùng bộ lọc trên để thu hẹp theo Port hoặc người phụ trách.
       </div>
 
       {validTasks.length === 0 ? (

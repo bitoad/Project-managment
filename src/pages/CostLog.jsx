@@ -23,6 +23,7 @@ import {
   DollarOutlined,
   EditOutlined,
   PlusOutlined,
+  InfoCircleOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { costLogsApi, itemsApi } from '../api/api.js';
@@ -173,6 +174,10 @@ export default function CostLog({ initialPortFilter = null }) {
           />
           <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd}>Thêm chi phí</Button>
         </Space>
+      </div>
+
+      <div className="ev-guide">
+        <InfoCircleOutlined /> <b>Cost Log</b> ghi nhận chi phí thực tế phát sinh. Mỗi bản ghi thuộc một nhóm: <b>Nhập vật tư</b> (Material), <b>Gia công/Sản xuất</b> (Fabrication/Installation/Subcontractor), <b>Vận chuyển</b> (Logistics/Transport) hoặc <b>Chi phí khác</b>. Tổng thực tế được so sánh với chi phí kế hoạch (từ giá internal của Item) để theo dõi vượt chi.
       </div>
 
       <Row gutter={[16, 16]} style={{ marginTop: 20, marginBottom: 8 }}>

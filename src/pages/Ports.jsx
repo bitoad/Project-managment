@@ -32,6 +32,7 @@ import {
   SearchOutlined,
   ShopOutlined,
   WarningOutlined,
+  InfoCircleOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { costLogsApi, itemsApi, portsApi, supplierPortsApi, suppliersApi, tasksApi } from '../api/api.js';
@@ -285,6 +286,10 @@ export default function Ports() {
             {stats.total} hạng mục - Hợp đồng Golden Point x PTSC M&C (via Hà Quang)
           </Text>
         </div>
+      </div>
+
+      <div className="ev-guide">
+        <InfoCircleOutlined /> <b>Port</b> là hạng mục/cụm công việc của dự án. Mỗi Port có tiến độ, doanh thu (giá trị hợp đồng), chi phí kế hoạch &amp; chi phí thực tế. Bảng bên dưới so sánh hiệu suất từng Port — tiến độ càng cao và chi phí thực tế càng thấp kế hoạch là tốt.
       </div>
 
       <Row gutter={[16, 16]} style={{ marginTop: 20 }}>

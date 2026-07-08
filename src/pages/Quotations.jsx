@@ -4,7 +4,7 @@ import {
   Space, message, Popconfirm, Row, Col, Statistic, Tooltip,
 } from 'antd';
 import {
-  FileSearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined,
+  FileSearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined, InfoCircleOutlined,
 } from '@ant-design/icons';
 import { quotationsApi } from '../api/api.js';
 import { fmtShort } from '../components/helpers.js';
@@ -91,7 +91,11 @@ export default function Quotations() {
           <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd}>Thêm báo giá</Button>
       </div>
 
-      <Row gutter={[16, 16]} style={{ marginTop: 20, marginBottom: 8 }}>
+      <div className="ev-guide">
+        <InfoCircleOutlined /> <b>So sánh báo giá</b>: nhập giá từ 3 nhà cung cấp (A/B/C) cho mỗi hạng mục, hệ thống tự đánh dấu <b>giá tốt nhất</b> (xanh). Cột "Đã chốt" cho biết bạn đã chọn supplier chính thức. Tổng giá trị ở trên tính theo giá tốt nhất × số lượng.
+      </div>
+
+      <Row gutter={[16, 16]} style={{ marginTop: 16, marginBottom: 8 }}>
         <Col xs={8}><Card size="small"><Statistic title="Số mục báo giá" value={quotes.length} /></Card></Col>
         <Col xs={8}><Card size="small"><Statistic title="Tổng giá trị (giá tốt nhất)" value={fmtShort(totalBest)} valueStyle={{ color: '#52c41a' }} /></Card></Col>
         <Col xs={8}><Card size="small"><Statistic title="Đã chốt" value={quotes.filter(q => q.selected).length} /></Card></Col>

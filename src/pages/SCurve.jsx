@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Typography, Spin, Table, Tag, message, Row, Col, Statistic } from 'antd';
 import {
-  LineChartOutlined, RiseOutlined, FallOutlined,
+  LineChartOutlined, RiseOutlined, FallOutlined, InfoCircleOutlined,
 } from '@ant-design/icons';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, Legend,
@@ -52,15 +52,25 @@ export default function SCurve() {
 
   return (
     <div className="page-container">
-      <Title level={3} style={{ marginBottom: 4 }}><LineChartOutlined /> S-Curve (Earned Value)</Title>
-      <Text type="secondary">Tiến độ Kế hoạch vs Thực tế — SPI = EV / PV</Text>
+      <div className="page-header">
+        <div>
+          <Title level={3} style={{ marginBottom: 4 }}><LineChartOutlined /> S-Curve (Earned Value)</Title>
+          <Text type="secondary">Theo dõi tiến độ kế hoạch so với thực tế theo thời gian</Text>
+        </div>
+      </div>
 
-      <Row gutter={[16, 16]} style={{ marginTop: 20, marginBottom: 8 }}>
+      <div className="ev-guide">
+        <InfoCircleOutlined /> <b>SPI (Schedule Performance Index)</b> = EV ÷ PV. &nbsp;
+        SPI &gt; 1: tiến độ nhanh hơn kế hoạch · = 1: đúng kế hoạch · &lt; 1: chậm. &nbsp;
+        <b>PV</b> = giá trị kế hoạch (Planned), <b>EV</b> = giá trị thực đạt được (Earned). Đường Cong tích lũy càng sát nhau càng tốt.
+      </div>
+
+      <Row gutter={[16, 16]} style={{ marginTop: 16, marginBottom: 8 }}>
         <Col xs={8}>
           <Card size="small"><Statistic title="Cum. Planned (PV)" value={last.cumPlan || 0} suffix="%" valueStyle={{ color: '#faad14' }} /></Card>
         </Col>
         <Col xs={8}>
-          <Card size="small"><Statistic title="Cum. Actual (EV)" value={last.cumActual || 0} suffix="%" valueStyle={{ color: '#1677ff' }} /></Card>
+          <Card size="small"><Statistic title="Cum. Actual (EV)" value={last.cumActual || 0} suffix="%" valueStyle={{ color: '#2F5CE0' }} /></Card>
         </Col>
         <Col xs={8}>
           <Card size="small">
