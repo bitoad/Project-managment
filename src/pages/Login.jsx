@@ -21,31 +21,12 @@ export default function Login() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #001529 0%, #003a70 100%)',
-        padding: 20,
-      }}
-    >
-      <Card
-        style={{
-          width: 440,
-          maxWidth: '100%',
-          borderRadius: 16,
-          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-        }}
-        styles={{ body: { padding: 32 } }}
-      >
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ fontSize: 52, marginBottom: 8 }}>🛢️</div>
-          <Title level={3} style={{ marginBottom: 4 }}>
-            Oil & Gas Project Control
-          </Title>
-          <Text type="secondary">Đăng nhập để quản lý công việc</Text>
+    <div className="login-page" style={{ position: 'relative', overflow: 'hidden' }}>
+      <Card className="login-card" styles={{ body: { padding: 32 } }}>
+        <div className="login-brand">
+          <div className="login-brand-icon">🛢️</div>
+          <div className="login-brand-title">Oil & Gas Project Control</div>
+          <div className="login-brand-sub">Đăng nhập để quản lý công việc</div>
         </div>
 
         <Divider />
@@ -76,7 +57,7 @@ export default function Login() {
           />
 
           <Button
-            type="primary"
+            className="btn-gradient"
             size="large"
             block
             icon={<LoginOutlined />}

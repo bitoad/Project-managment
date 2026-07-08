@@ -211,6 +211,18 @@ body {
 }
 
 /* ============ MISC ============ */
+/* Thống kê nhỏ (size='small') cũng có shadow đồng bộ */
+.ant-card.ant-card-size-small {
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-card);
+  border: 1px solid #f0f0f0 !important;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.ant-card.ant-card-size-small:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
+}
+
 .drag-handle {
   cursor: grab;
 }
@@ -239,6 +251,138 @@ body {
 }
 .page-container > * {
   animation: fadeInUp 0.35s ease both;
+}
+
+/* ============ PANEL CARD (trang con) ============ */
+.panel-card,
+.ant-card:has(.ant-card-head) {
+  border-radius: var(--radius) !important;
+  border: 1px solid #f0f0f0 !important;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.ant-card:has(.ant-card-head) .ant-card-head,
+.panel-card .ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+  min-height: 52px;
+}
+.ant-card:has(.ant-card-head) .ant-card-head-title,
+.panel-card .ant-card-head-title {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+/* ============ SECTION TITLE ============ */
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ============ GRADIENT BUTTON ============ */
+.btn-gradient {
+  background: var(--color-primary-grad) !important;
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(22, 119, 255, 0.35);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn-gradient:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(22, 119, 255, 0.45);
+}
+
+/* ============ LOGIN ============ */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 20% 20%, #1d3a6e 0%, #0a2347 45%, #061a36 100%);
+  padding: 24px;
+}
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 18px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+.login-brand {
+  text-align: center;
+  margin-bottom: 8px;
+}
+.login-brand-icon {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+.login-brand-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f1f1f;
+}
+.login-brand-sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+.login-page::before {
+  content: '';
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(64,150,255,0.25) 0%, transparent 70%);
+  top: -120px;
+  right: -80px;
+  border-radius: 50%;
+}
+.login-page::after {
+  content: '';
+  position: absolute;
+  width: 360px;
+  height: 360px;
+  background: radial-gradient(circle, rgba(114,46,209,0.18) 0%, transparent 70%);
+  bottom: -100px;
+  left: -60px;
+  border-radius: 50%;
+}
+
+/* ============ TABLE POLISH ============ */
+.polished-table .ant-table-thead > tr > th {
+  font-weight: 600;
+  font-size: 13px;
+}
+.polished-table .ant-table-tbody > tr > td {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+/* ============ SUMMARY STRIP ============ */
+.summary-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.summary-pill {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  min-width: 140px;
+}
+.summary-pill .label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.summary-pill .value {
+  font-size: 20px;
+  font-weight: 700;
+  margin-top: 2px;
 }
 
 /* Print styles for PDF export */
