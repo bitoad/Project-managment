@@ -21,6 +21,7 @@ import {
   Table,
   Tag,
   Timeline,
+  Tooltip,
   Typography,
   message,
 } from 'antd';
@@ -370,15 +371,20 @@ export default function RiskMatrix() {
         <Col xs={24} xl={14}>
           <Card
             title="Risk Heatmap"
-            extra={selectedCell && (
-              <Button size="small" onClick={() => setSelectedCell(null)}>
-                Bỏ chọn ô {selectedCell.impact} x {selectedCell.probability}
-              </Button>
-            )}
+            extra={
+              <Space size={4} wrap>
+                {selectedCell && (
+                  <Button size="small" onClick={() => setSelectedCell(null)}>
+                    Bỏ chọn {selectedCell.impact} x {selectedCell.probability}
+                  </Button>
+                )}
+                <Text type="secondary" style={{ fontSize: 12 }}>Nhấn ô để lọc bảng ↓</Text>
+              </Space>
+            }
           >
             <div style={{ display: 'grid', gridTemplateColumns: '44px 1fr', gap: 8, alignItems: 'stretch' }}>
-              <div style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', textAlign: 'center', fontWeight: 700, color: '#6b7280' }}>
-                Tác động
+              <div style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', textAlign: 'center', fontWeight: 700, color: '#6b7280', letterSpacing: 1 }}>
+                TÁC ĐỘNG (I) ↑
               </div>
               <div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(64px, 1fr))', gap: 6 }}>
@@ -387,27 +393,33 @@ export default function RiskMatrix() {
                       {[1, 2, 3, 4, 5].map((probabilityValue) => {
                         const cellRisks = heatmap[`${impactValue}-${probabilityValue}`] || [];
                         const score = impactValue * probabilityValue;
+                        const level = getRiskLevel(score);
                         const isSelected = selectedCell?.impact === impactValue && selectedCell?.probability === probabilityValue;
+                        const tip = cellRisks.length
+                          ? cellRisks.map((r) => `• ${r.title} (${r.owner || '?'})`).join('\n')
+                          : 'Không có rủi ro';
                         return (
-                          <button
-                            key={`${impactValue}-${probabilityValue}`}
-                            type="button"
-                            onClick={() => setSelectedCell(isSelected ? null : { impact: impactValue, probability: probabilityValue })}
-                            className="risk-heatmap-cell"
-                            style={{
-                              minHeight: 74,
-                              border: isSelected ? '3px solid #111827' : '1px solid rgba(255,255,255,0.55)',
-                              background: riskColor(score),
-                              opacity: cellRisks.length ? 1 : 0.45,
-                              cursor: 'pointer',
-                            }}
-                            title={cellRisks.map((risk) => risk.title).join('\n')}
-                          >
-                            <div>
-                              <div style={{ fontSize: 22, lineHeight: 1 }}>{cellRisks.length || ''}</div>
-                              <div style={{ fontSize: 11 }}>{impactValue} x {probabilityValue}</div>
-                            </div>
-                          </button>
+                          <Tooltip key={`${impactValue}-${probabilityValue}`} title={<div style={{ whiteSpace: 'pre-line' }}>{tip}</div>}>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedCell(isSelected ? null : { impact: impactValue, probability: probabilityValue })}
+                              className="risk-heatmap-cell"
+                              style={{
+                                minHeight: 78,
+                                width: '100%',
+                                border: isSelected ? '3px solid #111827' : '1px solid rgba(255,255,255,0.55)',
+                                background: riskColor(score),
+                                opacity: cellRisks.length ? 1 : 0.4,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <div>
+                                <div style={{ fontSize: 22, lineHeight: 1 }}>{cellRisks.length || ''}</div>
+                                <div style={{ fontSize: 10, opacity: 0.95 }}>{level.label}</div>
+                                <div style={{ fontSize: 10, opacity: 0.8 }}>{impactValue} x {probabilityValue}</div>
+                              </div>
+                            </button>
+                          </Tooltip>
                         );
                       })}
                     </React.Fragment>
@@ -417,15 +429,15 @@ export default function RiskMatrix() {
                   {[1, 2, 3, 4, 5].map((value) => <Text strong key={value}>{value}</Text>)}
                 </div>
                 <div style={{ textAlign: 'center', marginTop: 4 }}>
-                  <Text strong type="secondary">Xác suất</Text>
+                  <Text strong type="secondary">XÁC SUẤT (P) → &nbsp; 1=Rất thấp … 5=Rất cao</Text>
                 </div>
               </div>
             </div>
             <Space wrap style={{ marginTop: 16 }}>
-              <Tag color="green">Thấp 1-5</Tag>
-              <Tag color="gold">Trung bình 6-9</Tag>
-              <Tag color="orange">Cao 10-14</Tag>
-              <Tag color="red">Nghiêm trọng 15-25</Tag>
+              <Tag color="green">Thấp (1-5)</Tag>
+              <Tag color="gold">Trung bình (6-9)</Tag>
+              <Tag color="orange">Cao (10-14)</Tag>
+              <Tag color="red">Nghiêm trọng (15-25)</Tag>
               {stats.overdue > 0 && <Tag color="red">{stats.overdue} quá hạn xử lý</Tag>}
             </Space>
           </Card>
