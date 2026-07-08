@@ -35,17 +35,17 @@ function ProtectedLayout() {
 export default function App() {
   const themeConfig = {
     token: {
-      colorPrimary: '#1677ff',
-      borderRadius: 10,
+      colorPrimary: '#2F5CE0',
+      borderRadius: 16,
       fontFamily: "'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif",
-      colorBgLayout: '#f0f2f5',
+      colorBgLayout: '#F5F7FB',
       boxShadowSecondary: '0 4px 16px rgba(0, 0, 0, 0.06)',
     },
     components: {
-      Card: { borderRadiusLG: 14 },
+      Card: { borderRadiusLG: 16 },
       Statistic: { titleFontSize: 13 },
-      Table: { headerBg: '#fafafa', headerColor: '#595959', rowHoverBg: '#f5f8ff' },
-      Menu: { itemBorderRadius: 8, itemMarginInline: 8 },
+      Table: { headerBg: '#fafafa', headerColor: '#595959', rowHoverBg: '#f0f4ff' },
+      Menu: { itemBorderRadius: 10, itemMarginInline: 8 },
     },
   };
 

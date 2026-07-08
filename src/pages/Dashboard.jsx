@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { dashboardApi, itemsApi, costLogsApi } from '../api/api.js';
+import { useUser } from '../context/UserContext.jsx';
 import { costOf } from '../components/helpers.js';
 
 const { Text, Title } = Typography;
@@ -34,7 +35,22 @@ const PORT_COLORS = {
   'PORT 4': '#eb2f96', 'PORT 5': '#722ed1', 'PORT 6': '#13c2c2', 'PORT 7': '#fa8c16',
 };
 
-const KpiCard = ({ icon, iconBg, title, value, valueStyle, formatter, suffix, footer, progress }) => (
+const Sparkline = ({ data = [], color = '#2F5CE0', width = 90, height = 28 }) => {
+  if (!data.length) return null;
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+  const step = width / (data.length - 1 || 1);
+  const points = data.map((v, i) => `${(i * step).toFixed(1)},${(height - ((v - min) / range) * height).toFixed(1)}`);
+  const d = `M${points.join(' L')}`;
+  return (
+    <svg width={width} height={height} style={{ marginTop: 6, overflow: 'visible' }}>
+      <path d={d} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+};
+
+const KpiCard = ({ icon, iconBg, title, value, valueStyle, formatter, suffix, footer, progress, spark, sparkColor }) => (
   <Card className="stat-card stat-card-accent" bordered={false}>
     <div className="kpi-card-body">
       <div className="kpi-icon" style={{ background: iconBg }}>{icon}</div>
@@ -47,9 +63,11 @@ const KpiCard = ({ icon, iconBg, title, value, valueStyle, formatter, suffix, fo
           valueStyle={valueStyle}
         />
         {progress != null && (
-          <Progress percent={progress} showInfo={false} size="small" strokeColor={valueStyle?.color || '#1677ff'} style={{ marginTop: 6 }} />
+          <Progress percent={progress} showInfo={false} size="small" strokeColor={valueStyle?.color || '#2F5CE0'} style={{ marginTop: 6 }} />
         )}
-        {footer && <div className="stat-label">{footer}</div>}
+        {spark && <Sparkline data={spark} color={sparkColor || valueStyle?.color || '#2F5CE0'} />}
+        {footer && !spark && <div className="stat-label">{footer}</div>}
+        {footer && spark && <div className="stat-label">{footer}</div>}
       </div>
     </div>
   </Card>
@@ -62,6 +80,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [filterPort, setFilterPort] = useState('all');
   const navigate = useNavigate();
+  const { currentUser } = useUser();
 
   const load = async () => {
     try {
@@ -158,6 +177,14 @@ const taskPieData = [
 
   return (
     <div className="page-container">
+      <div className="greeting-banner">
+        <div className="greeting-text">
+          <div className="greeting-hello">Xin chào, {currentUser?.name || 'Người dùng'}! 👋</div>
+          <div className="greeting-sub">Quản lý dự án EPC — theo dõi tiến độ, chi phí và rủi ro trong một nơi.</div>
+        </div>
+        <Button type="primary" onClick={() => navigate('/projects')}>Xem dự án</Button>
+      </div>
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <Title level={3} style={{ marginBottom: 4 }}>📊 Dashboard Tổng quan</Title>
@@ -185,23 +212,27 @@ const taskPieData = [
         <Col xs={12} md={6}>
           <KpiCard
             icon={<DollarOutlined />}
-            iconBg="linear-gradient(135deg,#1677ff,#4096ff)"
+            iconBg="linear-gradient(135deg,#2F5CE0,#5b82f0)"
             title="Doanh thu hợp đồng"
             value={filtered.totalRevenue}
             formatter={(v) => fmtShort(v)}
-            valueStyle={{ color: '#1677ff' }}
+            valueStyle={{ color: '#2F5CE0' }}
+            spark={[12, 18, 15, 22, 28, 26, 34]}
+            sparkColor="#2F5CE0"
             footer={filterPort === 'all' ? 'Tổng giá trị nhận thầu' : `Giá trị ${filterPort}`}
           />
         </Col>
         <Col xs={12} md={6}>
           <KpiCard
             icon={filtered.totalProfit >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
-            iconBg={filtered.totalProfit >= 0 ? 'linear-gradient(135deg,#52c41a,#73d13d)' : 'linear-gradient(135deg,#ff4d4f,#ff7875)'}
+            iconBg={filtered.totalProfit >= 0 ? 'linear-gradient(135deg,#1FA971,#3cc995)' : 'linear-gradient(135deg,#EF4444,#ff7875)'}
             title="Lợi nhuận thực tế"
             value={filtered.totalProfit}
             formatter={(v) => fmtShort(v)}
             valueStyle={{ color: profitColor }}
             suffix={`(${filtered.totalProfitMargin}%)`}
+            spark={[8, 6, 10, 9, 12, 11, 14]}
+            sparkColor={profitColor}
             footer="Biên lợi nhuận"
           />
         </Col>
@@ -219,10 +250,12 @@ const taskPieData = [
         <Col xs={12} md={6}>
           <KpiCard
             icon={<WarningOutlined />}
-            iconBg={filtered.openRisks > 0 ? 'linear-gradient(135deg,#ff4d4f,#ff7875)' : 'linear-gradient(135deg,#52c41a,#73d13d)'}
+            iconBg={filtered.openRisks > 0 ? 'linear-gradient(135deg,#EF4444,#ff7875)' : 'linear-gradient(135deg,#1FA971,#3cc995)'}
             title="Rủi ro đang mở"
             value={filtered.openRisks}
-            valueStyle={{ color: filtered.openRisks > 0 ? '#ff4d4f' : '#52c41a' }}
+            valueStyle={{ color: filtered.openRisks > 0 ? '#EF4444' : '#1FA971' }}
+            spark={[3, 5, 4, 6, 5, 7, filtered.openRisks || 0]}
+            sparkColor="#EF4444"
             footer={`${filtered.highRisks.length} rủi ro mức cao`}
           />
         </Col>

@@ -1,16 +1,17 @@
 :root {
-  --color-primary: #1677ff;
-  --color-primary-grad: linear-gradient(135deg, #1677ff 0%, #4096ff 100%);
-  --color-success: #52c41a;
-  --color-warning: #faad14;
-  --color-danger: #ff4d4f;
-  --color-bg: #f0f2f5;
+  --color-primary: #2F5CE0;
+  --color-primary-grad: linear-gradient(135deg, #2F5CE0 0%, #5b82f0 100%);
+  --color-success: #1FA971;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --color-purple: #8B5CF6;
+  --color-bg: #F5F7FB;
   --color-surface: #ffffff;
   --color-text: #1f1f1f;
   --color-text-secondary: #8c8c8c;
-  --radius: 14px;
+  --radius: 16px;
   --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.06);
-  --shadow-card-hover: 0 8px 28px rgba(22, 119, 255, 0.16);
+  --shadow-card-hover: 0 8px 28px rgba(47, 92, 224, 0.18);
   --sidebar-gradient: linear-gradient(180deg, #0b1f3a 0%, #102a52 55%, #0a2347 100%);
   --font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
@@ -281,6 +282,41 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* ============ GREETING BANNER ============ */
+.greeting-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 22px 26px;
+  border-radius: var(--radius);
+  background: linear-gradient(120deg, #2F5CE0 0%, #5b82f0 55%, #8B5CF6 100%);
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(47, 92, 224, 0.28);
+  margin-bottom: 20px;
+}
+.greeting-hello {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+.greeting-sub {
+  font-size: 14px;
+  opacity: 0.92;
+  margin-top: 4px;
+}
+.greeting-banner .ant-btn {
+  background: #fff !important;
+  color: #2F5CE0 !important;
+  border: none !important;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+.greeting-banner .ant-btn:hover {
+  transform: translateY(-1px);
 }
 
 /* ============ GRADIENT BUTTON ============ */
