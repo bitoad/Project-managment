@@ -31,7 +31,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { costLogsApi, itemsApi, portsApi, supplierPortsApi, suppliersApi, tasksApi } from '../api/api.js';
-import { fmtDate, fmtShort, fmtVND, PORT_COLORS, statusColor } from '../components/helpers.js';
+import { fmtDate, fmtShort, fmtVND, PORT_COLORS, statusColor, costOf } from '../components/helpers.js';
 
 const { Title, Text } = Typography;
 
@@ -186,7 +186,7 @@ export default function Ports() {
       const portSupplierPorts = supplierPorts.filter((sp) => sp.portId === port.id);
       const deadline = getPortDeadline(port, portItems, portTasks);
       const deadlineState = getDeadlineState(deadline, port.progress || 0);
-      const plannedCost = portItems.reduce((sum, item) => sum + ((item.qty || 0) * (item.unitCost || 0)), 0);
+      const plannedCost = portItems.reduce((sum, item) => sum + ((item.qty || 0) * costOf(item)), 0);
       const plannedRevenue = portItems.reduce((sum, item) => sum + ((item.qty || 0) * (item.unitPrice || 0)), 0);
       const actualCost = portCostLogs.reduce((sum, log) => sum + (log.amount || 0), 0);
       const suppliersForPort = portSupplierPorts.map((sp) => ({

@@ -1,5 +1,8 @@
 // Hàm tiện ích dùng chung cho toàn app
 
+// Đơn giá vốn (giá internal) — ưu tiên internalCost, fallback unitCost
+export const costOf = (item) => (item?.internalCost ?? item?.unitCost ?? 0);
+
 // Format tiền VND đầy đủ
 export const fmtVND = (n) => {
   if (n === null || n === undefined || n === '') return '-';

@@ -25,7 +25,7 @@ import {
   ProfileOutlined,
 } from '@ant-design/icons';
 import { itemsApi, costLogsApi } from '../api/api.js';
-import { fmtShort, PORT_COLORS, PORT_LIST, STATUS_LIST } from '../components/helpers.js';
+import { fmtShort, PORT_COLORS, PORT_LIST, STATUS_LIST, costOf } from '../components/helpers.js';
 
 const { Title, Text } = Typography;
 
@@ -119,7 +119,7 @@ export default function Items({ initialPortFilter = null }) {
     return map;
   }, [costLogs]);
   const totalRevenue = filteredItems.reduce((sum, item) => sum + ((item.qty || 0) * (item.unitPrice || 0)), 0);
-  const totalPlannedCost = filteredItems.reduce((sum, item) => sum + ((item.qty || 0) * (item.unitCost || 0)), 0);
+  const totalPlannedCost = filteredItems.reduce((sum, item) => sum + ((item.qty || 0) * costOf(item)), 0);
   const totalActualCost = filteredItems.reduce((sum, item) => sum + (costByItem[item.code] || 0), 0);
   const totalProfit = totalRevenue - totalActualCost;
 
@@ -174,12 +174,12 @@ export default function Items({ initialPortFilter = null }) {
             },
             { title: 'SL', dataIndex: 'qty', key: 'qty', width: 70, align: 'right' },
             { title: 'ĐVT', dataIndex: 'unit', key: 'unit', width: 70 },
-            { title: 'Đơn giá vốn', dataIndex: 'unitCost', key: 'unitCost', width: 120, align: 'right', render: (value) => fmtShort(value) },
+            { title: 'Đơn giá vốn', dataIndex: 'internalCost', key: 'internalCost', width: 120, align: 'right', render: (_, record) => fmtShort(costOf(record)) },
             { title: 'Giá bán', dataIndex: 'unitPrice', key: 'unitPrice', width: 120, align: 'right', render: (value) => <Text strong style={{ color: '#1677ff' }}>{fmtShort(value)}</Text> },
-            { title: 'Tổng vốn (kế hoạch)', key: 'totalCost', width: 140, align: 'right', render: (_, record) => fmtShort((record.qty || 0) * (record.unitCost || 0)) },
+            { title: 'Tổng vốn (kế hoạch)', key: 'totalCost', width: 140, align: 'right', render: (_, record) => fmtShort((record.qty || 0) * costOf(record)) },
             { title: 'Chi phí thực tế', key: 'actualCost', width: 140, align: 'right', render: (_, record) => {
               const actual = costByItem[record.code] || 0;
-              const planned = (record.qty || 0) * (record.unitCost || 0);
+              const planned = (record.qty || 0) * costOf(record);
               const color = actual > planned ? '#ff4d4f' : actual < planned ? '#faad14' : '#52c41a';
               return <Text strong style={{ color }}>{fmtShort(actual)}</Text>;
             } },

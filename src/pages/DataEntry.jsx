@@ -36,7 +36,7 @@ import Team from './Team';
 import Quotations from './Quotations';
 import SCurve from './SCurve';
 import { costLogsApi, dashboardApi, itemsApi, portsApi, risksApi, tasksApi, teamApi } from '../api/api.js';
-import { fmtShort } from '../components/helpers.js';
+import { fmtShort, costOf } from '../components/helpers.js';
 import { useProject } from '../context/ProjectContext.jsx';
 
 const { Title, Text, Paragraph } = Typography;
@@ -164,7 +164,7 @@ export default function DataEntry() {
   const focusedPortCosts = focusedPort
     ? summary.costLogs.filter((log) => log.portId === focusedPort)
     : [];
-  const focusedPortPlannedCost = focusedPortItems.reduce((sum, item) => sum + ((item.qty || 0) * (item.unitCost || 0)), 0);
+  const focusedPortPlannedCost = focusedPortItems.reduce((sum, item) => sum + ((item.qty || 0) * costOf(item)), 0);
   const focusedPortRevenue = focusedPortItems.reduce((sum, item) => sum + ((item.qty || 0) * (item.unitPrice || 0)), 0);
   const focusedPortActualCost = focusedPortCosts.reduce((sum, log) => sum + (log.amount || 0), 0);
 

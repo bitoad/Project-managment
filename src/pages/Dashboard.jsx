@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { dashboardApi, itemsApi, costLogsApi } from '../api/api.js';
+import { costOf } from '../components/helpers.js';
 
 const { Text, Title } = Typography;
 
@@ -90,7 +91,7 @@ export default function Dashboard() {
     const profit = revenue - cost;
     const progress = portItems.length > 0 ? Math.round(portItems.reduce((s, i) => s + (i.progress || 0), 0) / portItems.length) : 0;
     const portData = (data.ports || []).find((p) => p.id === filterPort);
-    const plannedCost = portItems.reduce((s, i) => s + (i.qty || 0) * (i.unitCost || 0), 0);
+    const plannedCost = portItems.reduce((s, i) => s + (i.qty || 0) * costOf(i), 0);
     return {
       ports: portData ? [portData] : [],
       totalRevenue: revenue,

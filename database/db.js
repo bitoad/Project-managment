@@ -553,7 +553,7 @@ export function getDashboardData(projectId) {
   const db = ensureDb(projectId);
   const items = db.items;
   const totalRevenue = items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0);
-  const totalCost = items.reduce((sum, i) => sum + (i.qty * i.unitCost), 0);
+  const totalCost = items.reduce((sum, i) => sum + (i.qty * (i.internalCost ?? i.unitCost ?? 0)), 0);
   const totalProfit = totalRevenue - totalCost;
   const avgProgress = items.length > 0
     ? Math.round(items.reduce((sum, i) => sum + (i.progress || 0), 0) / items.length)
@@ -582,7 +582,7 @@ export function getDashboardData(projectId) {
     ports: db.ports.map(p => {
       const portItems = items.filter(i => i.port === p.id);
       const portRevenue = portItems.reduce((s, i) => s + (i.qty * i.unitPrice), 0);
-      const portCost = portItems.reduce((s, i) => s + (i.qty * i.unitCost), 0);
+      const portCost = portItems.reduce((s, i) => s + (i.qty * (i.internalCost ?? i.unitCost ?? 0)), 0);
       const portProgress = portItems.length > 0 ? Math.round(portItems.reduce((s, i) => s + (i.progress || 0), 0) / portItems.length) : 0;
       const portLogged = db.costLogs.filter(c => c.portId === p.id).reduce((s, c) => s + (c.amount || 0), 0);
       return { id: p.id, name: p.name, description: p.description, status: p.status, progress: portProgress, revenue: portRevenue, cost: portCost, logged: portLogged, itemCount: portItems.length, color: p.color };
