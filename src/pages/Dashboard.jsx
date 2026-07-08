@@ -354,7 +354,10 @@ const taskPieData = [
                       <Text strong style={{ fontSize: 13 }}>{r.title}</Text>
                       <Tag color={color} style={{ marginLeft: 8 }}>{r.score}</Tag>
                     </div>
-                    <Text type="secondary" style={{ fontSize: 12 }}>{r.portName} • {r.owner}</Text>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+                      <Tag color={PORT_COLORS[r.portId] || 'blue'} style={{ fontSize: 11, marginRight: 0 }}>{r.portId}</Tag>
+                      <Text type="secondary" style={{ fontSize: 12 }}>{r.owner}</Text>
+                    </div>
                   </div>
                 );
               })
