@@ -83,12 +83,12 @@ export default function Quotations() {
 
   return (
     <div className="page-container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div className="page-header">
         <div>
           <Title level={3} style={{ marginBottom: 4 }}><FileSearchOutlined /> So sánh Báo giá</Title>
           <Text type="secondary">So sánh 3 nhà cung cấp & chọn giá tốt nhất (SUPPLIER_QUOTATION)</Text>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>Thêm báo giá</Button>
+          <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd}>Thêm báo giá</Button>
       </div>
 
       <Row gutter={[16, 16]} style={{ marginTop: 20, marginBottom: 8 }}>

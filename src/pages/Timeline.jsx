@@ -106,7 +106,7 @@ export default function Timeline() {
 
   return (
     <div className="page-container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+      <div className="page-header">
         <div>
           <Title level={3} style={{ marginBottom: 4 }}>
             <FieldTimeOutlined /> Timeline (Gantt Chart)

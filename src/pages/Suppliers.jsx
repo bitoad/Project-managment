@@ -70,12 +70,12 @@ export default function Suppliers() {
 
   return (
     <div className="page-container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div className="page-header">
         <div>
           <Title level={3} style={{ marginBottom: 4 }}><ShopOutlined /> Quản lý Nhà cung cấp</Title>
           <Text type="secondary">Danh mục nhà cung cấp & đối tác (SUPPLIER_QUOTATION)</Text>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>Thêm NCC</Button>
+          <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd}>Thêm NCC</Button>
       </div>
 
       <Card style={{ marginTop: 20 }}>

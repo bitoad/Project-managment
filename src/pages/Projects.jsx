@@ -137,7 +137,7 @@ export default function Projects() {
         onChange={onFileChange}
       />
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div className="page-header">
         <div>
           <Title level={3} style={{ marginBottom: 4 }}><ProjectOutlined /> Quản lý Dự án</Title>
           <Text type="secondary">Tạo dự án mới, nhập dữ liệu từ Excel, chuyển đổi giữa các dự án</Text>

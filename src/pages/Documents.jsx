@@ -104,12 +104,12 @@ export default function Documents() {
 
   return (
     <div className="page-container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div className="page-header">
         <div>
           <Title level={3} style={{ marginBottom: 4 }}><FolderOpenOutlined /> Bản vẽ & Tài liệu</Title>
           <Text type="secondary">Quản lý bản vẽ, MTO, BOM theo từng Port</Text>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>Thêm tài liệu</Button>
+          <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd}>Thêm tài liệu</Button>
       </div>
 
       <Row gutter={[16, 16]} style={{ marginTop: 20, marginBottom: 8 }}>
