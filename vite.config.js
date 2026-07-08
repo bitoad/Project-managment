@@ -18,5 +18,16 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    chunkSizeWarningLimit: 1200,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          antd: ['antd', '@ant-design/icons'],
+          charts: ['recharts'],
+          vendor: ['axios', 'dayjs', 'date-fns', 'sql.js', 'xlsx', 'jspdf', 'jspdf-autotable'],
+        },
+      },
+    },
   },
 });

@@ -1,0 +1,80 @@
+{
+  "meta": {
+    "projectName": "Aesop",
+    "contractor": "Golden Point Co., Ltd",
+    "client": "PTSC M&C (via Hà Quang)",
+    "location": "Vung Tau, Vietnam",
+    "address": "69/20 Nguyen Gia Tri, Thanh My Tay, HCM",
+    "phone": "(84) 08-2216 9998 / 2219 0888",
+    "fax": "(84) 08-2217 7633",
+    "createdAt": "2026-07-08T08:09:01.807Z"
+  },
+  "settings": {
+    "statusProgress": {
+      "Engineering": 0.1,
+      "Approved": 0.2,
+      "Procurement": 0.3,
+      "Fabrication": 0.6,
+      "Delivery": 0.8,
+      "Installation": 0.9,
+      "Completed": 1
+    },
+    "costTypes": [
+      {
+        "code": "Material",
+        "description": "Material → vật tư"
+      },
+      {
+        "code": "Fabrication",
+        "description": "Fabrication → gia công"
+      },
+      {
+        "code": "Installation",
+        "description": "Installation → nhân công lắp đặt"
+      },
+      {
+        "code": "Logistics",
+        "description": "Logistics → vận chuyển"
+      },
+      {
+        "code": "Equipment",
+        "description": "Equipment → máy móc thuê/mua"
+      },
+      {
+        "code": "Subcontractor",
+        "description": "Subcontractor → thầu phụ"
+      },
+      {
+        "code": "Overhead",
+        "description": "Overhead → chi phí quản lý"
+      },
+      {
+        "code": "Design",
+        "description": "Design → bản vẽ, shopdrawing"
+      },
+      {
+        "code": "Testing & Inspection",
+        "description": "Testing & Inspection → test, QC"
+      },
+      {
+        "code": "Temporary Work",
+        "description": "Temporary Work → giàn giáo, bảo vệ"
+      },
+      {
+        "code": "Contingency",
+        "description": "Contingency → dự phòng"
+      }
+    ]
+  },
+  "ports": [],
+  "items": [],
+  "suppliers": [],
+  "supplierPorts": [],
+  "risks": [],
+  "tasks": [],
+  "costLogs": [],
+  "supplierQuotations": [],
+  "sCurve": [],
+  "team": [],
+  "documents": []
+}
