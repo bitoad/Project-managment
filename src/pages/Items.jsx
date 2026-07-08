@@ -25,11 +25,14 @@ import {
   ProfileOutlined,
 } from '@ant-design/icons';
 import { itemsApi, costLogsApi } from '../api/api.js';
-import { fmtShort, PORT_COLORS, PORT_LIST, STATUS_LIST, costOf } from '../components/helpers.js';
+import { useProject } from '../context/ProjectContext.jsx';
+import { fmtShort, PORT_COLORS, STATUS_LIST, costOf } from '../components/helpers.js';
 
 const { Title, Text } = Typography;
 
 export default function Items({ initialPortFilter = null }) {
+  const { ports } = useProject();
+  const portOptions = useMemo(() => ports.map((p) => ({ value: p.id, label: p.id })), [ports]);
   const [items, setItems] = useState([]);
   const [costLogs, setCostLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -135,7 +138,7 @@ export default function Items({ initialPortFilter = null }) {
             value={filterPort}
             onChange={setFilterPort}
             style={{ width: 160 }}
-            options={[{ value: 'all', label: 'Tất cả Port' }, ...PORT_LIST.map((port) => ({ value: port, label: port }))]}
+            options={[{ value: 'all', label: 'Tất cả Port' }, ...portOptions]}
           />
           <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>Thêm Item</Button>
         </Space>
@@ -229,7 +232,7 @@ export default function Items({ initialPortFilter = null }) {
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item name="port" label="Port" rules={[{ required: true }]}>
-                <Select options={PORT_LIST.map((port) => ({ value: port, label: port }))} />
+                <Select options={portOptions} />
               </Form.Item>
             </Col>
             <Col span={8}>

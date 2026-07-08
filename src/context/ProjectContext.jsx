@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { message } from 'antd';
-import { projectsApi } from '../api/api.js';
+import { projectsApi, portsApi } from '../api/api.js';
 
 const ProjectContext = createContext(null);
 
@@ -9,6 +9,7 @@ export function ProjectProvider({ children }) {
   const [currentProjectId, setCurrentProjectId] = useState(
     () => localStorage.getItem('currentProjectId') || null
   );
+  const [ports, setPorts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const loadProjects = useCallback(async () => {
@@ -28,9 +29,23 @@ export function ProjectProvider({ children }) {
     }
   }, [currentProjectId]);
 
+  const loadPorts = useCallback(async () => {
+    try {
+      const list = await portsApi.getAll();
+      setPorts(list || []);
+    } catch (e) {
+      setPorts([]);
+    }
+  }, []);
+
   useEffect(() => {
     loadProjects();
   }, []);
+
+  useEffect(() => {
+    if (currentProjectId) loadPorts();
+    else setPorts([]);
+  }, [currentProjectId, loadPorts]);
 
   const selectProject = useCallback((projectId) => {
     setCurrentProjectId(projectId);
@@ -61,11 +76,13 @@ export function ProjectProvider({ children }) {
     projects,
     currentProject,
     currentProjectId,
+    ports,
     loading,
     selectProject,
     createProject,
     deleteProject,
     reloadProjects: loadProjects,
+    reloadPorts: loadPorts,
   };
 
   return <ProjectContext.Provider value={value}>{children}</ProjectContext.Provider>;

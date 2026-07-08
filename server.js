@@ -89,6 +89,7 @@ app.get('/api/settings', requireProject, (req, res) => res.json(db.getSettings(r
 
 // ============ PORTS ============
 app.get('/api/ports', requireProject, (req, res) => res.json(db.getPorts(req.projectId)));
+app.post('/api/ports', requireProject, (req, res) => res.status(201).json(db.addPort(req.projectId, req.body)));
 app.get('/api/ports/:id', requireProject, (req, res) => {
   const port = db.getPortById(req.projectId, req.params.id);
   if (!port) return res.status(404).json({ error: 'Port not found' });

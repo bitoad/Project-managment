@@ -26,7 +26,8 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { costLogsApi, itemsApi } from '../api/api.js';
-import { COST_TYPES, fmtShort, PORT_COLORS, PORT_LIST } from '../components/helpers.js';
+import { useProject } from '../context/ProjectContext.jsx';
+import { COST_TYPES, fmtShort, PORT_COLORS } from '../components/helpers.js';
 
 const { Title, Text } = Typography;
 
@@ -46,6 +47,8 @@ const COST_GROUP_LABELS = {
 };
 
 export default function CostLog({ initialPortFilter = null }) {
+  const { ports } = useProject();
+  const portOptions = useMemo(() => ports.map((p) => ({ value: p.id, label: p.id })), [ports]);
   const [logs, setLogs] = useState([]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -160,7 +163,7 @@ export default function CostLog({ initialPortFilter = null }) {
             value={filterPort}
             onChange={setFilterPort}
             style={{ width: 160 }}
-            options={[{ value: 'all', label: 'Tất cả Port' }, ...PORT_LIST.map((port) => ({ value: port, label: port }))]}
+            options={[{ value: 'all', label: 'Tất cả Port' }, ...portOptions]}
           />
           <Select
             value={filterType}
@@ -260,7 +263,7 @@ export default function CostLog({ initialPortFilter = null }) {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="portId" label="Port" rules={[{ required: true }]}>
-                <Select options={PORT_LIST.map((port) => ({ value: port, label: port }))} />
+                <Select options={portOptions} />
               </Form.Item>
             </Col>
             <Col span={12}>

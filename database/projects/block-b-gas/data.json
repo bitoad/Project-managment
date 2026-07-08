@@ -663,7 +663,7 @@
       "portId": "PORT 2",
       "itemCode": "A003",
       "owner": "Trương Thế Đại",
-      "status": "todo",
+      "status": "inprogress",
       "progress": 0,
       "priority": "high",
       "startDate": "2026-05-11",

@@ -5,7 +5,10 @@ import {
   Card,
   Col,
   Empty,
+  Form,
   Input,
+  InputNumber,
+  Modal,
   Progress,
   Row,
   Select,
@@ -24,6 +27,7 @@ import {
   DollarOutlined,
   DownOutlined,
   FileDoneOutlined,
+  PlusOutlined,
   ProfileOutlined,
   SearchOutlined,
   ShopOutlined,
@@ -31,7 +35,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { costLogsApi, itemsApi, portsApi, supplierPortsApi, suppliersApi, tasksApi } from '../api/api.js';
-import { fmtDate, fmtShort, fmtVND, PORT_COLORS, statusColor, costOf } from '../components/helpers.js';
+import { fmtDate, fmtShort, fmtVND, PORT_COLORS, statusColor, costOf, STATUS_LIST } from '../components/helpers.js';
 
 const { Title, Text } = Typography;
 
@@ -147,6 +151,8 @@ export default function Ports() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState();
   const [supplierFilter, setSupplierFilter] = useState();
+  const [addOpen, setAddOpen] = useState(false);
+  const [addForm] = Form.useForm();
 
   const load = async () => {
     try {
@@ -175,6 +181,25 @@ export default function Ports() {
   useEffect(() => {
     load();
   }, []);
+
+  const openAdd = () => {
+    addForm.resetFields();
+    addForm.setFieldsValue({ id: 'PORT ' + (ports.length + 1), status: 'Engineering', progress: 0 });
+    setAddOpen(true);
+  };
+
+  const onSubmitAdd = async () => {
+    try {
+      const v = await addForm.validateFields();
+      const created = await portsApi.create(v);
+      setPorts((prev) => [...prev, created]);
+      message.success('Đã thêm Port');
+      setAddOpen(false);
+    } catch (e) {
+      if (e?.errorFields) return;
+      message.error('Lỗi khi lưu');
+    }
+  };
 
   const suppliersById = useMemo(() => new Map(suppliers.map((supplier) => [supplier.id, supplier])), [suppliers]);
 
@@ -323,6 +348,9 @@ export default function Ports() {
             />
             <Button icon={<ClearOutlined />} onClick={clearFilters}>
               Xóa bộ lọc
+            </Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>
+              Thêm Port
             </Button>
           </Space>
           <Text type="secondary">
@@ -500,6 +528,36 @@ export default function Ports() {
           ]}
         />
       </Card>
+
+      <Modal
+        title="Thêm Port"
+        open={addOpen}
+        onOk={onSubmitAdd}
+        onCancel={() => setAddOpen(false)}
+        okText="Thêm"
+        cancelText="Hủy"
+      >
+        <Form form={addForm} layout="vertical">
+          <Form.Item name="id" label="Mã Port" rules={[{ required: true, message: 'Vui lòng nhập mã' }]}>
+            <Input placeholder="vd: PORT 1" />
+          </Form.Item>
+          <Form.Item name="name" label="Tên Port" rules={[{ required: true, message: 'Vui lòng nhập tên' }]}>
+            <Input placeholder="vd: Topside Module" />
+          </Form.Item>
+          <Form.Item name="description" label="Mô tả">
+            <Input.TextArea rows={2} />
+          </Form.Item>
+          <Form.Item name="status" label="Trạng thái">
+            <Select options={STATUS_LIST.map((s) => ({ value: s, label: s }))} />
+          </Form.Item>
+          <Form.Item name="progress" label="Tiến độ (%)">
+            <InputNumber min={0} max={100} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="contractValue" label="Giá trị hợp đồng">
+            <InputNumber min={0} style={{ width: '100%' }} formatter={(value) => `${value || ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }

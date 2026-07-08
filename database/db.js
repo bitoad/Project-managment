@@ -68,8 +68,8 @@ export function createProject(name, description) {
   seed.meta.projectName = name;
   seed.meta.createdAt = new Date().toISOString();
 
-  // Reset data trống nhưng giữ cấu trúc
-  seed.ports = seed.ports.map(p => ({ ...p, progress: 0, contractValue: 0, paymentReceived: 0, budget: 0, actual: 0, status: 'Engineering', plannedProgress: 0 }));
+  // Reset data trống nhưng giữ cấu trúc. Dự án mới bắt đầu không có Port (người dùng tự thêm)
+  seed.ports = [];
   seed.items = [];
   seed.suppliers = [];
   seed.supplierPorts = [];
@@ -167,6 +167,27 @@ export function getSettings(projectId) {
 // ============ PORTS ============
 export function getPorts(projectId) {
   return ensureDb(projectId).ports;
+}
+
+export function addPort(projectId, port) {
+  const db = ensureDb(projectId);
+  const id = port.id || ('PORT ' + (db.ports.length + 1));
+  const newPort = {
+    id,
+    name: port.name || id,
+    description: port.description || '',
+    status: port.status || 'Engineering',
+    progress: port.progress || 0,
+    contractValue: port.contractValue || 0,
+    paymentReceived: port.paymentReceived || 0,
+    budget: port.budget || 0,
+    actual: port.actual || 0,
+    plannedProgress: port.plannedProgress || 0,
+    createdAt: new Date().toISOString(),
+  };
+  db.ports.push(newPort);
+  save(projectId, db);
+  return newPort;
 }
 
 export function getPortById(projectId, id) {
