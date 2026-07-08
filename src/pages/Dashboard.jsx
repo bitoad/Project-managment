@@ -34,6 +34,27 @@ const PORT_COLORS = {
   'PORT 4': '#eb2f96', 'PORT 5': '#722ed1', 'PORT 6': '#13c2c2', 'PORT 7': '#fa8c16',
 };
 
+const KpiCard = ({ icon, iconBg, title, value, valueStyle, formatter, suffix, footer, progress }) => (
+  <Card className="stat-card stat-card-accent" bordered={false}>
+    <div className="kpi-card-body">
+      <div className="kpi-icon" style={{ background: iconBg }}>{icon}</div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <Statistic
+          title={title}
+          value={value}
+          formatter={formatter}
+          suffix={suffix}
+          valueStyle={valueStyle}
+        />
+        {progress != null && (
+          <Progress percent={progress} showInfo={false} size="small" strokeColor={valueStyle?.color || '#1677ff'} style={{ marginTop: 6 }} />
+        )}
+        {footer && <div className="stat-label">{footer}</div>}
+      </div>
+    </div>
+  </Card>
+);
+
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [items, setItems] = useState([]);
@@ -162,52 +183,48 @@ const taskPieData = [
       {/* KPI CARDS */}
       <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
         <Col xs={12} md={6}>
-          <Card className="stat-card" bordered={false}>
-            <Statistic
-              title="Doanh thu hợp đồng"
-              value={filtered.totalRevenue}
-              formatter={(v) => fmtShort(v)}
-              prefix={<DollarOutlined style={{ color: '#1677ff' }} />}
-              valueStyle={{ color: '#1677ff' }}
-            />
-            <div className="stat-label">{filterPort === 'all' ? 'Tổng giá trị nhận thầu' : `Giá trị ${filterPort}`}</div>
-          </Card>
+          <KpiCard
+            icon={<DollarOutlined />}
+            iconBg="linear-gradient(135deg,#1677ff,#4096ff)"
+            title="Doanh thu hợp đồng"
+            value={filtered.totalRevenue}
+            formatter={(v) => fmtShort(v)}
+            valueStyle={{ color: '#1677ff' }}
+            footer={filterPort === 'all' ? 'Tổng giá trị nhận thầu' : `Giá trị ${filterPort}`}
+          />
         </Col>
         <Col xs={12} md={6}>
-          <Card className="stat-card" bordered={false}>
-            <Statistic
-              title="Lợi nhuận thực tế"
-              value={filtered.totalProfit}
-              formatter={(v) => fmtShort(v)}
-              prefix={filtered.totalProfit >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
-              valueStyle={{ color: profitColor }}
-              suffix={`(${filtered.totalProfitMargin}%)`}
-            />
-            <div className="stat-label">Biên lợi nhuận</div>
-          </Card>
+          <KpiCard
+            icon={filtered.totalProfit >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+            iconBg={filtered.totalProfit >= 0 ? 'linear-gradient(135deg,#52c41a,#73d13d)' : 'linear-gradient(135deg,#ff4d4f,#ff7875)'}
+            title="Lợi nhuận thực tế"
+            value={filtered.totalProfit}
+            formatter={(v) => fmtShort(v)}
+            valueStyle={{ color: profitColor }}
+            suffix={`(${filtered.totalProfitMargin}%)`}
+            footer="Biên lợi nhuận"
+          />
         </Col>
         <Col xs={12} md={6}>
-          <Card className="stat-card" bordered={false}>
-            <Statistic
-              title="Tiến độ trung bình"
-              value={filtered.avgProgress}
-              suffix="%"
-              prefix={<ExperimentOutlined style={{ color: '#722ed1' }} />}
-              valueStyle={{ color: '#722ed1' }}
-            />
-            <Progress percent={filtered.avgProgress} showInfo={false} strokeColor="#722ed1" size="small" style={{ marginTop: 6 }} />
-          </Card>
+          <KpiCard
+            icon={<ExperimentOutlined />}
+            iconBg="linear-gradient(135deg,#722ed1,#9254de)"
+            title="Tiến độ trung bình"
+            value={filtered.avgProgress}
+            formatter={(v) => `${v}%`}
+            valueStyle={{ color: '#722ed1' }}
+            progress={filtered.avgProgress}
+          />
         </Col>
         <Col xs={12} md={6}>
-          <Card className="stat-card" bordered={false}>
-            <Statistic
-              title="Rủi ro đang mở"
-              value={filtered.openRisks}
-              prefix={<WarningOutlined style={{ color: filtered.openRisks > 0 ? '#ff4d4f' : '#52c41a' }} />}
-              valueStyle={{ color: filtered.openRisks > 0 ? '#ff4d4f' : '#52c41a' }}
-            />
-            <div className="stat-label">{filtered.highRisks.length} rủi ro mức cao</div>
-          </Card>
+          <KpiCard
+            icon={<WarningOutlined />}
+            iconBg={filtered.openRisks > 0 ? 'linear-gradient(135deg,#ff4d4f,#ff7875)' : 'linear-gradient(135deg,#52c41a,#73d13d)'}
+            title="Rủi ro đang mở"
+            value={filtered.openRisks}
+            valueStyle={{ color: filtered.openRisks > 0 ? '#ff4d4f' : '#52c41a' }}
+            footer={`${filtered.highRisks.length} rủi ro mức cao`}
+          />
         </Col>
       </Row>
 
@@ -239,15 +256,19 @@ const taskPieData = [
         <Col xs={24} lg={16}>
           <Card title="Tiến độ & Chi phí theo Hạng mục" bordered={false} className="chart-container">
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={progressChartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" />
-                <RTooltip formatter={(v, n) => (n.includes('Chi phí') ? fmtShort(v * 1e6) : v + '%')} />
-                <Legend />
-                <Bar yAxisId="left" dataKey="Tiến độ %" fill="#1677ff" radius={[4, 4, 0, 0]} />
-                <Bar yAxisId="right" dataKey="Chi phí (Tr)" fill="#faad14" radius={[4, 4, 0, 0]} />
+              <BarChart data={progressChartData} barGap={6}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#595959' }} axisLine={{ stroke: '#e8e8e8' }} tickLine={false} />
+                <YAxis yAxisId="left" tick={{ fontSize: 12, fill: '#595959' }} axisLine={false} tickLine={false} />
+                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12, fill: '#595959' }} axisLine={false} tickLine={false} />
+                <RTooltip
+                  cursor={{ fill: 'rgba(22,119,255,0.06)' }}
+                  formatter={(v, n) => (n.includes('Chi phí') ? fmtShort(v * 1e6) + ' ₫' : v + '%')}
+                  contentStyle={{ borderRadius: 10, border: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.12)' }}
+                />
+                <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+                <Bar yAxisId="left" dataKey="Tiến độ %" fill="#1677ff" radius={[6, 6, 0, 0]} maxBarSize={36} />
+                <Bar yAxisId="right" dataKey="Chi phí (Tr)" fill="#faad14" radius={[6, 6, 0, 0]} maxBarSize={36} />
               </BarChart>
             </ResponsiveContainer>
           </Card>
@@ -256,11 +277,11 @@ const taskPieData = [
           <Card title="Trạng thái công việc" bordered={false} className="chart-container">
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
-                <Pie data={taskPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
+                <Pie data={taskPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={95} paddingAngle={3} label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}>
                   {taskPieData.map((entry, i) => (<Cell key={i} fill={entry.color} />))}
                 </Pie>
-                <RTooltip />
-                <Legend />
+                <RTooltip contentStyle={{ borderRadius: 10, border: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.12)' }} />
+                <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
               </PieChart>
             </ResponsiveContainer>
           </Card>

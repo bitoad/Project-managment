@@ -140,9 +140,11 @@ export default function AppLayout() {
         collapsible
         collapsed={collapsed}
         width={248}
+        className="app-sider"
         style={{ overflow: 'auto', height: '100vh', position: 'sticky', top: 0, left: 0 }}
       >
         <div
+          className="app-logo"
           style={{
             height: 64,
             display: 'flex',
@@ -177,6 +179,7 @@ export default function AppLayout() {
 
       <Layout>
         <Header
+          className="app-header"
           style={{
             padding: '0 24px',
             display: 'flex',

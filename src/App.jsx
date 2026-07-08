@@ -1,4 +1,5 @@
 import React from 'react';
+import { ConfigProvider, theme as antdTheme } from 'antd';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import AppLayout from './layout/AppLayout.jsx';
 import Login from './pages/Login.jsx';
@@ -32,29 +33,47 @@ function ProtectedLayout() {
 }
 
 export default function App() {
+  const themeConfig = {
+    token: {
+      colorPrimary: '#1677ff',
+      borderRadius: 10,
+      fontFamily: "'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif",
+      colorBgLayout: '#f0f2f5',
+      boxShadowSecondary: '0 4px 16px rgba(0, 0, 0, 0.06)',
+    },
+    components: {
+      Card: { borderRadiusLG: 14 },
+      Statistic: { titleFontSize: 13 },
+      Table: { headerBg: '#fafafa', headerColor: '#595959', rowHoverBg: '#f5f8ff' },
+      Menu: { itemBorderRadius: 8, itemMarginInline: 8 },
+    },
+  };
+
   return (
-    <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/login" element={<Login />} />
-      <Route element={<ProtectedLayout />}>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/projects" element={<Projects />} />
-        <Route path="/ports" element={<Ports />} />
-        <Route path="/items" element={<Items />} />
-        <Route path="/data-entry" element={<DataEntry />} />
-        <Route path="/suppliers" element={<Suppliers />} />
-        <Route path="/kanban" element={<Kanban />} />
-        <Route path="/my-tasks" element={<MyTasks />} />
-        <Route path="/timeline" element={<Timeline />} />
-        <Route path="/risks" element={<RiskMatrix />} />
-        <Route path="/cost-log" element={<CostLog />} />
-        <Route path="/quotations" element={<Quotations />} />
-        <Route path="/s-curve" element={<SCurve />} />
-        <Route path="/documents" element={<Documents />} />
-        <Route path="/team" element={<Team />} />
-        <Route path="/reports" element={<Reports />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <ConfigProvider theme={themeConfig}>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route element={<ProtectedLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/ports" element={<Ports />} />
+          <Route path="/items" element={<Items />} />
+          <Route path="/data-entry" element={<DataEntry />} />
+          <Route path="/suppliers" element={<Suppliers />} />
+          <Route path="/kanban" element={<Kanban />} />
+          <Route path="/my-tasks" element={<MyTasks />} />
+          <Route path="/timeline" element={<Timeline />} />
+          <Route path="/risks" element={<RiskMatrix />} />
+          <Route path="/cost-log" element={<CostLog />} />
+          <Route path="/quotations" element={<Quotations />} />
+          <Route path="/s-curve" element={<SCurve />} />
+          <Route path="/documents" element={<Documents />} />
+          <Route path="/team" element={<Team />} />
+          <Route path="/reports" element={<Reports />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </ConfigProvider>
   );
 }
