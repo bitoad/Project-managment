@@ -548,8 +548,9 @@ export default function RiskMatrix() {
               title: 'Mã',
               dataIndex: 'id',
               key: 'id',
-              width: 82,
+              width: 92,
               fixed: 'left',
+              ellipsis: true,
               render: (id) => <Text strong>{id}</Text>,
             },
             {
@@ -558,12 +559,15 @@ export default function RiskMatrix() {
               key: 'title',
               width: 280,
               fixed: 'left',
+              ellipsis: true,
               render: (title, record) => (
-                <div>
-                  <Button type="link" style={{ padding: 0, height: 'auto', fontWeight: 600 }} onClick={() => setDrawerRisk(record)}>
-                    {title}
-                  </Button>
-                  <div>
+                <div style={{ maxWidth: 260, overflow: 'hidden' }}>
+                  <Tooltip title={title}>
+                    <Button type="link" style={{ padding: 0, height: 'auto', fontWeight: 600, maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block' }} onClick={() => setDrawerRisk(record)}>
+                      {title}
+                    </Button>
+                  </Tooltip>
+                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260 }}>
                     <Text type="secondary" style={{ fontSize: 12 }}>
                       {record.cause ? `Nguyên nhân: ${record.cause}` : 'Chưa nhập nguyên nhân'}
                     </Text>
