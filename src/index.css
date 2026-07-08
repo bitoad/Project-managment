@@ -169,6 +169,42 @@ body {
   filter: brightness(1.08);
 }
 
+/* Guide banner for risk matrix */
+.risk-guide {
+  margin-top: 16px;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  background: #eef3ff;
+  border: 1px solid #d6e2ff;
+}
+.risk-guide-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #2F5CE0;
+  margin-bottom: 8px;
+}
+.risk-guide-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #42526e;
+}
+.risk-gradient-bar {
+  flex: 1 1 180px;
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #52c41a 0%, #faad14 38%, #fa8c16 64%, #ff4d4f 100%);
+  min-width: 140px;
+}
+.risk-gradient-legend {
+  display: flex;
+  gap: 14px;
+  font-size: 11px;
+  color: #8c8c8c;
+}
+
 /* ============ CHARTS ============ */
 .chart-container {
   background: var(--color-surface);

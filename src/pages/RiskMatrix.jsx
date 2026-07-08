@@ -34,6 +34,7 @@ import {
   EditOutlined,
   ExclamationCircleOutlined,
   FilterOutlined,
+  InfoCircleOutlined,
   PlusOutlined,
   ReloadOutlined,
   SafetyCertificateOutlined,
@@ -366,6 +367,18 @@ export default function RiskMatrix() {
           </Card>
         </Col>
       </Row>
+
+      <div className="risk-guide">
+        <div className="risk-guide-title">
+          <InfoCircleOutlined /> Cách đọc Ma trận rủi ro 5 × 5
+        </div>
+        <div className="risk-guide-body">
+          <span>Mỗi ô thể hiện <b>số rủi ro</b> có <b>Xác suất (P)</b> × <b>Tác động (I)</b> tương ứng. Tích số càng lớn → mức độ càng <b>nghiêm trọng</b> (màu càng đỏ).</span>
+          <span className="risk-gradient-bar" aria-hidden />
+          <span className="risk-gradient-legend"><i>Thấp</i><i>Trung bình</i><i>Cao</i><i>Nghiêm trọng</i></span>
+          <span>👉 Ô góc <b>trên-bên-phải (đỏ)</b> = rủi ro cần xử lý đầu tiên. Nhấn vào ô để lọc danh sách bên dưới.</span>
+        </div>
+      </div>
 
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} xl={14}>
