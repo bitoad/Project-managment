@@ -153,7 +153,7 @@ export default function CostLog({ initialPortFilter = null }) {
 
   return (
     <div className="page-container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+      <div className="page-header">
         <div>
           <Title level={3} style={{ marginBottom: 4 }}><DollarOutlined /> Cost Log</Title>
           <Text type="secondary">Theo dõi chi phí thực tế: nhập vật tư, gia công/sản xuất, vận chuyển và chi phí phát sinh.</Text>
@@ -171,7 +171,7 @@ export default function CostLog({ initialPortFilter = null }) {
             style={{ width: 190 }}
             options={[{ value: 'all', label: 'Tất cả loại chi phí' }, ...Object.entries(COST_GROUP_LABELS).map(([value, label]) => ({ value, label }))]}
           />
-          <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>Thêm chi phí</Button>
+          <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd}>Thêm chi phí</Button>
         </Space>
       </div>
 

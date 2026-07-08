@@ -385,6 +385,39 @@ body {
   margin-top: 2px;
 }
 
+/* ============ PAGE HEADER ============ */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+/* ============ MODAL ============ */
+.ant-modal-content {
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+.ant-modal-header {
+  border-bottom: 1px solid #f0f0f0 !important;
+}
+.ant-modal-footer .ant-btn-primary {
+  box-shadow: 0 4px 14px rgba(22, 119, 255, 0.35);
+}
+
+/* ============ TAG POLISH ============ */
+.ant-tag {
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* ============ TABLE ROW INTERACTION ============ */
+.ant-table-tbody > tr.ant-table-row {
+  transition: background 0.15s;
+}
+
 /* Print styles for PDF export */
 @media print {
   .no-print { display: none !important; }

@@ -128,7 +128,7 @@ export default function Items({ initialPortFilter = null }) {
 
   return (
     <div className="page-container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+      <div className="page-header">
         <div>
           <Title level={3} style={{ marginBottom: 4 }}><ProfileOutlined /> Item Master</Title>
           <Text type="secondary">Danh mục hạng mục công việc, khối lượng, giá vốn và giá bán theo từng Port.</Text>
@@ -140,7 +140,7 @@ export default function Items({ initialPortFilter = null }) {
             style={{ width: 160 }}
             options={[{ value: 'all', label: 'Tất cả Port' }, ...portOptions]}
           />
-          <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>Thêm Item</Button>
+          <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd}>Thêm Item</Button>
         </Space>
       </div>
 

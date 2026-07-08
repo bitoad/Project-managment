@@ -276,12 +276,16 @@ export default function Ports() {
 
   return (
     <div className="page-container">
-      <Title level={3} style={{ marginBottom: 4 }}>
-        <AppstoreOutlined /> Quản lý Hạng mục (Ports)
-      </Title>
-      <Text type="secondary">
-        {stats.total} hạng mục - Hợp đồng Golden Point x PTSC M&C (via Hà Quang)
-      </Text>
+      <div className="page-header">
+        <div>
+          <Title level={3} style={{ marginBottom: 4 }}>
+            <AppstoreOutlined /> Quản lý Hạng mục (Ports)
+          </Title>
+          <Text type="secondary">
+            {stats.total} hạng mục - Hợp đồng Golden Point x PTSC M&C (via Hà Quang)
+          </Text>
+        </div>
+      </div>
 
       <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
         <Col xs={24} sm={12} lg={6}>
@@ -349,7 +353,7 @@ export default function Ports() {
             <Button icon={<ClearOutlined />} onClick={clearFilters}>
               Xóa bộ lọc
             </Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>
+            <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd}>
               Thêm Port
             </Button>
           </Space>

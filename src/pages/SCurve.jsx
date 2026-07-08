@@ -5,7 +5,7 @@ import {
 } from '@ant-design/icons';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, Legend,
-  ResponsiveContainer, ReferenceLine,
+  ResponsiveContainer, ReferenceLine, Area, ComposedChart,
 } from 'recharts';
 import { sCurveApi } from '../api/api.js';
 
@@ -74,19 +74,31 @@ export default function SCurve() {
         </Col>
       </Row>
 
-      <Card title="Đường cong tiến độ S-Curve" style={{ marginTop: 16 }}>
+      <Card title="Đường cong tiến độ S-Curve" className="chart-container" style={{ marginTop: 16 }}>
         <ResponsiveContainer width="100%" height={380}>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="week" />
-            <YAxis label={{ value: 'Tiến độ (%)', angle: -90, position: 'insideLeft' }} />
-            <RTooltip formatter={(v) => v + '%'} />
-            <Legend />
-            <ReferenceLine y={50} stroke="#d9d9d9" strokeDasharray="5 5" label="50%" />
+          <ComposedChart data={data}>
+            <defs>
+              <linearGradient id="gradPlan" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#fa8c16" stopOpacity={0.25} />
+                <stop offset="100%" stopColor="#fa8c16" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="gradActual" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#1677ff" stopOpacity={0.25} />
+                <stop offset="100%" stopColor="#1677ff" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+            <XAxis dataKey="week" tick={{ fontSize: 12, fill: '#595959' }} axisLine={{ stroke: '#e8e8e8' }} tickLine={false} />
+            <YAxis tick={{ fontSize: 12, fill: '#595959' }} axisLine={false} tickLine={false} label={{ value: 'Tiến độ (%)', angle: -90, position: 'insideLeft', fill: '#8c8c8c' }} />
+            <RTooltip formatter={(v) => v + '%'} contentStyle={{ borderRadius: 10, border: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.12)' }} />
+            <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+            <ReferenceLine y={50} stroke="#bfbfbf" strokeDasharray="5 5" label={{ value: '50%', fill: '#8c8c8c', fontSize: 11, position: 'insideTopRight' }} />
+            <Area type="monotone" dataKey="cumPlan" name="Cum. Planned (PV)" stroke="none" fill="url(#gradPlan)" strokeWidth={0} />
+            <Area type="monotone" dataKey="cumActual" name="Cum. Actual (EV)" stroke="none" fill="url(#gradActual)" strokeWidth={0} />
             <Line type="monotone" dataKey="planned" name="Kế hoạch (tuần)" stroke="#faad14" strokeWidth={2} dot={{ r: 3 }} />
             <Line type="monotone" dataKey="cumPlan" name="Cum. Planned (PV)" stroke="#fa8c16" strokeWidth={3} dot={{ r: 4 }} />
             <Line type="monotone" dataKey="cumActual" name="Cum. Actual (EV)" stroke="#1677ff" strokeWidth={3} dot={{ r: 4 }} />
-          </LineChart>
+          </ComposedChart>
         </ResponsiveContainer>
       </Card>
 

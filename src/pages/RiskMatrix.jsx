@@ -322,7 +322,7 @@ export default function RiskMatrix() {
 
   return (
     <div className="page-container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+      <div className="page-header">
         <div>
           <Title level={3} style={{ marginBottom: 4 }}>
             <WarningOutlined /> Ma trận rủi ro dự án
@@ -335,7 +335,7 @@ export default function RiskMatrix() {
           <Button icon={<ReloadOutlined />} onClick={load} loading={loading}>
             Tải lại
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>
+          <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd}>
             Thêm rủi ro
           </Button>
         </Space>
