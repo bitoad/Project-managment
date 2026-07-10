@@ -83,6 +83,27 @@ export default function Timeline() {
     return arr;
   }, [minDate, totalDays]);
 
+  // Gom ngày thành các tuần (bắt đầu Thứ 2)
+  const weeks = useMemo(() => {
+    const arr = [];
+    let current = null;
+    days.forEach((d, i) => {
+      const isWeekStart = d.getDay() === 1; // Monday
+      if (i === 0 || isWeekStart) {
+        if (current) arr.push(current);
+        current = {
+          startIdx: i,
+          endIdx: i,
+          label: `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`,
+        };
+      } else {
+        current.endIdx = i;
+      }
+    });
+    if (current) arr.push(current);
+    return arr;
+  }, [days]);
+
   // Tính offset (px) từ ngày bắt đầu timeline
   const dayOffset = (dateStr) => {
     const diff = Math.floor((new Date(dateStr) - minDate) / 86400000);
@@ -147,37 +168,64 @@ export default function Timeline() {
       ) : (
         <Card styles={{ body: { padding: 0 } }}>
           <div style={{ overflowX: 'auto' }}>
-            <div style={{ minWidth: sidebarWidth + timelineWidth + 20 }}>
-              {/* Header: tháng/ngày */}
-              <div style={{ display: 'flex', position: 'sticky', top: 0, zIndex: 5, background: '#fff', borderBottom: '2px solid #f0f0f0' }}>
-                <div style={{ width: sidebarWidth, padding: '10px 12px', borderRight: '1px solid #f0f0f0', fontWeight: 600, background: '#fafafa' }}>
-                  Công việc
-                </div>
-                <div style={{ display: 'flex', position: 'relative' }}>
-                  {days.map((d, i) => {
-                    const isFirstOfMonth = d.getDate() === 1;
-                    return (
+            <div style={{ minWidth: sidebarWidth + timelineWidth + 20, position: 'relative' }}>
+              {/* Header: tuần / ngày */}
+              <div style={{ display: 'flex', position: 'sticky', top: 0, zIndex: 6, background: '#fff', flexDirection: 'column', borderBottom: '2px solid #f0f0f0' }}>
+                {/* Hàng tuần */}
+                <div style={{ display: 'flex', borderBottom: '1px solid #e8e8e8' }}>
+                  <div style={{ width: sidebarWidth, padding: '8px 12px', fontWeight: 700, background: '#fafafa', borderRight: '1px solid #f0f0f0' }}>
+                    Tuần
+                  </div>
+                  <div style={{ display: 'flex' }}>
+                    {weeks.map((w, wi) => (
                       <div
-                        key={i}
+                        key={wi}
                         style={{
-                          width: DAY_WIDTH,
-                          padding: '4px 0',
+                          width: (w.endIdx - w.startIdx + 1) * DAY_WIDTH,
                           textAlign: 'center',
-                          borderRight: '1px solid #f5f5f5',
-                          fontSize: 10,
-                          color: d.getDay() === 0 || d.getDay() === 6 ? '#ff4d4f' : '#666',
-                          background: d.getDay() === 0 || d.getDay() === 6 ? '#fafafa' : 'transparent',
+                          padding: '6px 0',
+                          borderRight: '1px solid #e8e8e8',
+                          fontSize: 11,
+                          fontWeight: 600,
+                          color: '#333',
                         }}
                       >
-                        {isFirstOfMonth && (
-                          <div style={{ fontWeight: 700, color: '#1677ff', fontSize: 11 }}>
-                            Th{d.getMonth() + 1}
-                          </div>
-                        )}
-                        {d.getDate()}
+                        {w.label}
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
+                </div>
+                {/* Hàng ngày */}
+                <div style={{ display: 'flex' }}>
+                  <div style={{ width: sidebarWidth, padding: '10px 12px', borderRight: '1px solid #f0f0f0', fontWeight: 600, background: '#fafafa' }}>
+                    Công việc
+                  </div>
+                  <div style={{ display: 'flex', position: 'relative' }}>
+                    {days.map((d, i) => {
+                      const isFirstOfMonth = d.getDate() === 1;
+                      return (
+                        <div
+                          key={i}
+                          style={{
+                            width: DAY_WIDTH,
+                            padding: '4px 0',
+                            textAlign: 'center',
+                            borderRight: '1px solid #f5f5f5',
+                            fontSize: 10,
+                            color: d.getDay() === 0 || d.getDay() === 6 ? '#ff4d4f' : '#666',
+                            background: d.getDay() === 0 || d.getDay() === 6 ? '#fafafa' : 'transparent',
+                          }}
+                        >
+                          {isFirstOfMonth && (
+                            <div style={{ fontWeight: 700, color: '#1677ff', fontSize: 11 }}>
+                              Th{d.getMonth() + 1}
+                            </div>
+                          )}
+                          {d.getDate()}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
@@ -255,6 +303,22 @@ export default function Timeline() {
                     );
                   })}
                 </div>
+              ))}
+
+              {/* Đường phân cách tuần */}
+              {weeks.map((w, wi) => (
+                <div
+                  key={`wk-${wi}`}
+                  style={{
+                    position: 'absolute',
+                    left: sidebarWidth + w.startIdx * DAY_WIDTH,
+                    top: 0,
+                    bottom: 0,
+                    width: 1,
+                    background: '#e8e8e8',
+                    pointerEvents: 'none',
+                  }}
+                />
               ))}
 
               {/* Today line */}
