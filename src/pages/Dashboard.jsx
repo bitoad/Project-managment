@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Row, Col, Card, Statistic, Progress, Table, Tag, Spin, message, Typography, Button, Select, Space,
+  Row, Col, Card, Statistic, Progress, Table, Tag, Spin, message, Typography, Button, Select, Space, Calendar, Badge, Tooltip,
 } from 'antd';
 import {
   ArrowUpOutlined, ArrowDownOutlined, DollarOutlined, CheckCircleOutlined,
@@ -12,7 +12,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
-import { dashboardApi, itemsApi, costLogsApi } from '../api/api.js';
+import { dashboardApi, itemsApi, costLogsApi, tasksApi } from '../api/api.js';
 import { useUser } from '../context/UserContext.jsx';
 import { costOf } from '../components/helpers.js';
 
@@ -77,6 +77,7 @@ export default function Dashboard() {
   const [data, setData] = useState(null);
   const [items, setItems] = useState([]);
   const [costLogs, setCostLogs] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterPort, setFilterPort] = useState('all');
   const navigate = useNavigate();
@@ -85,10 +86,11 @@ export default function Dashboard() {
   const load = async () => {
     try {
       setLoading(true);
-      const [d, i, c] = await Promise.all([dashboardApi.get(), itemsApi.getAll(), costLogsApi.getAll()]);
+      const [d, i, c, t] = await Promise.all([dashboardApi.get(), itemsApi.getAll(), costLogsApi.getAll(), tasksApi.getAll()]);
       setData(d);
       setItems(i);
       setCostLogs(c);
+      setTasks(t);
     } catch (e) {
       message.error('Không tải được dữ liệu dashboard');
     } finally {
@@ -174,6 +176,67 @@ const taskPieData = [
 ].filter((t) => t.value > 0);
 
   const profitColor = filtered.totalProfit >= 0 ? '#52c41a' : '#ff4d4f';
+
+  const TASK_STATUS = {
+    todo: { label: 'Cần làm', color: '#8c8c8c' },
+    inprogress: { label: 'Đang làm', color: '#1677ff' },
+    review: { label: 'Kiểm tra', color: '#faad14' },
+    done: { label: 'Hoàn thành', color: '#52c41a' },
+  };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const toKey = (d) => {
+    const x = new Date(d);
+    return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+  };
+
+  const tasksByDate = useMemo(() => {
+    const map = {};
+    (tasks || []).forEach((t) => {
+      if (!t.endDate) return;
+      const key = toKey(t.endDate);
+      (map[key] = map[key] || []).push(t);
+    });
+    return map;
+  }, [tasks]);
+
+  const upcomingDeadlines = useMemo(() => {
+    return (tasks || [])
+      .filter((t) => t.status !== 'done' && t.endDate)
+      .map((t) => {
+        const d = new Date(t.endDate);
+        d.setHours(0, 0, 0, 0);
+        const days = Math.round((d - today) / 86400000);
+        return { ...t, days };
+      })
+      .sort((a, b) => a.days - b.days)
+      .slice(0, 8);
+  }, [tasks]);
+
+  const calendarCellRender = (current) => {
+    const key = toKey(current);
+    const dayTasks = tasksByDate[key];
+    if (!dayTasks || dayTasks.length === 0) return null;
+    return (
+      <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+        {dayTasks.slice(0, 3).map((t) => {
+          const overdue = t.status !== 'done' && new Date(t.endDate) < today;
+          const color = overdue ? '#ff4d4f' : TASK_STATUS[t.status]?.color || '#1677ff';
+          return (
+            <li key={t.id} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11, lineHeight: '16px' }}>
+              <Tooltip title={`${t.title} — ${TASK_STATUS[t.status]?.label || t.status}`}>
+                <Badge status={overdue ? 'error' : 'default'} color={color} />
+                <span>{t.title}</span>
+              </Tooltip>
+            </li>
+          );
+        })}
+        {dayTasks.length > 3 && <li style={{ fontSize: 11, color: '#8c8c8c' }}>+{dayTasks.length - 3} khác</li>}
+      </ul>
+    );
+  };
 
   return (
     <div className="page-container">
@@ -318,6 +381,39 @@ const taskPieData = [
                 <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
               </PieChart>
             </ResponsiveContainer>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* DEADLINE CALENDAR + UPCOMING */}
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        <Col xs={24} lg={14}>
+          <Card title="Lịch báo cáo tiến độ (Deadline task)" bordered={false}>
+            <Calendar fullscreen={false} cellRender={(current, info) => (info.type === 'date' ? calendarCellRender(current) : info.originNode)} />
+          </Card>
+        </Col>
+        <Col xs={24} lg={10}>
+          <Card title="Deadline sắp tới" bordered={false}>
+            {upcomingDeadlines.length === 0 ? (
+              <Text type="secondary">Không có task đến hạn</Text>
+            ) : (
+              upcomingDeadlines.map((t) => {
+                const overdue = t.days < 0;
+                const color = overdue ? '#ff4d4f' : TASK_STATUS[t.status]?.color || '#1677ff';
+                return (
+                  <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #f5f5f5' }}>
+                    <Badge status={overdue ? 'error' : 'default'} color={color} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
+                      <Text type="secondary" style={{ fontSize: 12 }}>{TASK_STATUS[t.status]?.label || t.status} · {t.owner || 'Chưa gán'}</Text>
+                    </div>
+                    <Tag color={overdue ? 'error' : 'default'} style={{ marginRight: 0 }}>
+                      {overdue ? `Quá hạn ${Math.abs(t.days)} ngày` : t.days === 0 ? 'Hôm nay' : `Còn ${t.days} ngày`}
+                    </Tag>
+                  </div>
+                );
+              })
+            )}
           </Card>
         </Col>
       </Row>
