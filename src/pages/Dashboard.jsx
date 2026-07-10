@@ -389,7 +389,7 @@ const taskPieData = [
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} lg={14}>
           <Card title="Lịch báo cáo tiến độ (Deadline task)" bordered={false}>
-            <Calendar fullscreen={false} cellRender={(current, info) => (info.type === 'date' ? calendarCellRender(current) : info.originNode)} />
+            <Calendar cellRender={(current, info) => (info.type === 'date' ? calendarCellRender(current) : info.originNode)} />
           </Card>
         </Col>
         <Col xs={24} lg={10}>
