@@ -1,25 +1,32 @@
-import React from 'react';
-import { ConfigProvider, theme as antdTheme } from 'antd';
+import React, { Suspense, lazy } from 'react';
+import { ConfigProvider, Spin } from 'antd';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import AppLayout from './layout/AppLayout.jsx';
 import Login from './pages/Login.jsx';
-import Dashboard from './pages/Dashboard.jsx';
-import Ports from './pages/Ports.jsx';
-import Suppliers from './pages/Suppliers.jsx';
-import Kanban from './pages/Kanban.jsx';
-import RiskMatrix from './pages/RiskMatrix.jsx';
-import Documents from './pages/Documents.jsx';
-import Team from './pages/Team.jsx';
-import Items from './pages/Items.jsx';
-import CostLog from './pages/CostLog.jsx';
-import Quotations from './pages/Quotations.jsx';
-import SCurve from './pages/SCurve.jsx';
-import Reports from './pages/Reports.jsx';
-import Projects from './pages/Projects.jsx';
-import Timeline from './pages/Timeline.jsx';
-import MyTasks from './pages/MyTasks.jsx';
-import DataEntry from './pages/DataEntry.jsx';
 import { useUser } from './context/UserContext.jsx';
+
+const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
+const Ports = lazy(() => import('./pages/Ports.jsx'));
+const Suppliers = lazy(() => import('./pages/Suppliers.jsx'));
+const Kanban = lazy(() => import('./pages/Kanban.jsx'));
+const RiskMatrix = lazy(() => import('./pages/RiskMatrix.jsx'));
+const Documents = lazy(() => import('./pages/Documents.jsx'));
+const Team = lazy(() => import('./pages/Team.jsx'));
+const Items = lazy(() => import('./pages/Items.jsx'));
+const CostLog = lazy(() => import('./pages/CostLog.jsx'));
+const Quotations = lazy(() => import('./pages/Quotations.jsx'));
+const SCurve = lazy(() => import('./pages/SCurve.jsx'));
+const Reports = lazy(() => import('./pages/Reports.jsx'));
+const Projects = lazy(() => import('./pages/Projects.jsx'));
+const Timeline = lazy(() => import('./pages/Timeline.jsx'));
+const MyTasks = lazy(() => import('./pages/MyTasks.jsx'));
+const DataEntry = lazy(() => import('./pages/DataEntry.jsx'));
+
+const PageLoader = (
+  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+    <Spin size="large" />
+  </div>
+);
 
 function ProtectedLayout() {
   const { isLoggedIn } = useUser();
@@ -51,29 +58,31 @@ export default function App() {
 
   return (
     <ConfigProvider theme={themeConfig}>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/login" element={<Login />} />
-        <Route element={<ProtectedLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/ports" element={<Ports />} />
-          <Route path="/items" element={<Items />} />
-          <Route path="/data-entry" element={<DataEntry />} />
-          <Route path="/suppliers" element={<Suppliers />} />
-          <Route path="/kanban" element={<Kanban />} />
-          <Route path="/my-tasks" element={<MyTasks />} />
-          <Route path="/timeline" element={<Timeline />} />
-          <Route path="/risks" element={<RiskMatrix />} />
-          <Route path="/cost-log" element={<CostLog />} />
-          <Route path="/quotations" element={<Quotations />} />
-          <Route path="/s-curve" element={<SCurve />} />
-          <Route path="/documents" element={<Documents />} />
-          <Route path="/team" element={<Team />} />
-          <Route path="/reports" element={<Reports />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <Suspense fallback={PageLoader}>
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
+          <Route element={<ProtectedLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/ports" element={<Ports />} />
+            <Route path="/items" element={<Items />} />
+            <Route path="/data-entry" element={<DataEntry />} />
+            <Route path="/suppliers" element={<Suppliers />} />
+            <Route path="/kanban" element={<Kanban />} />
+            <Route path="/my-tasks" element={<MyTasks />} />
+            <Route path="/timeline" element={<Timeline />} />
+            <Route path="/risks" element={<RiskMatrix />} />
+            <Route path="/cost-log" element={<CostLog />} />
+            <Route path="/quotations" element={<Quotations />} />
+            <Route path="/s-curve" element={<SCurve />} />
+            <Route path="/documents" element={<Documents />} />
+            <Route path="/team" element={<Team />} />
+            <Route path="/reports" element={<Reports />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </ConfigProvider>
   );
 }

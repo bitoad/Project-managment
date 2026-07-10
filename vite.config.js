@@ -25,7 +25,7 @@ export default defineConfig({
           react: ['react', 'react-dom', 'react-router-dom'],
           antd: ['antd', '@ant-design/icons'],
           charts: ['recharts'],
-          vendor: ['axios', 'dayjs', 'date-fns', 'sql.js', 'xlsx', 'jspdf', 'jspdf-autotable'],
+          vendor: ['axios', 'dayjs', 'date-fns'],
         },
       },
     },
