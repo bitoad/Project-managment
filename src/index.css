@@ -29,7 +29,13 @@ html, body, #root {
 
 body {
   font-family: var(--font);
-  background: var(--color-bg);
+  background-color: #eaf0fb;
+  background-image:
+    radial-gradient(circle at 12% 16%, rgba(47, 92, 224, 0.18), transparent 38%),
+    radial-gradient(circle at 88% 84%, rgba(139, 92, 246, 0.16), transparent 42%),
+    radial-gradient(circle at 60% 50%, rgba(95, 130, 240, 0.10), transparent 45%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Ccircle cx='2' cy='2' r='1.4' fill='%232F5CE0' fill-opacity='0.10'/%3E%3C/svg%3E");
+  background-attachment: fixed;
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
 }
@@ -99,17 +105,9 @@ body {
   padding: 24px;
 }
 
-/* Nền hiện đại cho trang Quản lý Dự án (pattern chấm + gradient mềm, không file ngoài) */
+/* Nền hiện đại (pattern chấm + gradient mềm) đã áp dụng xuyên suốt qua body */
 .projects-page {
   position: relative;
-  min-height: 100vh;
-  background-color: #eaf0fb;
-  background-image:
-    radial-gradient(circle at 12% 16%, rgba(47, 92, 224, 0.18), transparent 38%),
-    radial-gradient(circle at 88% 84%, rgba(139, 92, 246, 0.16), transparent 42%),
-    radial-gradient(circle at 60% 50%, rgba(95, 130, 240, 0.10), transparent 45%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Ccircle cx='2' cy='2' r='1.4' fill='%232F5CE0' fill-opacity='0.10'/%3E%3C/svg%3E");
-  background-attachment: fixed;
 }
 .page-title {
   font-size: 22px;
