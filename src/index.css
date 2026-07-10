@@ -41,6 +41,7 @@ body {
   overflow: hidden;
   box-shadow: var(--shadow-card);
   transition: transform 0.22s ease, box-shadow 0.22s ease;
+  height: 100%;
 }
 .stat-card:hover {
   transform: translateY(-4px);
@@ -87,6 +88,7 @@ body {
   display: flex;
   align-items: center;
   gap: 16px;
+  height: 100%;
 }
 .kpi-card-body .ant-statistic-title {
   margin-bottom: 2px;

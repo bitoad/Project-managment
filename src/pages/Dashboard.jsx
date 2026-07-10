@@ -208,7 +208,7 @@ const taskPieData = [
       </div>
 
       {/* KPI CARDS */}
-      <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
+      <Row gutter={[16, 16]} align="stretch" style={{ marginTop: 24 }}>
         <Col xs={12} md={6}>
           <KpiCard
             icon={<DollarOutlined />}
@@ -245,6 +245,7 @@ const taskPieData = [
             formatter={(v) => `${v}%`}
             valueStyle={{ color: '#722ed1' }}
             progress={filtered.avgProgress}
+            footer="Theo Items dự án"
           />
         </Col>
         <Col xs={12} md={6}>
