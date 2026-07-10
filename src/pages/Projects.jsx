@@ -128,7 +128,7 @@ export default function Projects() {
   };
 
   return (
-    <div className="page-container">
+    <div className="page-container projects-page">
       <input
         ref={fileInputRef}
         type="file"

@@ -98,6 +98,28 @@ body {
 .page-container {
   padding: 24px;
 }
+
+/* Nền hiện đại cho trang Quản lý Dự án (pattern chấm + gradient mềm, không file ngoài) */
+.projects-page {
+  position: relative;
+  z-index: 0;
+}
+.projects-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: #eaf0fb;
+  background-image:
+    radial-gradient(circle at 12% 16%, rgba(47, 92, 224, 0.18), transparent 38%),
+    radial-gradient(circle at 88% 84%, rgba(139, 92, 246, 0.16), transparent 42%),
+    radial-gradient(circle at 60% 50%, rgba(95, 130, 240, 0.10), transparent 45%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Ccircle cx='2' cy='2' r='1.4' fill='%232F5CE0' fill-opacity='0.10'/%3E%3C/svg%3E");
+  background-attachment: fixed;
+}
+.projects-page .ant-card {
+  backdrop-filter: blur(2px);
+}
 .page-title {
   font-size: 22px;
   font-weight: 700;
