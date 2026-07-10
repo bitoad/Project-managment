@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Layout, Menu, Avatar, Badge, Dropdown, Typography, Select, Modal, Input, Spin, Button, Tag } from 'antd';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Layout, Menu, Avatar, Badge, Dropdown, Typography, Select, Modal, Input, Spin, Button, Tag, Popover, List, Empty } from 'antd';
 import {
   DashboardOutlined,
   AppstoreOutlined,
@@ -26,9 +26,19 @@ import {
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext.jsx';
 import { useUser } from '../context/UserContext.jsx';
+import { tasksApi } from '../api/api.js';
 
 const { Sider, Header, Content } = Layout;
 const { Text } = Typography;
+
+function getDaysUntil(dateValue) {
+  if (!dateValue) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(dateValue);
+  target.setHours(0, 0, 0, 0);
+  return Math.round((target - today) / 86400000);
+}
 
 const menuItems = [
   {
@@ -93,6 +103,24 @@ export default function AppLayout() {
   const location = useLocation();
   const { projects, currentProject, currentProjectId, selectProject, createProject, loading } = useProject();
   const { currentUser, logout } = useUser();
+  const [tasks, setTasks] = useState([]);
+
+  useEffect(() => {
+    tasksApi.getAll().then(setTasks).catch(() => setTasks([]));
+  }, []);
+
+  const notifications = useMemo(() => {
+    return (tasks || [])
+      .filter((t) => t.status !== 'done' && t.endDate && t.owner === currentUser?.name)
+      .map((t) => {
+        const days = getDaysUntil(t.endDate);
+        const level = days < 0 ? 'error' : 'warning';
+        const text = days < 0 ? `Quá hạn ${Math.abs(days)} ngày` : `Còn ${days} ngày`;
+        return { id: t.id, name: t.title, level, text, days };
+      })
+      .sort((a, b) => a.days - b.days)
+      .slice(0, 5);
+  }, [tasks]);
 
   const userMenu = {
     items: [
@@ -236,10 +264,37 @@ export default function AppLayout() {
              />
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            <Badge count={5} size="small">
-              <BellOutlined style={{ fontSize: 18, cursor: 'pointer' }} />
-            </Badge>
+           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+            <Popover
+              trigger="click"
+              placement="bottomRight"
+              title="Thông báo"
+              content={
+                <div style={{ width: 320, maxHeight: 360, overflow: 'auto' }}>
+                  {notifications.length === 0 ? (
+                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có thông báo" />
+                  ) : (
+                    <List
+                      size="small"
+                      dataSource={notifications}
+                      renderItem={(n) => (
+                        <List.Item>
+                          <List.Item.Meta
+                            avatar={<Badge status={n.level === 'error' ? 'error' : 'warning'} />}
+                            title={n.name}
+                            description={n.text}
+                          />
+                        </List.Item>
+                      )}
+                    />
+                  )}
+                </div>
+              }
+            >
+              <Badge count={notifications.length} size="small" offset={[-2, 2]}>
+                <BellOutlined style={{ fontSize: 18, cursor: 'pointer' }} />
+              </Badge>
+            </Popover>
             <Dropdown menu={userMenu} placement="bottomRight">
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                 <Avatar size="small" icon={<UserOutlined />} style={{ backgroundColor: '#1677ff' }} />

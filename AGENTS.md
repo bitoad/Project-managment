@@ -110,3 +110,31 @@ npm run dev
 - `dev.log` đã được .gitignore (không commit).
 - `*.sqlite`, `*.db` bị ignore (dành cho SQLite thật sau này), nhưng SQL.js hiện dùng JSON nên không ảnh hưởng.
 
+# Available Skills
+
+Use excel-boq when:
+- User asks about BOQ
+- Excel formulas
+- Quantity takeoff
+
+Use procurement when:
+- Vendor
+- RFQ
+- Quotation
+- Material
+
+Use react when:
+- React
+- Vite
+- Ant Design
+
+Use bug-fix when:
+- Errors
+- Build failed
+- Runtime issues
+
+Use project-manager when:
+- Planning
+- Timeline
+- Schedule
+- WBS
