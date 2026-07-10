@@ -153,30 +153,6 @@ export default function Dashboard() {
     };
   }, [filterPort, data, items, costLogs]);
 
-  if (loading || !data) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '70vh' }}>
-        <Spin size="large" tip="Đang tải dashboard..." />
-      </div>
-    );
-  }
-
-  const progressChartData = filtered.ports.map((p) => ({
-    name: p.id,
-    'Tiến độ %': p.progress,
-    'Chi phí (Tr)': Math.round(p.logged / 1e6),
-  }));
-
-const taskByStatus = data.taskByStatus || {};
-const taskPieData = [
-  { name: 'Cần làm', value: taskByStatus.todo || 0, color: '#8c8c8c' },
-  { name: 'Đang làm', value: taskByStatus.inprogress || 0, color: '#1677ff' },
-  { name: 'Kiểm tra', value: taskByStatus.review || 0, color: '#faad14' },
-  { name: 'Hoàn thành', value: taskByStatus.done || 0, color: '#52c41a' },
-].filter((t) => t.value > 0);
-
-  const profitColor = filtered.totalProfit >= 0 ? '#52c41a' : '#ff4d4f';
-
   const TASK_STATUS = {
     todo: { label: 'Cần làm', color: '#8c8c8c' },
     inprogress: { label: 'Đang làm', color: '#1677ff' },
@@ -214,6 +190,30 @@ const taskPieData = [
       .sort((a, b) => a.days - b.days)
       .slice(0, 8);
   }, [tasks]);
+
+  if (loading || !data) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '70vh' }}>
+        <Spin size="large" tip="Đang tải dashboard..." />
+      </div>
+    );
+  }
+
+  const progressChartData = filtered.ports.map((p) => ({
+    name: p.id,
+    'Tiến độ %': p.progress,
+    'Chi phí (Tr)': Math.round(p.logged / 1e6),
+  }));
+
+const taskByStatus = data.taskByStatus || {};
+const taskPieData = [
+  { name: 'Cần làm', value: taskByStatus.todo || 0, color: '#8c8c8c' },
+  { name: 'Đang làm', value: taskByStatus.inprogress || 0, color: '#1677ff' },
+  { name: 'Kiểm tra', value: taskByStatus.review || 0, color: '#faad14' },
+  { name: 'Hoàn thành', value: taskByStatus.done || 0, color: '#52c41a' },
+].filter((t) => t.value > 0);
+
+  const profitColor = filtered.totalProfit >= 0 ? '#52c41a' : '#ff4d4f';
 
   const calendarCellRender = (current) => {
     const key = toKey(current);
