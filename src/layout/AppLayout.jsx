@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Layout, Menu, Avatar, Badge, Dropdown, Typography, Select, Modal, Input, Spin, Button, Tag, Popover, List, Empty } from 'antd';
+import companyLogo from '../assets/company-logo.png';
+import { Layout, Menu, Avatar, Badge, Dropdown, Typography, Select, Modal, Input, Spin, Button, Tag, Popover, List, Empty, Drawer, Grid } from 'antd';
 import {
   DashboardOutlined,
   AppstoreOutlined,
@@ -104,6 +105,9 @@ export default function AppLayout() {
   const { projects, currentProject, currentProjectId, selectProject, createProject, loading } = useProject();
   const { currentUser, logout } = useUser();
   const [tasks, setTasks] = useState([]);
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     tasksApi.getAll().then(setTasks).catch(() => setTasks([]));
@@ -144,6 +148,45 @@ export default function AppLayout() {
     },
   };
 
+  const renderLogo = (showText) => (
+    <div
+      className="app-logo"
+      style={{
+        height: 64,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#fff',
+        gap: 10,
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+      }}
+    >
+      <div
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 8,
+          background: '#fff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 4,
+          flexShrink: 0,
+        }}
+      >
+        <img src={companyLogo} alt="Golden Point" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+      </div>
+      {showText && (
+        <div style={{ lineHeight: 1.2 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 170 }}>
+            Golden Point Co., Ltd
+          </div>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>PM Dashboard</div>
+        </div>
+      )}
+    </div>
+  );
+
   const handleCreateProject = async () => {
     if (!newProjectName.trim()) return;
     await createProject(newProjectName.trim(), newProjectDesc.trim());
@@ -163,47 +206,51 @@ export default function AppLayout() {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider
-        trigger={null}
-        collapsible
-        collapsed={collapsed}
-        width={248}
-        className="app-sider"
-        style={{ overflow: 'auto', height: '100vh', position: 'sticky', top: 0, left: 0 }}
-      >
-        <div
-          className="app-logo"
-          style={{
-            height: 64,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
-            gap: 10,
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
-          }}
+      {!isMobile && (
+        <Sider
+          trigger={null}
+          collapsible
+          collapsed={collapsed}
+          width={248}
+          className="app-sider"
+          style={{ overflow: 'auto', height: '100vh', position: 'sticky', top: 0, left: 0 }}
         >
-          <span style={{ fontSize: 26 }}>🛢️</span>
-          {!collapsed && (
-            <div style={{ lineHeight: 1.2 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 170 }}>
-                {currentProject?.name || 'Project Control'}
-              </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>PM Dashboard</div>
-            </div>
-          )}
-        </div>
+          {renderLogo(!collapsed)}
+          <Menu
+            theme="dark"
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            defaultOpenKeys={['grp-main', 'grp-project', 'grp-cost', 'grp-resources', 'grp-report']}
+            items={menuItems}
+            onClick={({ key }) => navigate(key)}
+            style={{ borderRight: 0 }}
+          />
+        </Sider>
+      )}
 
+      <Drawer
+        placement="left"
+        open={isMobile && mobileNavOpen}
+        onClose={() => setMobileNavOpen(false)}
+        width={248}
+        closable={false}
+        className="app-sider-drawer"
+        styles={{ body: { padding: 0 }, header: { display: 'none' } }}
+      >
+        {renderLogo(true)}
         <Menu
           theme="dark"
           mode="inline"
           selectedKeys={[location.pathname]}
           defaultOpenKeys={['grp-main', 'grp-project', 'grp-cost', 'grp-resources', 'grp-report']}
           items={menuItems}
-          onClick={({ key }) => navigate(key)}
+          onClick={({ key }) => {
+            navigate(key);
+            setMobileNavOpen(false);
+          }}
           style={{ borderRight: 0 }}
         />
-      </Sider>
+      </Drawer>
 
       <Layout>
         <Header
@@ -219,23 +266,23 @@ export default function AppLayout() {
             zIndex: 9,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <span style={{ fontSize: 18, cursor: 'pointer' }} onClick={() => setCollapsed(!collapsed)}>
-              {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+            <span style={{ fontSize: 18, cursor: 'pointer', flexShrink: 0 }} onClick={() => (isMobile ? setMobileNavOpen(true) : setCollapsed(!collapsed))}>
+              {collapsed || isMobile ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             </span>
 
             {/* Project Selector */}
              <Select
-               value={currentProjectId}
-               onChange={(val) => {
-                 if (val === '__create__') {
-                   setCreateModalOpen(true);
-                   return;
-                 }
-                 selectProject(val);
-               }}
-               style={{ width: 260 }}
-               placeholder="Chọn dự án"
+                value={currentProjectId}
+                onChange={(val) => {
+                  if (val === '__create__') {
+                    setCreateModalOpen(true);
+                    return;
+                  }
+                  selectProject(val);
+                }}
+                style={{ flex: 1, minWidth: 0 }}
+                placeholder="Chọn dự án"
                optionLabelProp="label"
                options={[
                  ...projects.map((p) => ({

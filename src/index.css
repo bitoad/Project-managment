@@ -270,6 +270,25 @@ body {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
+/* Drawer điều hướng trên mobile (kiểu app) */
+.app-sider-drawer .ant-drawer-body {
+  background: var(--sidebar-gradient) !important;
+  padding: 0 !important;
+}
+.app-sider-drawer .ant-drawer-mask {
+  background: rgba(0, 0, 0, 0.45);
+}
+.app-sider-drawer .ant-menu {
+  background: transparent !important;
+}
+.app-sider-drawer .ant-menu .ant-menu-item-selected {
+  background: var(--color-primary-grad) !important;
+  box-shadow: 0 4px 14px rgba(22, 119, 255, 0.45);
+}
+.app-sider-drawer .ant-menu .ant-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
 /* ============ HEADER ============ */
 .app-header {
   background: var(--color-surface) !important;
@@ -527,5 +546,7 @@ body {
 }
 
 @media (max-width: 768px) {
-  .page-container { padding: 16px; }
+  .page-container { padding: 12px; }
+  .app-header { padding: 0 12px !important; }
+  .ant-layout-header.app-header { line-height: normal; }
 }
