@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { message } from 'antd';
-import { teamApi } from '../api/api.js';
+import { teamApi, authApi } from '../api/api.js';
 
 const UserContext = createContext(null);
 
@@ -33,13 +33,27 @@ export function UserProvider({ children }) {
     return () => window.removeEventListener('storage', handler);
   }, [loadTeam]);
 
-  const login = useCallback((member) => {
-    setCurrentUser(member);
-    localStorage.setItem('currentUser', JSON.stringify(member));
-    message.success(`Xin chào, ${member.name}!`);
+  const login = useCallback(async ({ username, password }) => {
+    try {
+      const res = await authApi.login(username, password);
+      localStorage.setItem('authToken', res.token);
+      const user = { username: res.user.username, name: res.user.name, role: res.user.role };
+      setCurrentUser(user);
+      localStorage.setItem('currentUser', JSON.stringify(user));
+      message.success(`Xin chào, ${res.user.name || res.user.username}!`);
+    } catch (e) {
+      message.error('Đăng nhập thất bại');
+      throw e;
+    }
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await authApi.logout();
+    } catch (e) {
+      // ignore network errors on logout
+    }
+    localStorage.removeItem('authToken');
     setCurrentUser(null);
     localStorage.removeItem('currentUser');
     message.info('Đã đăng xuất');

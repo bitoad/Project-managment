@@ -1,0 +1,11 @@
+[
+  {
+    "id": "U-001",
+    "username": "nguyen.nguyen",
+    "passwordHash": "$2b$10$3.jQTxBnUU9T6UI7uxj14eMSHQO8cv7zP5ZETCrMV0Q3GtdL/Pajy",
+    "role": "admin",
+    "teamId": null,
+    "name": "Administrator",
+    "createdAt": "2026-07-11T16:12:37.817Z"
+  }
+]

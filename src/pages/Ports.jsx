@@ -9,6 +9,7 @@ import {
   Input,
   InputNumber,
   Modal,
+  Popconfirm,
   Progress,
   Row,
   Select,
@@ -24,15 +25,17 @@ import {
   AppstoreOutlined,
   CalendarOutlined,
   ClearOutlined,
+  DeleteOutlined,
   DollarOutlined,
   DownOutlined,
+  EditOutlined,
   FileDoneOutlined,
+  InfoCircleOutlined,
   PlusOutlined,
   ProfileOutlined,
   SearchOutlined,
   ShopOutlined,
   WarningOutlined,
-  InfoCircleOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { costLogsApi, itemsApi, portsApi, supplierPortsApi, suppliersApi, tasksApi } from '../api/api.js';
@@ -152,8 +155,10 @@ export default function Ports() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState();
   const [supplierFilter, setSupplierFilter] = useState();
-  const [addOpen, setAddOpen] = useState(false);
-  const [addForm] = Form.useForm();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState('add');
+  const [editingPort, setEditingPort] = useState(null);
+  const [form] = Form.useForm();
 
   const load = async () => {
     try {
@@ -184,21 +189,57 @@ export default function Ports() {
   }, []);
 
   const openAdd = () => {
-    addForm.resetFields();
-    addForm.setFieldsValue({ id: 'PORT ' + (ports.length + 1), status: 'Engineering', progress: 0 });
-    setAddOpen(true);
+    setModalMode('add');
+    setEditingPort(null);
+    form.resetFields();
+    form.setFieldsValue({ id: 'PORT ' + (ports.length + 1), status: 'Engineering', progress: 0 });
+    setModalOpen(true);
   };
 
-  const onSubmitAdd = async () => {
+  const openEdit = (record) => {
+    setModalMode('edit');
+    setEditingPort(record);
+    form.resetFields();
+    form.setFieldsValue({ ...record });
+    setModalOpen(true);
+  };
+
+  const onSubmit = async () => {
     try {
-      const v = await addForm.validateFields();
-      const created = await portsApi.create(v);
-      setPorts((prev) => [...prev, created]);
-      message.success('Đã thêm Port');
-      setAddOpen(false);
+      const v = await form.validateFields();
+      if (modalMode === 'add') {
+        const created = await portsApi.create(v);
+        setPorts((prev) => [...prev, created]);
+        message.success('Đã thêm Port');
+      } else {
+        const updated = await portsApi.update(editingPort.id, v);
+        setPorts((prev) => prev.map((p) => (p.id === editingPort.id ? updated : p)));
+        message.success('Đã cập nhật Port');
+      }
+      setModalOpen(false);
     } catch (e) {
       if (e?.errorFields) return;
       message.error('Lỗi khi lưu');
+    }
+  };
+
+  const onDelete = async (record) => {
+    try {
+      await portsApi.remove(record.id);
+      setPorts((prev) => prev.filter((p) => p.id !== record.id));
+      message.success(`Đã xóa Port ${record.id}`);
+    } catch (e) {
+      const status = e?.response?.status;
+      const details = e?.response?.data?.details;
+      if (status === 409 && details) {
+        const parts = [];
+        if (details.items) parts.push(`${details.items} item`);
+        if (details.tasks) parts.push(`${details.tasks} công việc`);
+        if (details.costLogs) parts.push(`${details.costLogs} chi phí`);
+        message.error(`Không thể xóa: Port đang có ${parts.join(', ')} liên kết`);
+      } else {
+        message.error('Lỗi khi xóa');
+      }
     }
   };
 
@@ -230,6 +271,7 @@ export default function Ports() {
         plannedCost,
         plannedRevenue,
         actualCost,
+        hasChildren: portItems.length > 0 || portTasks.length > 0 || portCostLogs.length > 0,
         history: buildHistory(port, portItems, portTasks, portSupplierPorts, suppliersById),
       };
     });
@@ -521,7 +563,7 @@ export default function Ports() {
             {
               title: 'Quản lý',
               key: 'manage',
-              width: 180,
+              width: 280,
               fixed: 'right',
               render: (_, record) => (
                 <Space>
@@ -531,6 +573,26 @@ export default function Ports() {
                   <Button size="small" icon={<DollarOutlined />} onClick={() => navigate(getPortManageUrl(record.id, 'costs'))}>
                     Chi phí
                   </Button>
+                  <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(record)}>
+                    Sửa
+                  </Button>
+                  <Popconfirm
+                    title={`Xóa Port ${record.id}?`}
+                    description={record.hasChildren ? 'Port đang có item/công việc/chi phí liên kết, cần xóa hết trước' : 'Hành động này không thể hoàn tác'}
+                    okText="Xóa"
+                    cancelText="Hủy"
+                    okButtonProps={{ danger: true }}
+                    onConfirm={() => onDelete(record)}
+                  >
+                    <Button
+                      size="small"
+                      danger
+                      icon={<DeleteOutlined />}
+                      disabled={record.hasChildren}
+                    >
+                      Xóa
+                    </Button>
+                  </Popconfirm>
                 </Space>
               ),
             },
@@ -539,16 +601,16 @@ export default function Ports() {
       </Card>
 
       <Modal
-        title="Thêm Port"
-        open={addOpen}
-        onOk={onSubmitAdd}
-        onCancel={() => setAddOpen(false)}
-        okText="Thêm"
+        title={modalMode === 'edit' ? 'Sửa Port' : 'Thêm Port'}
+        open={modalOpen}
+        onOk={onSubmit}
+        onCancel={() => setModalOpen(false)}
+        okText={modalMode === 'edit' ? 'Lưu' : 'Thêm'}
         cancelText="Hủy"
       >
-        <Form form={addForm} layout="vertical">
+        <Form form={form} layout="vertical">
           <Form.Item name="id" label="Mã Port" rules={[{ required: true, message: 'Vui lòng nhập mã' }]}>
-            <Input placeholder="vd: PORT 1" />
+            <Input placeholder="vd: PORT 1" disabled={modalMode === 'edit'} />
           </Form.Item>
           <Form.Item name="name" label="Tên Port" rules={[{ required: true, message: 'Vui lòng nhập tên' }]}>
             <Input placeholder="vd: Topside Module" />

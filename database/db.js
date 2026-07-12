@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import bcrypt from 'bcrypt';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -9,6 +10,7 @@ const PROJECTS_DIR = path.join(__dirname, 'projects');
 const INDEX_PATH = path.join(PROJECTS_DIR, '_index.json');
 const SEED_PATH = path.join(__dirname, 'seed-data.json');
 const OLD_DB_PATH = path.join(__dirname, 'data.json');
+const USERS_PATH = path.join(__dirname, 'users.json');
 
 // Đảm bảo thư mục tồn tại
 if (!fs.existsSync(PROJECTS_DIR)) fs.mkdirSync(PROJECTS_DIR, { recursive: true });
@@ -53,7 +55,9 @@ export function getIndex() {
 }
 
 function saveIndex(index) {
-  fs.writeFileSync(INDEX_PATH, JSON.stringify(index, null, 2), 'utf-8');
+  return withWriteLock('__INDEX__', () => {
+    fs.writeFileSync(INDEX_PATH, JSON.stringify(index, null, 2), 'utf-8');
+  });
 }
 
 // ============ PROJECT CRUD ============
@@ -82,6 +86,7 @@ export function createProject(name, description) {
   seed.documents = [];
 
   fs.writeFileSync(path.join(projectDir, 'data.json'), JSON.stringify(seed, null, 2), 'utf-8');
+  dbCache.set(id, seed);
 
   const project = { id, name, description: description || '', createdAt: new Date().toISOString() };
   idx.push(project);
@@ -109,6 +114,7 @@ export function updateProject(id, updates) {
 }
 
 export function deleteProject(id) {
+  dbCache.delete(id);
   // Xóa thư mục dự án
   const projectDir = path.join(PROJECTS_DIR, id);
   if (fs.existsSync(projectDir)) {
@@ -124,23 +130,50 @@ function getDbPath(projectId) {
   return path.join(PROJECTS_DIR, projectId, 'data.json');
 }
 
-// ============ HELPER: Load/Save DB theo projectId ============
+// ============ CONCURRENCY SAFETY (hotfix ADR-011) ============
+// JSON persistence dùng fs read-modify-write không nguyên tử → 2 request ghi
+// cùng 1 project có thể mất dữ liệu (last-writer-wins). Khắc phục bằng:
+//  1) in-memory cache: mọi request cùng project chia sẻ 1 object db → các
+//     mutation cộng dồn trên cùng object, save cuối cùng ghi trạng thái đã gộp
+//     (không đè nhau).
+//  2) per-project write mutex: serialize các lần ghi file.
+// Không đổi cấu trúc file JSON, không đổi schema.
+const dbCache = new Map(); // projectId -> in-memory db object (shared)
+const writeChains = new Map(); // projectId -> Promise chain serializing writes
+
+function withWriteLock(projectId, task) {
+  const prev = writeChains.get(projectId) || Promise.resolve();
+  const node = prev
+    .then(() => task())
+    .catch((e) => console.error('[write lock error]', e));
+  writeChains.set(projectId, node);
+  node.finally(() => {
+    if (writeChains.get(projectId) === node) writeChains.delete(projectId);
+  });
+  return node;
+}
+
 function ensureDb(projectId) {
+  if (dbCache.has(projectId)) return dbCache.get(projectId);
   const dbPath = getDbPath(projectId);
-  if (!fs.existsSync(dbPath)) {
-    // Copy seed nếu chưa có
-    const seed = JSON.parse(fs.readFileSync(SEED_PATH, 'utf-8'));
-    fs.writeFileSync(dbPath, JSON.stringify(seed, null, 2), 'utf-8');
-    return seed;
+  let db;
+  if (fs.existsSync(dbPath)) {
+    db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
+  } else {
+    db = JSON.parse(fs.readFileSync(SEED_PATH, 'utf-8'));
   }
-  return JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
+  dbCache.set(projectId, db);
+  return db;
 }
 
 function save(projectId, data) {
-  const dbPath = getDbPath(projectId);
-  const dir = path.dirname(dbPath);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf-8');
+  dbCache.set(projectId, data);
+  return withWriteLock(projectId, () => {
+    const dbPath = getDbPath(projectId);
+    const dir = path.dirname(dbPath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf-8');
+  });
 }
 
 // Helper ID
@@ -203,6 +236,25 @@ export function updatePort(projectId, id, updates) {
     return db.ports[idx];
   }
   return null;
+}
+
+export function deletePort(projectId, id) {
+  const db = ensureDb(projectId);
+  const exists = db.ports.some(p => p.id === id);
+  if (!exists) return false;
+  const linkedItems = db.items.filter(i => i.port === id || i.portId === id).length;
+  const linkedTasks = db.tasks.filter(t => t.portId === id).length;
+  const linkedCosts = db.costLogs.filter(c => c.portId === id).length;
+  if (linkedItems > 0 || linkedTasks > 0 || linkedCosts > 0) {
+    const err = new Error('PORT_HAS_LINKED_DATA');
+    err.code = 'PORT_HAS_LINKED_DATA';
+    err.details = { items: linkedItems, tasks: linkedTasks, costLogs: linkedCosts };
+    throw err;
+  }
+  db.ports = db.ports.filter(p => p.id !== id);
+  db.supplierPorts = db.supplierPorts.filter(sp => sp.portId !== id);
+  save(projectId, db);
+  return true;
 }
 
 // ============ ITEMS ============
@@ -523,6 +575,67 @@ export function deleteDocument(projectId, id) {
   const db = ensureDb(projectId);
   db.documents = db.documents.filter(d => d.id !== id);
   save(projectId, db);
+}
+
+// ============ USERS (P0 real authentication) ============
+// Global user store (not per-project). Passwords hashed with bcrypt.
+export function getUsers() {
+  if (!fs.existsSync(USERS_PATH)) return [];
+  return JSON.parse(fs.readFileSync(USERS_PATH, 'utf-8'));
+}
+
+function saveUsers(users) {
+  return withWriteLock('__USERS__', () => {
+    fs.writeFileSync(USERS_PATH, JSON.stringify(users, null, 2), 'utf-8');
+  });
+}
+
+export function getUserByUsername(username) {
+  return getUsers().find((u) => u.username === username);
+}
+
+export function getUserById(id) {
+  return getUsers().find((u) => u.id === id);
+}
+
+export function createUser({ username, passwordHash, role, teamId, name }) {
+  const users = getUsers();
+  const id = nextId('U', users.length);
+  const user = {
+    id,
+    username,
+    passwordHash,
+    role: role || 'viewer',
+    teamId: teamId || null,
+    name: name || username,
+    createdAt: new Date().toISOString(),
+  };
+  users.push(user);
+  saveUsers(users);
+  return user;
+}
+
+export function updateUser(id, updates) {
+  const users = getUsers();
+  const idx = users.findIndex((u) => u.id === id);
+  if (idx === -1) return null;
+  users[idx] = { ...users[idx], ...updates };
+  saveUsers(users);
+  return users[idx];
+}
+
+export function deleteUser(id) {
+  const users = getUsers().filter((u) => u.id !== id);
+  saveUsers(users);
+}
+
+// ============ PASSWORD HASHING (bcrypt, no plaintext) ============
+export function hashPassword(password) {
+  return bcrypt.hashSync(String(password), 10);
+}
+
+export function verifyPassword(password, hash) {
+  return bcrypt.compareSync(String(password), hash);
 }
 
 // ============ IMPORT DATA (thay thế toàn bộ entity) ============

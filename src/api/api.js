@@ -9,6 +9,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const message = error.response?.data?.error || error.message || 'Lỗi không xác định';
+    if (error.response?.status === 401) {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('currentUser');
+      if (window.location.pathname !== '/login') window.location.href = '/login';
+    }
     console.error('[API Error]', message);
     return Promise.reject(error);
   }
@@ -19,10 +24,14 @@ function getProjectId() {
   return localStorage.getItem('currentProjectId') || 'block-b-gas';
 }
 
-// Header projectId cho mọi request
+// Header projectId + auth token cho mọi request
 api.interceptors.request.use((config) => {
   if (!config.headers['x-project-id']) {
     config.headers['x-project-id'] = getProjectId();
+  }
+  const token = localStorage.getItem('authToken');
+  if (token && !config.headers['Authorization']) {
+    config.headers['Authorization'] = 'Bearer ' + token;
   }
   return config;
 });
@@ -81,7 +90,9 @@ export const settingsApi = {
 export const portsApi = {
   getAll: () => api.get('/ports').then((r) => r.data),
   get: (id) => api.get(`/ports/${id}`).then((r) => r.data),
+  create: (data) => api.post('/ports', data).then((r) => r.data),
   update: (id, data) => api.put(`/ports/${id}`, data).then((r) => r.data),
+  remove: (id) => api.delete(`/ports/${id}`).then((r) => r.data),
 };
 
 // ============ ITEMS ============
@@ -165,6 +176,17 @@ export const documentsApi = {
       .then((r) => r.data),
   update: (id, data) => api.put(`/documents/${id}`, data).then((r) => r.data),
   remove: (id) => api.delete(`/documents/${id}`).then((r) => r.data),
+};
+
+// ============ AUTH (hotfix ADR-012 / P0 ADR-013) ============
+export const authApi = {
+  login: (username, password) => api.post('/api/auth/login', { username, password }).then((r) => r.data),
+  logout: () => api.post('/api/auth/logout').then((r) => r.data),
+};
+
+// ============ RBAC (modeled only — ADR-014) ============
+export const rbacApi = {
+  get: () => api.get('/rbac').then((r) => r.data),
 };
 
 export default api;

@@ -36,3 +36,5 @@ Thumbs.db
 
 # Coverage
 coverage/
+# AI Platform (separate sub-project, không commit vào repo ERP)
+Workspace/
