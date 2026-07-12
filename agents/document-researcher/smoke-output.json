@@ -3,56 +3,55 @@
   "sources": ["datasheet"],
   "datasheets": [
     {
-      "title": "Jotun Facade (Powder Coating) — Product Page",
-      "source": "Jotun",
-      "url": "https://www.jotun.com/ww-en/products-and-services/products/jotun-facade",
-      "excerpt": "Powder coating cho facade tòa nhà & linh kiện nhôm. Chứng nhận Qualicoat Class 1, GSB, AAMA 2603. Bảo hành hiệu năng 10 năm (khi dùng trên nhôm theo hướng dẫn Jotun Powder Coatings). Không phát thải VOC có hại; compliant LEED/BREEAM.",
+      "title": "TDS 37266 — Jotun Facade 1403, 1406, 1407, 1408 (Euk/GB)",
+      "source": "jotundatasheetsprod.blob.core.windows.net",
+      "url": "https://jotundatasheetsprod.blob.core.windows.net/tds%2FTDS%C2%A437266%C2%A4Jotun%20Facade%201403%2C%201406%2C%201407%2C%201408%C2%A4Euk%C2%A4GB.pdf",
+      "excerpt": "Lead-free TGIC powder coating cho ngành xây dựng: giữ độ bóng, ổn định màu, chống ăn mòn. Chứng nhận Qualicoat Class 1, hiệu năng thời tiết theo AAMA 2603. Có trong Cool Shades Collection. Date of issue: 7 June 2023.",
       "specs": {
-        "Product type": "Exterior powder coating / Architectural topcoat",
-        "Substrate": "Aluminium alloy, Steel",
-        "Certification": "Qualicoat Class 1, GSB, AAMA 2603",
-        "Green": "LEED, BREEAM, EPD Type III",
-        "Warranty": "10-year Product Performance Guarantee"
+        "Product type": "Lead-free TGIC powder coating (architectural topcoat)",
+        "Application areas": "Architectural aluminium extrusions & claddings; ferrous/non-ferrous substrates",
+        "Certification": "Qualicoat Class 1; weathering in line with AAMA 2603",
+        "Specific gravity": "Max. 1.7 g/cm3 (calculated)",
+        "Recommended film thickness": "60-80 µm",
+        "Storage": "Dry cool area, max 25 °C, max 60% RH; retest if stored > 12 months"
       },
-      "retrievedVia": "websearch (firecrawl IP-blocked fallback)",
-      "retrievedAt": "2026-07-12"
+      "retrievedVia": "firecrawl",
+      "retrievedAt": "2026-07-13"
     },
     {
-      "title": "Jotun Facade Brochure (PDF)",
-      "source": "Jotun",
-      "url": "https://cp.jotun.com/siteassetsjot03/_b2b/product-brochures/jotun-facade-brochure.pdf",
-      "excerpt": "Thông số kỹ thuật: Impact EN ISO 6272/ASTM D2794; Cupping EN ISO 1520 (5mm không nứt); Flexibility EN ISO 1519 (5mm mandrel); Salt spray ISO 9227 (max 16mm2 infiltration/1000h); Humidity EN ISO 6270-2 (1000h); Accelerated weathering ISO 16474-3 (300h); Flame spread ASTM E84 Class 1/A.",
+      "title": "Application Guide 37266 — Jotun Facade 1403, 1406, 1407, 1408",
+      "source": "jotundatasheetsprod.blob.core.windows.net",
+      "url": "https://jotundatasheetsprod.blob.core.windows.net/ags/AG%C2%A437266%C2%A4Jotun%20Facade%201403%2C%201406%2C%201407%2C%201408%C2%A4Euk%C2%A4GB.pdf",
+      "excerpt": "Application Guide đi kèm TDS: pretreatment (aluminium: chromate conversion; steel/zinc-coated: zinc phosphate), final rinse deionized < 30 µS/cm ở 20°C, phun Corona/Tribo, curing theo hướng dẫn.",
       "specs": {
-        "Impact resistance": "EN ISO 6272 / ASTM D2794",
-        "Cupping test": "EN ISO 1520 — passes 5 mm indentation",
-        "Flexibility": "EN ISO 1519 — passes 5 mm mandrel bend",
-        "Salt spray": "ISO 9227 — max 16 mm2 / 1000h",
-        "Humidity": "EN ISO 6270-2 — 1000h",
-        "Accelerated weathering": "ISO 16474-3 — 300h, no chalking",
-        "Flame spread": "ASTM E84 — Class 1 / A"
+        "Pretreatment (Aluminium)": "Chromate conversion (hoặc hệ chrome-free được Qualicoat/GSB duyệt)",
+        "Pretreatment (Steel)": "Zinc phosphate",
+        "Final rinse (deionized)": "< 30 µS/cm tại 20 °C",
+        "Application method": "Corona hoặc Tribo charging"
       },
-      "retrievedVia": "websearch (firecrawl IP-blocked fallback)",
-      "retrievedAt": "2026-07-12"
-    },
-    {
-      "title": "Jotun Facade 1403 — Datasheet Search (SDS)",
-      "source": "Jotun",
-      "url": "https://www.jotun.com/me-en/decorative/datasheets-search/datasheets-results?FileType=SDS&searchTerm=jotun+facade",
-      "excerpt": "Kết quả tra cứu datasheet: Jotun Facade 1403, 1406, 1407, 1408 nằm trong line Jotun Facade.",
-      "retrievedVia": "websearch (firecrawl IP-blocked fallback)",
-      "retrievedAt": "2026-07-12"
+      "retrievedVia": "firecrawl",
+      "retrievedAt": "2026-07-13"
     }
   ],
-  "catalogues": [],
+  "catalogues": [
+    {
+      "title": "Datasheets Search (SDS/TDS/AG) — Jotun",
+      "source": "www.jotun.com",
+      "url": "https://www.jotun.com/me-en/decorative/datasheets-search/datasheets-results?searchTerm=jotun%20facade&FileType=SDS&location=&language=",
+      "excerpt": "Trang tra cứu datasheet chính thức của Jotun (lọc theo TDS/SDS/AG/FDV, theo quốc gia/ngôn ngữ). Dùng để lấy đúng bản SDS/TDS mới nhất của line Jotun Facade 1403/1406/1407/1408.",
+      "retrievedVia": "firecrawl",
+      "retrievedAt": "2026-07-13"
+    }
+  ],
   "standards": [
     {
-      "title": "Qualicoat Class 1 / GSB / AAMA 2603",
-      "source": "Standards",
-      "url": "",
-      "excerpt": "Chứng nhận/class yêu cầu mà Jotun Facade line thỏa mãn (Qualicoat Class 1, GSB Florida 1, AAMA 2603 third-party tested).",
-      "retrievedVia": "websearch (firecrawl IP-blocked fallback)",
-      "retrievedAt": "2026-07-12"
+      "title": "Qualicoat Class 1 / AAMA 2603",
+      "source": "www.jotun.com",
+      "url": "https://jotundatasheetsprod.blob.core.windows.net/tds%2FTDS%C2%A437266%C2%A4Jotun%20Facade%201403%2C%201406%2C%201407%2C%201408%C2%A4Euk%C2%A4GB.pdf",
+      "excerpt": "Chứng nhận/hiệu năng mà Jotun Facade 1403 thỏa mãn theo TDS chính thức: Qualicoat Class 1 và hiệu năng thời tiết theo AAMA 2603.",
+      "retrievedVia": "firecrawl",
+      "retrievedAt": "2026-07-13"
     }
   ],
-  "technicalSummary": "Jotun Facade 1403 là sơn dạng bột (powder coating) ngoại thất của Jotun, dùng cho facade tòa nhà và linh kiện nhôm/thép. Thông số chính: chịu va đập (EN ISO 6272/ASTM D2794), cupping 5mm (EN ISO 1520), uốn 5mm (EN ISO 1519), thử muối ISO 9227 ≤16mm2 sau 1000h, thử ẩm EN ISO 6270-2 1000h, thời tiết hóa ISO 16474-3 300h không phấn hóa, chống cháy ASTM E84 Class 1/A. Chứng nhận Qualicoat Class 1, GSB, AAMA 2603;合规 LEED/BREEAM, EPD Type III; bảo hành hiệu năng 10 năm khi thi công đúng hướng dẫn Jotun trên nền nhôm. Lưu ý: lấy đúng SDS/technical datasheet chính thức từ link Jotun để làm cơ sở chọn vật liệu và nghiệm thu."
+  "technicalSummary": "Jotun Facade 1403 (cùng line 1406/1407/1408) là sơn bột (powder coating) lead-free TGIC cho facade — chủ yếu dùng cho nhôm định hình/cladding kiến trúc, cũng áp dụng được cho nền sắt/không-sắt. Theo TDS 37266 chính thức: chứng nhận Qualicoat Class 1, hiệu năng thời tiết theo AAMA 2603; specific gravity max 1.7 g/cm3; chiều dày màng khuyến nghị 60-80 µm; bảo quản nơi khô mát ≤25°C, ≤60% RH (thử lại nếu lưu >12 tháng). Application Guide đi kèm quy định pretreatment (nhôm: chromate conversion; thép: zinc phosphate), final rinse DI <30 µS/cm ở 20°C, phun Corona/Tribo. Lưu ý: dùng đúng bản TDS/SDS mới nhất từ trang tra cứu Jotun làm cơ sở chọn vật liệu và nghiệm thu."
 }

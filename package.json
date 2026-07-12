@@ -4,8 +4,8 @@
   "description": "Ứng dụng Quản lý Dự án Dầu Khí - Hợp đồng Hà Quang / PTSC M&C",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"node server.js\" \"vite\"",
-    "dev:server": "node server.js",
+    "dev": "concurrently \"node --env-file-if-exists=.env server.js\" \"vite\"",
+    "dev:server": "node --env-file-if-exists=.env server.js",
     "dev:client": "vite",
     "build": "vite build",
     "preview": "vite preview",

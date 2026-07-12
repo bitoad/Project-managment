@@ -48,4 +48,4 @@ chuẩn hóa kết quả theo `workflows/document-research/output-schema.json`. 
 ## Smoke test (tham khảo)
 - Input: `{ "query": "Jotun Facade 1403 technical datasheet", "sources": ["datasheet"] }`
 - Route → firecrawl; kết quả điền `datasheets[]` + `technicalSummary`.
-- Xem `agents/document-researcher/smoke-output.json` (tạo bằng websearch fallback do firecrawl IP-blocked).
+- Xem `agents/document-researcher/smoke-output.json` (dữ liệu thật từ firecrawl với API key, 2026-07-13; TDS 37266 Jotun Facade 1403).

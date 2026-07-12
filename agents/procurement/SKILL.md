@@ -48,5 +48,5 @@ Lớp điều phối mua sắm vật tư EPC. Nhận 1 hạng mục, trả về 
 ## Smoke test (tham khảo)
 - Input: `{ "itemDescription": "bolt/nut/washer ASTM A193/A194", "quantity": 500, "specs": "A193 B7 stud bolt, A194 2H heavy hex nut, F436 washer, M20, HDG" }`
 - Internal check: `suppliersApi.getAll()` → không NCC nội bộ khớp A193/A194 → search ngoài.
-- Route → `websearch-fallback` (firecrawl IP-blocked): ra shortlist NCC thật (Bulong Alpha / Quang Thai / Duc Khanh / CTEG / THV / VNFAS), so sánh theo tiêu chuẩn A193/A194, đề xuất Bulong Alpha.
-- Xem `agents/procurement/smoke-output.json` (dữ liệu thật từ websearch, 2026-07-12).
+- Route → `firecrawl` (API key): ra shortlist NCC thật (Bulong Alpha / Bulong Quang Thai / Saigon Kinh Bac / VETCO), so sánh theo tiêu chuẩn A193/A194, đề xuất Bulong Quang Thai (trang sản phẩm khớp 100% bộ B7 + 2H + F436).
+- Xem `agents/procurement/smoke-output.json` (dữ liệu thật từ firecrawl, 2026-07-13).
