@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ProjectControlReport",
+  "description": "Cấu trúc dữ liệu đầu vào để render báo cáo Project Control sang mọi định dạng (docx / xlsx / pptx / pdf). Khớp src/pages/Reports.jsx (PDF) và OfficeCLI (docx/xlsx/pptx).",
+  "type": "object",
+  "required": ["meta", "kpi", "ports"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "description": "Thông tin dự án cho header báo cáo.",
+      "required": ["projectName"],
+      "additionalProperties": false,
+      "properties": {
+        "projectName": { "type": "string" },
+        "contractor": { "type": "string" },
+        "client": { "type": "string" },
+        "location": { "type": "string" },
+        "reportDate": {
+          "type": "string",
+          "description": "Ngày báo cáo (mặc định = ngày hiện tại, định dạng vi-VN)."
+        }
+      }
+    },
+    "kpi": {
+      "type": "array",
+      "description": "Section 1 - Chỉ số chính (KPI). Giá trị chỉ để trình bày, KHÔNG đổi công thức.",
+      "items": {
+        "type": "object",
+        "required": ["name", "value"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Tên chỉ số (vd: Budget, Planned Cost, Actual Cost, Profit, Progress, SPI, CPI, Schedule, Risk)."
+          },
+          "value": { "type": ["string", "number"] },
+          "note": { "type": "string", "description": "Ghi chú (cột 'Ghi chu')." }
+        }
+      }
+    },
+    "ports": {
+      "type": "array",
+      "description": "Section 2 - Hiệu suất theo Port.",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "description": "Cột 'Port'." },
+          "description": { "type": "string", "description": "Cột 'Mo ta'." },
+          "progress": { "type": ["number", "string"], "description": "Cột 'Tien do %'." },
+          "revenue": { "type": ["number", "string"], "description": "Cột 'Doanh thu'." },
+          "recordedCost": { "type": ["number", "string"], "description": "Cột 'Chi phi da ghi'." },
+          "items": { "type": ["number", "string"], "description": "Cột 'Items'." }
+        }
+      }
+    },
+    "risks": {
+      "type": "array",
+      "description": "Section 3 - Rủi ro ưu tiên (high risk). Có thể rỗng => ẩn section.",
+      "items": {
+        "type": "object",
+        "required": ["title", "score"],
+        "additionalProperties": false,
+        "properties": {
+          "title": { "type": "string", "description": "Cột 'Rui ro'." },
+          "portName": { "type": "string", "description": "Cột 'Port'." },
+          "score": { "type": ["number", "string"], "description": "Cột 'Score'." },
+          "owner": { "type": "string", "description": "Cột 'Phu trach'." }
+        }
+      }
+    },
+    "slides": {
+      "type": "array",
+      "description": "Chỉ dùng khi format='pptx'. Mỗi phần tử là 1 slide {title, content}. Nếu không có, agent tự sinh slide từ kpi/ports/risks.",
+      "items": {
+        "type": "object",
+        "required": ["title"],
+        "additionalProperties": false,
+        "properties": {
+          "title": { "type": "string" },
+          "content": { "type": "string" }
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "description": "Chỉ dùng khi format='docx'. Mỗi phần tử {heading, body}.",
+      "items": {
+        "type": "object",
+        "required": ["heading"],
+        "additionalProperties": false,
+        "properties": {
+          "heading": { "type": "string" },
+          "body": { "type": "string" }
+        }
+      }
+    }
+  }
+}
