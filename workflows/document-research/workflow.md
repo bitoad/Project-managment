@@ -1,5 +1,7 @@
 # Workflow: document-research
 
+> **Orchestrator: ACTIVE (M8)** — điều phối bởi Project Manager agent (`agents/project-manager/SKILL.md`).
+
 Chuẩn hóa flow tra cứu tài liệu kỹ thuật (datasheet / catalogue / standard) cho dự án EPC.
 Tái sử dụng MCP có sẵn: `context7` (docs kỹ thuật) và `firecrawl` (web search + scrape vendor).
 Output khớp `output-schema.json`.

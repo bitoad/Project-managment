@@ -1,5 +1,7 @@
 # Workflow: report-generation
 
+> **Orchestrator: ACTIVE (M8)** — điều phối bởi Project Manager agent (`agents/project-manager/SKILL.md`).
+
 Chuẩn hóa flow xuất báo cáo Project Control ra NHIỀU định dạng (docx / xlsx / pptx / pdf).
 Tái sử dụng logic đã có: `src/pages/Reports.jsx` (jsPDF, PDF), `Workspace/ai-platform/tools/officecli/officecli.py` (docx/xlsx/pptx), và excel MCP (xlsx).
 Output dữ liệu khớp `output-schema.json`.

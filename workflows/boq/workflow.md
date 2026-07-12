@@ -1,5 +1,7 @@
 # Workflow: BOQ / Quantity Takeoff (Workflow #4)
 
+> **Orchestrator: ACTIVE (M8)** — điều phối bởi Project Manager agent (`agents/project-manager/SKILL.md`).
+
 Flow gốc (AI_Platform_7_Workflows.md):
 ```
 Drawing Data ──▶ BOQ Engineer ──▶ Quantity Calculation ──▶ MTO ──▶ Cost Estimate ──▶ Review

@@ -1,5 +1,7 @@
 # Workflow: Drawing Analysis (Workflow #4 — bước Drawing Data)
 
+> **Orchestrator: ACTIVE (M8)** — điều phối bởi Project Manager agent (`agents/project-manager/SKILL.md`).
+
 Phần **Drawing Data** của flow BOQ:
 ```
 Drawing Data ──▶ BOQ Engineer ──▶ Quantity Calculation ──▶ MTO ──▶ Cost Estimate ──▶ Review

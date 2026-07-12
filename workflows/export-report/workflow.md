@@ -1,5 +1,7 @@
 # Workflow: export-report
 
+> **Orchestrator: ACTIVE (M8)** — điều phối bởi Project Manager agent (`agents/project-manager/SKILL.md`).
+
 Chuẩn hóa flow xuất báo cáo PDF (Project Control Report) — tái sử dụng logic đã có trong `src/pages/Reports.jsx` (jsPDF + jspdf-autotable).
 
 > Nguồn dữ liệu: `GET /api/dashboard` + `/api/ports` + `/api/risks` (theo project). Output khớp `output-schema.json`.

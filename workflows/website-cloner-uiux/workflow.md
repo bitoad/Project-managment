@@ -1,5 +1,7 @@
 # Workflow: Website Cloner + UI/UX (Workflow #7)
 
+> **Orchestrator: ACTIVE (M8)** — điều phối bởi Project Manager agent (`agents/project-manager/SKILL.md`).
+
 Flow gốc (theo file AI_Platform_7_Workflows.md): Website Cloner → sinh React/Next.js/Tailwind component → UI Designer.
 M7 giới hạn: KHÔNG sinh Next.js — chỉ React thuần + Tailwind (stack Vite+React hiện tại).
 

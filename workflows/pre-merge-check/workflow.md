@@ -1,5 +1,7 @@
 # Workflow: pre-merge-check
 
+> **Orchestrator: ACTIVE (M8)** — điều phối bởi Project Manager agent (`agents/project-manager/SKILL.md`).
+
 Chạy "Architecture Review Checklist" (đã có sẵn `ARCHITECTURE.md`, mục *Architecture Review Checklist*) + kiểm tra build/chất lượng TRƯỚC khi merge.
 Mục tiêu: chặn các lỗi lẽ ra checklist bắt được (vd blank page do sai thứ tự hook, route overlap, lost update...).
 

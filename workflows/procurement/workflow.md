@@ -1,5 +1,7 @@
 # Workflow: Procurement
 
+> **Orchestrator: ACTIVE (M8)** — điều phối bởi Project Manager agent (`agents/project-manager/SKILL.md`).
+
 Pipeline mua sắm vật tư EPC: từ BOQ → tìm NCC → RFQ → so sánh báo giá → đề xuất.
 Chuẩn tham chiếu là tiền lệ RFQ/so sánh báo giá thật ngoài hệ thống (Bulong Alpha, RS Group, CEPRO, Nederman...).
 Agent `procurement` là lớp điều phối — KHÔNG viết lại logic, chỉ route đến công cụ CÓ SẴN.

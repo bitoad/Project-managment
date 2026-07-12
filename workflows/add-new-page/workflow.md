@@ -1,5 +1,7 @@
 # Workflow: add-new-page
 
+> **Orchestrator: ACTIVE (M8)** — điều phối bởi Project Manager agent (`agents/project-manager/SKILL.md`).
+
 Chuẩn hóa các bước khi thêm 1 page/module mới vào Project-Management (EPC ERP).
 Mục tiêu: không bỏ sót bước nào — đặc biệt là **gate route** và **đăng ký menu** (đã từng suýt quên).
 

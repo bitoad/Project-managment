@@ -1,5 +1,7 @@
 # Workflow: Build Web App
 
+> **Orchestrator: ACTIVE (M8)** — điều phối bởi Project Manager agent (`agents/project-manager/SKILL.md`).
+
 Pipeline chuẩn để phát triển tính năng web app (React + Vite + Ant Design + Express + JSON storage), orchestrated bởi **Project Manager** và thực thi bởi **Software Engineer** agent.
 
 ```
