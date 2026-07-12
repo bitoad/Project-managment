@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BOQResult",
+  "description": "Kết quả BOQ / Quantity Takeoff (bản giới hạn M5): BOQ + MTO + Cost Estimate. Input thủ công (itemCode + quantity từ itemsApi). Drawing Data tự động để M6. Cost Estimate tái dùng công thức KPI có sẵn trong db.js (không đổi).",
+  "type": "object",
+  "required": ["scope", "boq", "mto", "costEstimate"],
+  "additionalProperties": false,
+  "properties": {
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manualInput", "drawingData"],
+      "properties": {
+        "manualInput": { "type": "boolean", "description": "true: input từ itemCode + quantity thủ công (M5)." },
+        "drawingData": { "type": "boolean", "description": "false: auto-lấy từ bản vẽ chưa làm (M6 - Drawing Analyzer)." },
+        "note": { "type": "string" }
+      }
+    },
+    "boq": {
+      "type": "array",
+      "description": "Bill of Quantities: danh mục hạng mục + số lượng.",
+      "items": { "$ref": "#/$defs/BOQLine" }
+    },
+    "mto": {
+      "type": "array",
+      "description": "Material Take-Off: vật tư lấy ra từ input (bản giới hạn = từ itemCode/qty thủ công).",
+      "items": { "$ref": "#/$defs/MTOLine" }
+    },
+    "costEstimate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["totalCost", "totalPrice", "totalProfit", "profitMargin", "lines"],
+      "properties": {
+        "totalCost": { "type": "number", "description": "Σ qty × (internalCost ?? unitCost)" },
+        "totalPrice": { "type": "number", "description": "Σ qty × unitPrice (revenue)" },
+        "totalProfit": { "type": "number", "description": "totalPrice − totalCost" },
+        "profitMargin": { "type": "string", "description": "profit/price × 100, %, 1 thập phân" },
+        "lines": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CostLine" }
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": { "type": "string", "enum": ["pending", "done"] },
+        "note": { "type": "string", "description": "vd: cần review thủ công / chờ M6 bổ sung Drawing Data." }
+      }
+    }
+  },
+  "$defs": {
+    "BOQLine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "name", "qty", "unit"],
+      "properties": {
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "qty": { "type": "number" },
+        "unit": { "type": "string" }
+      }
+    },
+    "MTOLine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "name", "qty", "unit"],
+      "properties": {
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "qty": { "type": "number" },
+        "unit": { "type": "string" },
+        "drawingCode": { "type": "string", "description": "Mã bản vẽ gốc (nếu có). M6 sẽ tự fill." }
+      }
+    },
+    "CostLine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "qty", "unitCost", "unitPrice", "cost", "price"],
+      "properties": {
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "qty": { "type": "number" },
+        "unitCost": { "type": "number" },
+        "unitPrice": { "type": "number" },
+        "cost": { "type": "number", "description": "qty × unitCost (internalCost nếu có)" },
+        "price": { "type": "number", "description": "qty × unitPrice" }
+      }
+    }
+  }
+}

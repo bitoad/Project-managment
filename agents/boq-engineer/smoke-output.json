@@ -1,0 +1,32 @@
+{
+  "scope": {
+    "manualInput": true,
+    "drawingData": false,
+    "note": "M5 limited: input thu cong tu itemCode + quantity tu itemsApi. Drawing Data (auto tu ban ve) thuoc M6 - Drawing Analyzer."
+  },
+  "boq": [
+    { "code": "A001", "name": "Beam Ceiling - Exercise", "qty": 14, "unit": "spm" },
+    { "code": "A003", "name": "Baffles Ceiling - Mesh Room", "qty": 13, "unit": "pcs" },
+    { "code": "A004", "name": "Beam Ceiling - Corridor", "qty": 38.4, "unit": "md" }
+  ],
+  "mto": [
+    { "code": "A001", "name": "Beam Ceiling - Exercise", "qty": 14, "unit": "spm", "drawingCode": "BB1-LQM-A09-CD0001" },
+    { "code": "A003", "name": "Baffles Ceiling - Mesh Room", "qty": 13, "unit": "pcs", "drawingCode": "BB1-LQM-A09-CD0003" },
+    { "code": "A004", "name": "Beam Ceiling - Corridor", "qty": 38.4, "unit": "md", "drawingCode": "BB1-LQM-A09-CD0004" }
+  ],
+  "costEstimate": {
+    "totalCost": 103970000,
+    "totalPrice": 211770000,
+    "totalProfit": 107800000,
+    "profitMargin": "50.9%",
+    "lines": [
+      { "code": "A001", "name": "Beam Ceiling - Exercise", "qty": 14, "unitCost": 1250000, "unitPrice": 2437500, "cost": 17500000, "price": 34125000 },
+      { "code": "A003", "name": "Baffles Ceiling - Mesh Room", "qty": 13, "unitCost": 3550000, "unitPrice": 5025000, "cost": 46150000, "price": 65325000 },
+      { "code": "A004", "name": "Beam Ceiling - Corridor", "qty": 38.4, "unitCost": 1050000, "unitPrice": 2925000, "cost": 40320000, "price": 112320000 }
+    ]
+  },
+  "review": {
+    "status": "pending",
+    "note": "Can review thu cong. M6 se tu dong lay itemCode/qty tu ban ve (Drawing Data) thay vi nhap thu cong."
+  }
+}
