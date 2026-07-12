@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ProcurementResult",
+  "description": "Kết quả mua sắm vật tư EPC: shortlist NCC (nội bộ + ngoài), nháp RFQ, bảng so sánh, đề xuất. Output của agent procurement.",
+  "type": "object",
+  "required": ["item", "vendorShortlist", "rfqDraft", "comparison", "recommendation"],
+  "additionalProperties": false,
+  "properties": {
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["description", "quantity"],
+      "properties": {
+        "description": { "type": "string", "description": "Mô tả hạng mục cần mua." },
+        "quantity": { "type": "number" },
+        "specs": { "type": "string", "description": "vd: ASTM A193 B7 / A194 2H, M20, HDG." }
+      }
+    },
+    "internalCheck": {
+      "type": "object",
+      "description": "Kết quả tra NCC nội bộ TRƯỚC khi search ngoài (tránh trùng dữ liệu).",
+      "additionalProperties": false,
+      "required": ["searched", "matched"],
+      "properties": {
+        "searched": { "type": "boolean", "description": "Đã gọi suppliersApi.getAll()?" },
+        "matched": {
+          "type": "array",
+          "description": "NCC nội bộ khớp itemDescription (theo supplier.type / name).",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "vendorShortlist": {
+      "type": "array",
+      "description": "Danh sách NCC tiềm năng (nội bộ ưu tiên, sau đó ngoài).",
+      "items": { "$ref": "#/$defs/VendorRef" }
+    },
+    "rfqDraft": {
+      "type": "object",
+      "description": "Nháp yêu cầu báo giá gửi shortlist.",
+      "additionalProperties": false,
+      "required": ["subject", "body", "recipients"],
+      "properties": {
+        "subject": { "type": "string" },
+        "body": { "type": "string" },
+        "recipients": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Tên/email NCC nhận RFQ."
+        },
+        "lineItems": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "comparison": {
+      "type": "array",
+      "description": "Bảng so sánh NCC theo tiêu chí. KHÔNG bịa giá — price để 'cần RFQ' nếu chưa có.",
+      "items": { "$ref": "#/$defs/ComparisonRow" }
+    },
+    "recommendation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vendor", "reason"],
+      "properties": {
+        "vendor": { "type": "string", "description": "Tên NCC đề xuất (ưu tiên nội bộ nếu khớp)." },
+        "reason": { "type": "string" },
+        "alternatives": { "type": "array", "items": { "type": "string" } },
+        "caveats": { "type": "string", "description": "Lưu ý (vd: cần RFQ chính thức, MOQ, lead time)." }
+      }
+    }
+  },
+  "$defs": {
+    "VendorRef": {
+      "type": "object",
+      "required": ["name", "source", "retrievedVia"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "description": "SUPxxx nếu nội bộ, hoặc rỗng nếu ngoài." },
+        "name": { "type": "string" },
+        "source": { "type": "string", "enum": ["internal", "external"] },
+        "type": { "type": "string", "description": "Loại sản phẩm/dịch vụ (khớp supplier.type)." },
+        "location": { "type": "string" },
+        "contact": { "type": "string" },
+        "standards": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Tiêu chuẩn hỗ trợ, vd ASTM A193, A194."
+        },
+        "matchScore": { "type": "string", "enum": ["high", "medium", "low"] },
+        "retrievedVia": { "type": "string", "description": "suppliersApi | firecrawl | websearch-fallback" },
+        "url": { "type": "string" }
+      }
+    },
+    "ComparisonRow": {
+      "type": "object",
+      "required": ["vendor"],
+      "additionalProperties": false,
+      "properties": {
+        "vendor": { "type": "string" },
+        "standards": { "type": "string" },
+        "certs": { "type": "string", "description": "vd ISO 9001" },
+        "leadTime": { "type": "string", "description": "để 'cần RFQ' nếu không rõ" },
+        "moq": { "type": "string" },
+        "priceIndication": { "type": "string", "description": "LUÔN 'cần RFQ' trừ khi có báo giá thật." },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

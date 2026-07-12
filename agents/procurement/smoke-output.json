@@ -1,0 +1,154 @@
+{
+  "item": {
+    "description": "Bolt / Nut / Washer set for structural steel connection (stud bolt + heavy hex nut + flat washer)",
+    "quantity": 500,
+    "specs": "ASTM A193 B7 stud bolt, ASTM A194 2H heavy hex nut, ASTM F436 washer, M20, Hot-Dip Galvanized"
+  },
+  "internalCheck": {
+    "searched": true,
+    "matched": []
+  },
+  "vendorShortlist": [
+    {
+      "id": "",
+      "name": "Alpha Fastener JSC (Bulong Alpha)",
+      "source": "external",
+      "type": "High-strength bolts, anchor bolts, chemical bolts",
+      "location": "TP.HCM (office) + Di An, Binh Duong (factory)",
+      "contact": "+84-936777380",
+      "standards": ["ASTM A193 B7", "ASTM A325", "ASTM A490", "JIS S10T/F10T", "ISO 9001:2015"],
+      "matchScore": "high",
+      "retrievedVia": "websearch-fallback",
+      "url": "https://bulongalpha.vn/"
+    },
+    {
+      "id": "",
+      "name": "Quang Thai Bolts (Bu Long Quang Thai)",
+      "source": "external",
+      "type": "Stud bolt / hex bolt / nut / washer",
+      "location": "TP.HCM",
+      "contact": "",
+      "standards": ["ASTM A193 B7/B7M/B8/B8M", "ASTM A194", "ASTM A320 L7", "ASTM A325/A490", "DIN", "ISO"],
+      "matchScore": "high",
+      "retrievedVia": "websearch-fallback",
+      "url": "https://www.yellowpages.com.vn/products/395766001/astm-a193-bolts.html"
+    },
+    {
+      "id": "",
+      "name": "Duc Khanh Bolts, Nuts And Screws",
+      "source": "external",
+      "type": "Bolts, nuts, washers (incl. A194 washers)",
+      "location": "Ba Ria - Vung Tau",
+      "contact": "+84 254 3854154 / +84 903375023",
+      "standards": ["ASTM A193", "ASTM A194 (F436 washers)", "ASTM A320", "DIN 125/127/434/6914", "ISO 7091/7090"],
+      "matchScore": "high",
+      "retrievedVia": "websearch-fallback",
+      "url": "https://www.yellowpages.com.vn/products/395701570/astm-a193-bolts.html"
+    },
+    {
+      "id": "",
+      "name": "Cuong Thinh CTEG",
+      "source": "external",
+      "type": "Anchor bolts, high-strength bolts, nuts, washers",
+      "location": "Xuyen A IP, Tay Ninh",
+      "contact": "+84 914 117 937",
+      "standards": ["ASTM", "JIS", "DIN", "ISO 9001:2015"],
+      "matchScore": "medium",
+      "retrievedVia": "websearch-fallback",
+      "url": "https://cteg.com.vn/"
+    },
+    {
+      "id": "",
+      "name": "THV Fasteners",
+      "source": "external",
+      "type": "Bolts, nuts, washers (structural)",
+      "location": "Ho Chi Minh City",
+      "contact": "+84 329 909 765",
+      "standards": ["ASTM", "DIN", "ISO", "ANSI", "ISO 9001"],
+      "matchScore": "medium",
+      "retrievedVia": "websearch-fallback",
+      "url": "https://thvfasteners.com/"
+    },
+    {
+      "id": "",
+      "name": "VNFAS",
+      "source": "external",
+      "type": "Bolts, nuts, washers, stud bolts",
+      "location": "Vietnam",
+      "contact": "",
+      "standards": ["ASTM A193/A194", "TCVN", "JIS", "DIN", "ISO", "EN14399"],
+      "matchScore": "medium",
+      "retrievedVia": "websearch-fallback",
+      "url": "https://vnfas.vn/"
+    }
+  ],
+  "rfqDraft": {
+    "subject": "RFQ: ASTM A193 B7 stud bolt + A194 2H nut + F436 washer (M20, HDG) - 500 sets",
+    "body": "Kinh gui Quy cong ty, Chung toi can bang gia cho hang muc lien ket ket cau (500 bo):\n- Stud bolt ASTM A193 Gr B7, M20 x chieu dai (can xac nhan), Hot-Dip Galvanized\n- Heavy hex nut ASTM A194 Gr 2H, M20, HDG\n- Flat washer ASTM F436, M20, HDG\nTieu chuan/Chung nhan: yeu cau chung nhan vat lieu (MTC) va thu nghiem. Vui long cung cap: don gia, MOQ, lead time, dieu kien giao hang, va tai lieu chung nhan.",
+    "recipients": [
+      "Alpha Fastener JSC (bulongalpha.vn)",
+      "Quang Thai Bolts",
+      "Duc Khanh Bolts",
+      "Cuong Thinh CTEG",
+      "THV Fasteners"
+    ],
+    "lineItems": [
+      "ASTM A193 B7 stud bolt M20 - 500 pcs",
+      "ASTM A194 2H heavy hex nut M20 - 500 pcs",
+      "ASTM F436 flat washer M20 - 500 pcs"
+    ]
+  },
+  "comparison": [
+    {
+      "vendor": "Alpha Fastener JSC (Bulong Alpha)",
+      "standards": "A193 B7, A325, A490; ISO 9001:2015",
+      "certs": "ISO 9001:2015",
+      "leadTime": "can RFQ",
+      "moq": "can RFQ",
+      "priceIndication": "can RFQ",
+      "notes": "Co nha may + xu ly be mat (HDG) tai Binh Duong; 14 nam kinh nghiem, 200+ khach."
+    },
+    {
+      "vendor": "Quang Thai Bolts",
+      "standards": "A193 B7/B7M/B8/B8M, A194; DIN/ISO",
+      "certs": "can RFQ",
+      "leadTime": "can RFQ",
+      "moq": "can RFQ",
+      "priceIndication": "can RFQ",
+      "notes": "Cover day du A193 B7/B8 + A194; TP.HCM."
+    },
+    {
+      "vendor": "Duc Khanh Bolts",
+      "standards": "A193, A194 (F436 washer), DIN/ISO",
+      "certs": "can RFQ",
+      "leadTime": "can RFQ",
+      "moq": "can RFQ",
+      "priceIndication": "can RFQ",
+      "notes": "Washer A194/F436 ro; Vung Tau."
+    },
+    {
+      "vendor": "Cuong Thinh CTEG",
+      "standards": "ASTM/JIS/DIN; ISO 9001:2015",
+      "certs": "ISO 9001:2015",
+      "leadTime": "can RFQ",
+      "moq": "can RFQ",
+      "priceIndication": "can RFQ",
+      "notes": "Manh anchor bolt; Tay Ninh."
+    },
+    {
+      "vendor": "THV Fasteners",
+      "standards": "ASTM/DIN/ISO/ANSI; ISO 9001",
+      "certs": "ISO 9001",
+      "leadTime": "can RFQ",
+      "moq": "2,000 pcs (bespoke)",
+      "priceIndication": "can RFQ",
+      "notes": "MOQ 2,000 cho hang custom."
+    }
+  ],
+  "recommendation": {
+    "vendor": "Alpha Fastener JSC (Bulong Alpha)",
+    "reason": "Cover day du ASTM A193 B7 + A194 range, co nha may va xu ly HDG tai Vietnam (khong can gia cong ngoai), ISO 9001:2015, kinh nghiem EPC (oil&gas/wind/solar). Phu hop nhat cho lot A193/A194 M20 HDG.",
+    "alternatives": ["Quang Thai Bolts", "Duc Khanh Bolts"],
+    "caveats": "Can RFQ chinh thuc de co gia/lead time/MOQ. Neu chi tieu A194 washer rieng, Duc Khanh/Quang Thai cung phu hop. Chua co NCC noi bo khop A193/A194 nen dung external search."
+  }
+}
