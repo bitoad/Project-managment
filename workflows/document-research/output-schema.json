@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DocumentResearchResult",
+  "description": "Kết quả tra cứu tài liệu kỹ thuật (datasheet / catalogue / standard) cho dự án EPC. Output của agent document-researcher.",
+  "type": "object",
+  "required": ["query", "sources", "technicalSummary"],
+  "additionalProperties": false,
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "Câu hỏi/nhu cầu tra cứu gốc."
+    },
+    "sources": {
+      "type": "array",
+      "description": "Loại nguồn đã yêu cầu.",
+      "items": { "enum": ["datasheet", "standard", "catalogue"] }
+    },
+    "datasheets": {
+      "type": "array",
+      "description": "Datasheet kỹ thuật (thông số sản phẩm). Route: firecrawl (web/vendor).",
+      "items": { "$ref": "#/$defs/DocumentRef" }
+    },
+    "catalogues": {
+      "type": "array",
+      "description": "Catalogue/Zoning/Product range. Route: firecrawl (web/vendor).",
+      "items": { "$ref": "#/$defs/DocumentRef" }
+    },
+    "standards": {
+      "type": "array",
+      "description": "Tiêu chuẩn (ISO/ASTM/Qualicoat/...). Route: context7 (docs kỹ thuật) chính, firecrawl fallback.",
+      "items": { "$ref": "#/$defs/DocumentRef" }
+    },
+    "technicalSummary": {
+      "type": "string",
+      "description": "Tóm tắt kỹ thuật bằng tiếng Việt: sản phẩm là gì, thông số chính, chứng nhận, lưu ý chọn/ứng dụng."
+    }
+  },
+  "$defs": {
+    "DocumentRef": {
+      "type": "object",
+      "required": ["title", "source", "url"],
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string", "description": "Tên tài liệu/sản phẩm." },
+        "source": { "type": "string", "description": "Nhà cung cấp / tổ chức / site (vd: Jotun, ISO, ASTM)." },
+        "url": { "type": "string", "description": "Link gốc (datasheet/catalogue/pdf/trang chuẩn)." },
+        "excerpt": { "type": "string", "description": "Trích xuất / thông số chính." },
+        "specs": {
+          "type": "object",
+          "description": "Thông số kỹ thuật có cấu trúc (norm -> value), nếu có.",
+          "additionalProperties": { "type": "string" }
+        },
+        "retrievedVia": {
+          "type": "string",
+          "description": "Công cụ thực tế dùng lấy kết quả (firecrawl | context7 | websearch-fallback)."
+        },
+        "retrievedAt": { "type": "string", "description": "Thời gian lấy (ISO 8601)." }
+      }
+    }
+  }
+}

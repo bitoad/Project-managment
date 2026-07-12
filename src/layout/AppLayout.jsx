@@ -23,6 +23,7 @@ import {
   LogoutOutlined,
   CheckSquareOutlined,
   FieldTimeOutlined,
+  RobotOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext.jsx';
@@ -91,6 +92,14 @@ const menuItems = [
     label: 'BÁO CÁO',
     children: [
       { key: '/reports', icon: <FilePdfOutlined />, label: 'Xuất Báo cáo PDF' },
+    ],
+  },
+  {
+    key: 'grp-ai',
+    type: 'group',
+    label: 'AI',
+    children: [
+      { key: '/ai-search', icon: <RobotOutlined />, label: 'AI Search' },
     ],
   },
 ];

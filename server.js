@@ -666,6 +666,93 @@ app.post('/api/projects/:id/reset', requireProject, (req, res) => {
   }
 });
 
+// ============ RESEARCH (Document Researcher agent) ============
+// Gọi agent document-researcher: route theo `sources` tới firecrawl (web/vendor).
+// Khi thiếu FIRECRAWL_API_KEY -> fallback websearch (DuckDuckGo HTML) để page
+// vẫn chạy được. KHÔNG lưu lịch sử (frontend giữ in-session).
+// Route ĐÓNG: requireAuth (thêm vào nhóm yêu cầu token, giống mọi POST khác).
+const FIRECRAWL_API_KEY = process.env.FIRECRAWL_API_KEY;
+
+async function searchFirecrawl(query, limit = 5) {
+  const resp = await fetch('https://api.firecrawl.dev/v1/search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${FIRECRAWL_API_KEY}` },
+    body: JSON.stringify({ query, limit, scrapeOptions: { formats: ['markdown'], onlyMainContent: true } }),
+  });
+  if (!resp.ok) throw new Error(`firecrawl ${resp.status}`);
+  const json = await resp.json();
+  return (json.data || []).map((it) => ({
+    title: it.title || it.url,
+    source: (() => { try { return new URL(it.url).hostname; } catch { return 'web'; } })(),
+    url: it.url,
+    excerpt: String(it.markdown || it.description || '').slice(0, 400),
+    retrievedVia: 'firecrawl',
+  }));
+}
+
+function parseDdg(html) {
+  const links = [...html.matchAll(/class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)];
+  const snippets = [...html.matchAll(/class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g)]
+    .map((m) => m[1].replace(/<[^>]+>/g, '').trim());
+  return links.slice(0, 5).map((m, i) => {
+    let href = m[1];
+    const uddg = href.match(/[?&]uddg=([^&]+)/);
+    if (uddg) href = decodeURIComponent(uddg[1]);
+    return {
+      title: m[2].replace(/<[^>]+>/g, '').trim(),
+      source: 'web',
+      url: href,
+      excerpt: (snippets[i] || '').slice(0, 400),
+      retrievedVia: 'websearch-fallback',
+    };
+  });
+}
+
+async function searchFallback(query, limit = 5) {
+  const url = 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query);
+  const resp = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+  if (!resp.ok) throw new Error(`ddg ${resp.status}`);
+  return parseDdg(await resp.text()).slice(0, limit);
+}
+
+// Trả [] khi mọi nguồn lỗi -> UI hiển thị "không có kết quả" thay vì 502.
+async function searchDocuments(query) {
+  if (FIRECRAWL_API_KEY) {
+    try { return await searchFirecrawl(query); } catch (e) { console.error('[research] firecrawl failed:', e.message); }
+  }
+  try { return await searchFallback(query); } catch (e) { console.error('[research] fallback failed:', e.message); return []; }
+}
+
+app.post('/api/research/query', requireAuth, async (req, res) => {
+  const query = String(req.body?.query || '').trim();
+  if (!query) return res.status(400).json({ error: 'Thiếu trường query' });
+
+  let sources = req.body?.sources;
+  const VALID = ['datasheet', 'standard', 'catalogue'];
+  if (!Array.isArray(sources) || sources.length === 0) sources = [...VALID];
+  sources = sources.filter((s) => VALID.includes(s));
+
+  try {
+    const out = { query, sources, datasheets: [], catalogues: [], standards: [], technicalSummary: '' };
+    for (const src of sources) {
+      const q = src === 'datasheet' ? `${query} datasheet`
+        : src === 'catalogue' ? `${query} catalogue`
+        : `${query} standard`;
+      const found = await searchDocuments(q);
+      const bucket = src === 'datasheet' ? out.datasheets : src === 'catalogue' ? out.catalogues : out.standards;
+      for (const f of found) bucket.push({ ...f, retrievedAt: new Date().toISOString().slice(0, 10) });
+    }
+    const total = out.datasheets.length + out.catalogues.length + out.standards.length;
+    out.technicalSummary = total === 0
+      ? `Không tìm thấy kết quả cho "${query}". Kiểm tra kết nối mạng hoặc thiết lập FIRECRAWL_API_KEY để tìm kiếm sâu hơn.`
+      : `Tìm thấy ${out.datasheets.length} datasheet, ${out.catalogues.length} catalogue, ${out.standards.length} standard cho "${query}". Xem chi tiết các nguồn bên dưới.`;
+    res.json(out);
+  } catch (e) {
+    console.error('[research] error:', e);
+    res.status(502).json({ error: 'Lỗi khi tìm kiếm tài liệu', detail: e.message });
+  }
+});
+
 // ============ Serve built frontend ============
 const distPath = path.join(__dirname, 'dist');
 app.use(express.static(distPath));

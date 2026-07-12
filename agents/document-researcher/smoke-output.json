@@ -1,0 +1,58 @@
+{
+  "query": "Jotun Facade 1403 technical datasheet",
+  "sources": ["datasheet"],
+  "datasheets": [
+    {
+      "title": "Jotun Facade (Powder Coating) — Product Page",
+      "source": "Jotun",
+      "url": "https://www.jotun.com/ww-en/products-and-services/products/jotun-facade",
+      "excerpt": "Powder coating cho facade tòa nhà & linh kiện nhôm. Chứng nhận Qualicoat Class 1, GSB, AAMA 2603. Bảo hành hiệu năng 10 năm (khi dùng trên nhôm theo hướng dẫn Jotun Powder Coatings). Không phát thải VOC có hại; compliant LEED/BREEAM.",
+      "specs": {
+        "Product type": "Exterior powder coating / Architectural topcoat",
+        "Substrate": "Aluminium alloy, Steel",
+        "Certification": "Qualicoat Class 1, GSB, AAMA 2603",
+        "Green": "LEED, BREEAM, EPD Type III",
+        "Warranty": "10-year Product Performance Guarantee"
+      },
+      "retrievedVia": "websearch (firecrawl IP-blocked fallback)",
+      "retrievedAt": "2026-07-12"
+    },
+    {
+      "title": "Jotun Facade Brochure (PDF)",
+      "source": "Jotun",
+      "url": "https://cp.jotun.com/siteassetsjot03/_b2b/product-brochures/jotun-facade-brochure.pdf",
+      "excerpt": "Thông số kỹ thuật: Impact EN ISO 6272/ASTM D2794; Cupping EN ISO 1520 (5mm không nứt); Flexibility EN ISO 1519 (5mm mandrel); Salt spray ISO 9227 (max 16mm2 infiltration/1000h); Humidity EN ISO 6270-2 (1000h); Accelerated weathering ISO 16474-3 (300h); Flame spread ASTM E84 Class 1/A.",
+      "specs": {
+        "Impact resistance": "EN ISO 6272 / ASTM D2794",
+        "Cupping test": "EN ISO 1520 — passes 5 mm indentation",
+        "Flexibility": "EN ISO 1519 — passes 5 mm mandrel bend",
+        "Salt spray": "ISO 9227 — max 16 mm2 / 1000h",
+        "Humidity": "EN ISO 6270-2 — 1000h",
+        "Accelerated weathering": "ISO 16474-3 — 300h, no chalking",
+        "Flame spread": "ASTM E84 — Class 1 / A"
+      },
+      "retrievedVia": "websearch (firecrawl IP-blocked fallback)",
+      "retrievedAt": "2026-07-12"
+    },
+    {
+      "title": "Jotun Facade 1403 — Datasheet Search (SDS)",
+      "source": "Jotun",
+      "url": "https://www.jotun.com/me-en/decorative/datasheets-search/datasheets-results?FileType=SDS&searchTerm=jotun+facade",
+      "excerpt": "Kết quả tra cứu datasheet: Jotun Facade 1403, 1406, 1407, 1408 nằm trong line Jotun Facade.",
+      "retrievedVia": "websearch (firecrawl IP-blocked fallback)",
+      "retrievedAt": "2026-07-12"
+    }
+  ],
+  "catalogues": [],
+  "standards": [
+    {
+      "title": "Qualicoat Class 1 / GSB / AAMA 2603",
+      "source": "Standards",
+      "url": "",
+      "excerpt": "Chứng nhận/class yêu cầu mà Jotun Facade line thỏa mãn (Qualicoat Class 1, GSB Florida 1, AAMA 2603 third-party tested).",
+      "retrievedVia": "websearch (firecrawl IP-blocked fallback)",
+      "retrievedAt": "2026-07-12"
+    }
+  ],
+  "technicalSummary": "Jotun Facade 1403 là sơn dạng bột (powder coating) ngoại thất của Jotun, dùng cho facade tòa nhà và linh kiện nhôm/thép. Thông số chính: chịu va đập (EN ISO 6272/ASTM D2794), cupping 5mm (EN ISO 1520), uốn 5mm (EN ISO 1519), thử muối ISO 9227 ≤16mm2 sau 1000h, thử ẩm EN ISO 6270-2 1000h, thời tiết hóa ISO 16474-3 300h không phấn hóa, chống cháy ASTM E84 Class 1/A. Chứng nhận Qualicoat Class 1, GSB, AAMA 2603;合规 LEED/BREEAM, EPD Type III; bảo hành hiệu năng 10 năm khi thi công đúng hướng dẫn Jotun trên nền nhôm. Lưu ý: lấy đúng SDS/technical datasheet chính thức từ link Jotun để làm cơ sở chọn vật liệu và nghiệm thu."
+}

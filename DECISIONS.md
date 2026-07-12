@@ -290,6 +290,9 @@ Consequences
 - Login UI unchanged (team-name select); it now establishes a real backend session.
 - Passwords, user model, and role-based access control are deferred to the Future roadmap (RBAC).
 
+### Route gate inventory (supplement)
+- `POST /api/research/query` (Document Researcher / AI Search) — **CLOSED**: requires a valid session token (`requireAuth` explicitly + global POST/PUT/DELETE gate). Not open to anonymous clients (returns `401` without token). No new DB entity; chat history is in-session only on the frontend.
+
 ---
 
 # ADR-013

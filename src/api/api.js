@@ -180,13 +180,18 @@ export const documentsApi = {
 
 // ============ AUTH (hotfix ADR-012 / P0 ADR-013) ============
 export const authApi = {
-  login: (username, password) => api.post('/api/auth/login', { username, password }).then((r) => r.data),
-  logout: () => api.post('/api/auth/logout').then((r) => r.data),
+  login: (username, password) => api.post('/auth/login', { username, password }).then((r) => r.data),
+  logout: () => api.post('/auth/logout').then((r) => r.data),
 };
 
 // ============ RBAC (modeled only — ADR-014) ============
 export const rbacApi = {
   get: () => api.get('/rbac').then((r) => r.data),
+};
+
+// ============ RESEARCH (Document Researcher agent) ============
+export const researchApi = {
+  query: (data) => api.post('/research/query', data).then((r) => r.data),
 };
 
 export default api;
