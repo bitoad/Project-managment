@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "WebsiteCloneResult",
+  "description": "Clone website public -> React component thuan (.jsx + Tailwind). M7 limited: DOM extraction, no Next.js, no vision-LLM, no copyrighted assets.",
+  "type": "object",
+  "required": ["url", "publicChecked", "component"],
+  "additionalProperties": false,
+  "properties": {
+    "url": { "type": "string" },
+    "publicChecked": {
+      "type": "boolean",
+      "description": "true: url public, khong phai noi bo/cong ty"
+    },
+    "extractedStructure": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tagCounts": { "type": "object", "additionalProperties": { "type": "number" } },
+        "classes": { "type": "array", "items": { "type": "string" } },
+        "texts": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fileName", "jsx", "framework"],
+      "properties": {
+        "fileName": { "type": "string" },
+        "jsx": { "type": "string", "description": "ma React component thuan (.jsx)" },
+        "framework": { "type": "string", "enum": ["react+vite"], "description": "KHONG Next.js" }
+      }
+    },
+    "deferred": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "cac phan hoan (vd pixel-perfect)"
+    },
+    "notes": { "type": "string" }
+  }
+}

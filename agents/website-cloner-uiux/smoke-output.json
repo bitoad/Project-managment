@@ -1,0 +1,29 @@
+{
+  "url": "https://example.com",
+  "publicChecked": true,
+  "extractedStructure": {
+    "tagCounts": {
+      "html": 1, "head": 1, "title": 1, "link": 1, "meta": 1, "style": 1,
+      "body": 1, "div": 1, "h1": 1, "p": 2, "a": 1
+    },
+    "classes": [],
+    "texts": [
+      "Example Domain",
+      "This domain is for use in documentation examples without needing permission. Avoid use in operations.",
+      "Learn more"
+    ]
+  },
+  "component": {
+    "fileName": "smoke-example.jsx",
+    "framework": "react+vite",
+    "jsx": "export default function ExampleClone() {\n  return (\n    <div className=\"min-h-screen w-full bg-white text-gray-900 flex flex-col\">\n      <main className=\"flex-1 flex flex-col items-center justify-center px-6 py-16 text-center\">\n        <h1 className=\"text-4xl font-bold tracking-tight text-gray-900 mb-6\">\n          Example Domain\n        </h1>\n        <p className=\"text-base leading-relaxed text-gray-600 max-w-xl mb-4\">\n          This domain is for use in documentation examples without needing permission. Avoid use in operations.\n        </p>\n        <a\n          href=\"https://iana.org/domains/example\"\n          className=\"text-blue-600 hover:text-blue-800 hover:underline transition-colors\"\n        >\n          Learn more\n        </a>\n      </main>\n    </div>\n  );\n}\n"
+  },
+  "deferred": ["pixel-perfect visual fidelity (needs vision-LLM)"],
+  "verification": {
+    "method": "esbuild.transformSync(jsx, { loader: 'jsx', jsx: 'automatic' })",
+    "result": "ESBUILD_OK: valid .jsx",
+    "nextJsTokens": "NONE",
+    "tailwindClasses": "yes"
+  },
+  "notes": "Smoke tren example.com (public domain). DOM extraction via Playwright (khong vision-LLM). Component pure React + Tailwind, KHONG Next.js, KHONG copy asset. Visual fidelity deferred."
+}
