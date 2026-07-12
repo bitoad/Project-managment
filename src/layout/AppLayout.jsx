@@ -6,7 +6,9 @@ import {
   AppstoreOutlined,
   TeamOutlined,
   ShopOutlined,
-  ProfileOutlined,
+  ContainerOutlined,
+  FormOutlined,
+  ScheduleOutlined,
   WarningOutlined,
   DollarOutlined,
   FileSearchOutlined,
@@ -44,68 +46,69 @@ function getDaysUntil(dateValue) {
 
 const menuItems = [
   {
-    key: 'grp-main',
+    key: 'grp-overview',
     type: 'group',
     label: 'TỔNG QUAN',
     children: [
       { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
       { key: '/my-tasks', icon: <CheckSquareOutlined />, label: 'Việc của tôi' },
-      { key: '/timeline', icon: <FieldTimeOutlined />, label: 'Timeline (Gantt)' },
       { key: '/projects', icon: <ProjectOutlined />, label: 'Quản lý Dự án' },
     ],
   },
   {
-    key: 'grp-project',
+    key: 'grp-execution',
     type: 'group',
-    label: 'QUẢN LÝ DỰ ÁN',
+    label: 'THỰC HIỆN DỰ ÁN',
     children: [
-        { key: '/ports', icon: <AppstoreOutlined />, label: 'Hạng mục (Ports)' },
-        { key: '/data-entry', icon: <ProfileOutlined />, label: 'Nhập liệu nhanh' },
-        { key: '/items', icon: <ProfileOutlined />, label: 'Item Master' },
-      { key: '/kanban', icon: <ProfileOutlined />, label: 'Kanban Công việc' },
+      { key: '/ports', icon: <AppstoreOutlined />, label: 'Hạng mục (Ports)' },
+      { key: '/kanban', icon: <ScheduleOutlined />, label: 'Kanban Công việc' },
+      { key: '/timeline', icon: <FieldTimeOutlined />, label: 'Timeline (Gantt)' },
       { key: '/risks', icon: <WarningOutlined />, label: 'Ma trận Rủi ro' },
     ],
   },
   {
     key: 'grp-cost',
     type: 'group',
-    label: 'CHI PHÍ & MUA HÀNG',
+    label: 'VẬT TƯ & CHI PHÍ',
     children: [
+      { key: '/items', icon: <ContainerOutlined />, label: 'Item Master' },
+      { key: '/data-entry', icon: <FormOutlined />, label: 'Nhập liệu nhanh' },
       { key: '/cost-log', icon: <DollarOutlined />, label: 'Cost Log' },
       { key: '/quotations', icon: <FileSearchOutlined />, label: 'So sánh Báo giá' },
       { key: '/s-curve', icon: <LineChartOutlined />, label: 'S-Curve (EV)' },
     ],
   },
   {
-    key: 'grp-resources',
+    key: 'grp-partners',
     type: 'group',
-    label: 'TÀI NGUYÊN',
+    label: 'ĐỐI TÁC & NHÂN SỰ',
     children: [
       { key: '/suppliers', icon: <ShopOutlined />, label: 'Nhà cung cấp' },
-      { key: '/documents', icon: <FolderOpenOutlined />, label: 'Bản vẽ & Tài liệu' },
       { key: '/team', icon: <TeamOutlined />, label: 'Team' },
     ],
   },
   {
-    key: 'grp-report',
+    key: 'grp-docs',
     type: 'group',
-    label: 'BÁO CÁO',
+    label: 'TÀI LIỆU & BÁO CÁO',
     children: [
+      { key: '/documents', icon: <FolderOpenOutlined />, label: 'Bản vẽ & Tài liệu' },
       { key: '/reports', icon: <FilePdfOutlined />, label: 'Xuất Báo cáo PDF' },
-    ],
-  },
-  {
-    key: 'grp-ai',
-    type: 'group',
-    label: 'AI',
-    children: [
       { key: '/ai-search', icon: <RobotOutlined />, label: 'AI Search' },
     ],
   },
 ];
 
+const SIDEBAR_COLLAPSED_KEY = 'gp-sidebar-collapsed';
+
 export default function AppLayout() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDesc, setNewProjectDesc] = useState('');
@@ -121,6 +124,22 @@ export default function AppLayout() {
   useEffect(() => {
     tasksApi.getAll().then(setTasks).catch(() => setTasks([]));
   }, []);
+
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(SIDEBAR_COLLAPSED_KEY, next ? '1' : '0');
+      } catch {
+        /* ignore storage errors */
+      }
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (!isMobile && screens.lg === false) setCollapsed(true);
+  }, [screens.lg, isMobile]);
 
   const notifications = useMemo(() => {
     return (tasks || [])
@@ -229,7 +248,6 @@ export default function AppLayout() {
             theme="dark"
             mode="inline"
             selectedKeys={[location.pathname]}
-            defaultOpenKeys={['grp-main', 'grp-project', 'grp-cost', 'grp-resources', 'grp-report']}
             items={menuItems}
             onClick={({ key }) => navigate(key)}
             style={{ borderRight: 0 }}
@@ -251,7 +269,6 @@ export default function AppLayout() {
           theme="dark"
           mode="inline"
           selectedKeys={[location.pathname]}
-          defaultOpenKeys={['grp-main', 'grp-project', 'grp-cost', 'grp-resources', 'grp-report']}
           items={menuItems}
           onClick={({ key }) => {
             navigate(key);
@@ -276,7 +293,7 @@ export default function AppLayout() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-            <span style={{ fontSize: 18, cursor: 'pointer', flexShrink: 0 }} onClick={() => (isMobile ? setMobileNavOpen(true) : setCollapsed(!collapsed))}>
+            <span style={{ fontSize: 18, cursor: 'pointer', flexShrink: 0 }} onClick={() => (isMobile ? setMobileNavOpen(true) : toggleCollapsed())}>
               {collapsed || isMobile ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             </span>
 

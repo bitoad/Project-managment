@@ -265,6 +265,31 @@ body {
 .app-sider .ant-menu-dark .ant-menu-item:hover {
   background: rgba(255, 255, 255, 0.08) !important;
 }
+/* Nhãn nhóm: nhỏ, mờ, nhất quán khoảng cách */
+.app-sider .ant-menu-item-group-title,
+.app-sider-drawer .ant-menu-item-group-title {
+  color: rgba(255, 255, 255, 0.4) !important;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 14px 24px 6px;
+}
+/* Khi thu gọn: ẩn nhãn nhóm để icon-only sạch sẽ */
+.app-sider .ant-menu-inline-collapsed .ant-menu-item-group-title {
+  display: none !important;
+}
+/* Active rõ hơn: chữ đậm + nhãn không xuống dòng/cắt chữ gọn */
+.app-sider .ant-menu-dark .ant-menu-item-selected,
+.app-sider-drawer .ant-menu .ant-menu-item-selected {
+  font-weight: 600;
+}
+.app-sider .ant-menu-title-content,
+.app-sider-drawer .ant-menu-title-content {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .app-logo {
   background: rgba(255, 255, 255, 0.04) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
