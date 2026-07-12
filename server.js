@@ -20,6 +20,21 @@ app.use(cors());
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
+// Write-metrics logging (ADR-011 follow-up): ghi nhật ký nhẹ mọi request ghi
+// (POST/PUT/DELETE) để lần review migrate SQLite sau có tần suất ghi THẬT thay
+// vì ước tính. File .log đã được .gitignore; append bất đồng bộ, không chặn request.
+const WRITE_METRICS_LOG = path.join(__dirname, 'write-metrics.log');
+app.use((req, res, next) => {
+  if (req.method === 'POST' || req.method === 'PUT' || req.method === 'DELETE') {
+    res.on('finish', () => {
+      const pid = req.query.projectId || req.headers['x-project-id'] || '-';
+      const line = `${new Date().toISOString()} ${req.method} ${req.path} ${res.statusCode} pid=${pid}\n`;
+      fs.appendFile(WRITE_METRICS_LOG, line, () => {});
+    });
+  }
+  next();
+});
+
 // Phục vụ file upload tĩnh
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });

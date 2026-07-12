@@ -56,7 +56,7 @@ export function getIndex() {
 
 function saveIndex(index) {
   return withWriteLock('__INDEX__', () => {
-    fs.writeFileSync(INDEX_PATH, JSON.stringify(index, null, 2), 'utf-8');
+    writeJsonAtomic(INDEX_PATH, JSON.stringify(index, null, 2));
   });
 }
 
@@ -85,7 +85,7 @@ export function createProject(name, description) {
   seed.team = [];
   seed.documents = [];
 
-  fs.writeFileSync(path.join(projectDir, 'data.json'), JSON.stringify(seed, null, 2), 'utf-8');
+  writeJsonAtomic(path.join(projectDir, 'data.json'), JSON.stringify(seed, null, 2));
   dbCache.set(id, seed);
 
   const project = { id, name, description: description || '', createdAt: new Date().toISOString() };
@@ -166,13 +166,21 @@ function ensureDb(projectId) {
   return db;
 }
 
+// Atomic JSON write (ADR-011 follow-up): ghi ra file .tmp rồi rename để tránh
+// file cụt/hỏng nếu process crash giữa lúc ghi. rename cùng volume là atomic.
+function writeJsonAtomic(filePath, dataStr) {
+  const tmp = filePath + '.tmp';
+  fs.writeFileSync(tmp, dataStr, 'utf-8');
+  fs.renameSync(tmp, filePath);
+}
+
 function save(projectId, data) {
   dbCache.set(projectId, data);
   return withWriteLock(projectId, () => {
     const dbPath = getDbPath(projectId);
     const dir = path.dirname(dbPath);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf-8');
+    writeJsonAtomic(dbPath, JSON.stringify(data, null, 2));
   });
 }
 
@@ -586,7 +594,7 @@ export function getUsers() {
 
 function saveUsers(users) {
   return withWriteLock('__USERS__', () => {
-    fs.writeFileSync(USERS_PATH, JSON.stringify(users, null, 2), 'utf-8');
+    writeJsonAtomic(USERS_PATH, JSON.stringify(users, null, 2));
   });
 }
 

@@ -260,6 +260,17 @@ Consequences
 - Current single-user / low-concurrency usage remains safe.
 - Risk is documented and tracked; no code change in this step.
 
+### Survey update (2026-07-13, post Phase 2)
+
+Khảo sát lại mức cấp thiết migrate sau khi có 7 agent (không migrate — chỉ đánh giá):
+
+- **Lỗi ghi đồng thời thực tế: 0.** Grep toàn bộ log ứng dụng (`dev.log`, `backend.log`, `dev-run.log`, `dev-check.log`...) không có "write lock error"/lost-update/corruption. Chỉ có `EADDRINUSE` (restart trùng port) và 2× SyntaxError do JSON body request hỏng — không liên quan concurrency. `tests/db-race.test.mjs` PASS.
+- **Tần suất ghi ước tính: ~8–9 write/ngày**, hiệu dụng 1 concurrent writer (block-b-gas ~104 bản ghi / ~12 ngày, 1 user). Data lớn nhất 31.6KB.
+- **Mô hình an toàn hiện tại:** server chạy **1 process**; `withWriteLock` + `dbCache` serialize tuyệt đối mọi write trong process ⇒ lost-update không thể xảy ra khi còn 1 process. 7 agent hiện là SKILL.md điều phối, KHÔNG tự ghi DB (`/api/research/query` không persist).
+- **Ngưỡng phá vỡ an toàn = SỰ KIỆN kiến trúc, KHÔNG phải mốc lịch:** (a) chạy đa-process/cluster, HOẶC (b) agent (M8 orchestrator) được nối auto-ghi CRUD. Phụ (c) multi-user chia sẻ thật, (d) file data → ~1MB.
+- **Ước tính công sức migrate:** ~13 entity, 68 hàm trong `db.js`, 40 route write. `db.js` là data-access layer duy nhất ⇒ giữ nguyên chữ ký hàm thì API + frontend không đổi. Driver `better-sqlite3` (cần duyệt, native module). Tổng ~4–6 ngày công.
+- **Quyết định:** **giữ deferred.** Đã triển khai 2 safeguard rẻ (không phải migrate): (1) atomic write trong `save()`/`saveIndex()`/`saveUsers()`/`createProject()` (ghi `.tmp` rồi `renameSync`) loại nguy cơ file cụt khi crash; (2) request-logging POST/PUT/DELETE ra `write-metrics.log` để lần review sau có số liệu thật.
+
 ---
 
 # ADR-012
