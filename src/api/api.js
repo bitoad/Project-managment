@@ -74,7 +74,14 @@ export const dashboardApi = {
     const config = projectId ? { headers: { 'x-project-id': projectId } } : {};
     return api.get('/dashboard', config).then((r) => r.data);
   },
+  aggregate: (projectIds) => {
+    const qs = Array.isArray(projectIds) && projectIds.length ? `?projectIds=${projectIds.join(',')}` : '';
+    return api.get(`/dashboard/aggregate${qs}`).then((r) => r.data);
+  },
 };
+
+// Ghi đè x-project-id cho 1 request (dùng khi Dashboard drill-down 1 dự án khác dự án đang chọn ở header)
+const withProject = (projectId) => (projectId ? { headers: { 'x-project-id': projectId } } : {});
 
 // ============ META & SETTINGS ============
 export const metaApi = {
@@ -97,7 +104,7 @@ export const portsApi = {
 
 // ============ ITEMS ============
 export const itemsApi = {
-  getAll: () => api.get('/items').then((r) => r.data),
+  getAll: (projectId) => api.get('/items', withProject(projectId)).then((r) => r.data),
   get: (code) => api.get(`/items/${code}`).then((r) => r.data),
   create: (data) => api.post('/items', data).then((r) => r.data),
   update: (code, data) => api.put(`/items/${code}`, data).then((r) => r.data),
@@ -131,7 +138,7 @@ export const risksApi = {
 
 // ============ TASKS ============
 export const tasksApi = {
-  getAll: () => api.get('/tasks').then((r) => r.data),
+  getAll: (projectId) => api.get('/tasks', withProject(projectId)).then((r) => r.data),
   create: (data) => api.post('/tasks', data).then((r) => r.data),
   update: (id, data) => api.put(`/tasks/${id}`, data).then((r) => r.data),
   remove: (id) => api.delete(`/tasks/${id}`).then((r) => r.data),
@@ -147,7 +154,7 @@ export const teamApi = {
 
 // ============ COST LOGS ============
 export const costLogsApi = {
-  getAll: () => api.get('/cost-logs').then((r) => r.data),
+  getAll: (projectId) => api.get('/cost-logs', withProject(projectId)).then((r) => r.data),
   create: (data) => api.post('/cost-logs', data).then((r) => r.data),
   update: (id, data) => api.put(`/cost-logs/${id}`, data).then((r) => r.data),
   remove: (id) => api.delete(`/cost-logs/${id}`).then((r) => r.data),

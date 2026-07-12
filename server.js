@@ -172,6 +172,19 @@ app.get('/api/dashboard', requireProject, (req, res) => {
   res.json(db.getDashboardData(req.projectId));
 });
 
+// Dashboard tổng hợp nhiều dự án (portfolio). GET mở như /api/dashboard —
+// ADR-012 chỉ gate POST/PUT/DELETE. projectIds rỗng = tổng hợp TẤT CẢ dự án.
+app.get('/api/dashboard/aggregate', (req, res) => {
+  const raw = String(req.query.projectIds || '').trim();
+  const ids = raw ? raw.split(',').map((s) => s.trim()).filter(Boolean) : [];
+  const known = db.getProjects().map((p) => p.id);
+  const invalid = ids.filter((id) => !known.includes(id));
+  if (invalid.length) {
+    return res.status(404).json({ error: `Dự án không tồn tại: ${invalid.join(', ')}` });
+  }
+  res.json(db.getAggregateDashboard(ids));
+});
+
 // ============ META & SETTINGS ============
 app.get('/api/meta', requireProject, (req, res) => res.json(db.getMeta(req.projectId)));
 app.put('/api/meta', requireProject, validateBody({}), (req, res) => res.json(db.updateMeta(req.projectId, req.body)));

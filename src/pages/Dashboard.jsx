@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Row, Col, Card, Statistic, Progress, Table, Tag, Spin, message, Typography, Button, Select, Space, Calendar, Badge, Tooltip,
 } from 'antd';
@@ -14,6 +14,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { dashboardApi, itemsApi, costLogsApi, tasksApi } from '../api/api.js';
 import { useUser } from '../context/UserContext.jsx';
+import { useProject } from '../context/ProjectContext.jsx';
 import { costOf } from '../components/helpers.js';
 
 const { Text, Title } = Typography;
@@ -75,32 +76,53 @@ const KpiCard = ({ icon, iconBg, title, value, valueStyle, formatter, suffix, fo
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
+  const [agg, setAgg] = useState(null);
   const [items, setItems] = useState([]);
   const [costLogs, setCostLogs] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterPort, setFilterPort] = useState('all');
+  const [selectedProjects, setSelectedProjects] = useState([]);
   const navigate = useNavigate();
   const { currentUser } = useUser();
+  const { projects } = useProject();
 
-  const load = async () => {
+  // Chế độ dashboard suy ra từ số dự án được chọn:
+  //  0 = tổng hợp TẤT CẢ (mặc định) · 1 = 1 dự án (drill-down như cũ) · ≥2 = so sánh
+  const mode = selectedProjects.length >= 2 ? 'compare' : selectedProjects.length === 1 ? 'single' : 'aggregate';
+  const singleId = mode === 'single' ? selectedProjects[0] : null;
+
+  const load = useCallback(async () => {
     try {
       setLoading(true);
-      const [d, i, c, t] = await Promise.all([dashboardApi.get(), itemsApi.getAll(), costLogsApi.getAll(), tasksApi.getAll()]);
-      setData(d);
-      setItems(i);
-      setCostLogs(c);
-      setTasks(t);
+      if (mode === 'single') {
+        const [d, i, c, t] = await Promise.all([
+          dashboardApi.get(singleId), itemsApi.getAll(singleId), costLogsApi.getAll(singleId), tasksApi.getAll(singleId),
+        ]);
+        setData(d); setItems(i); setCostLogs(c); setTasks(t); setAgg(null);
+      } else {
+        const a = await dashboardApi.aggregate(selectedProjects);
+        setAgg(a); setData(null); setItems([]); setCostLogs([]);
+        setTasks(a?.aggregate?.tasks || []);
+        setFilterPort('all');
+      }
     } catch (e) {
       message.error('Không tải được dữ liệu dashboard');
     } finally {
       setLoading(false);
     }
-  };
+  }, [mode, singleId, selectedProjects]);
 
+  // Refetch khi đổi bộ lọc (load thay đổi) và khi tab được focus lại (không polling)
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
+
+  useEffect(() => {
+    const onFocus = () => load();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [load]);
 
   // Dữ liệu đã lọc theo Port
   const filtered = useMemo(() => {
@@ -191,7 +213,7 @@ export default function Dashboard() {
       .slice(0, 8);
   }, [tasks]);
 
-  if (loading || !data) {
+  if (loading || (!data && !agg)) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '70vh' }}>
         <Spin size="large" tip="Đang tải dashboard..." />
@@ -199,13 +221,38 @@ export default function Dashboard() {
     );
   }
 
-  const progressChartData = filtered.ports.map((p) => ({
-    name: p.id,
-    'Tiến độ %': p.progress,
-    'Chi phí (Tr)': Math.round(p.logged / 1e6),
+  const A = agg?.aggregate;
+  // View KPI thống nhất cho mọi chế độ (single dùng `filtered`, còn lại dùng aggregate).
+  const view = mode === 'single' ? filtered : {
+    ports: [],
+    totalRevenue: A?.totalRevenue || 0,
+    totalCost: A?.totalLoggedCost || 0,
+    totalPlannedCost: A?.totalCost || 0,
+    totalProfit: (A?.totalRevenue || 0) - (A?.totalLoggedCost || 0),
+    totalProfitMargin: (A?.totalRevenue || 0) > 0 ? ((((A.totalRevenue - A.totalLoggedCost)) / A.totalRevenue) * 100).toFixed(1) : 0,
+    avgProgress: A?.avgProgress || 0,
+    totalItems: A?.totalItems || 0,
+    itemsInFab: A?.itemsInFab || 0,
+    totalLoggedCost: A?.totalLoggedCost || 0,
+    openRisks: A?.openRisks || 0,
+    highRisks: A?.highRisks || [],
+    pendingTasks: A?.pendingTasks || 0,
+    overdueTasks: A?.overdueTasks || 0,
+    recentCosts: A?.recentCosts || [],
+  };
+
+  const progressChartData = mode === 'single'
+    ? view.ports.map((p) => ({ name: p.id, 'Tiến độ %': p.progress, 'Chi phí (Tr)': Math.round(p.logged / 1e6) }))
+    : (agg?.perProject || []).map((p) => ({ name: p.name, 'Tiến độ %': p.avgProgress, 'Chi phí (Tr)': Math.round((p.totalLoggedCost || 0) / 1e6) }));
+
+  const compareChartData = (agg?.perProject || []).slice(0, 8).map((p) => ({
+    name: p.name,
+    'Doanh thu': Math.round((p.totalRevenue || 0) / 1e6),
+    'Chi phí': Math.round((p.totalLoggedCost || 0) / 1e6),
+    'Lợi nhuận': Math.round(((p.totalRevenue || 0) - (p.totalLoggedCost || 0)) / 1e6),
   }));
 
-const taskByStatus = data.taskByStatus || {};
+const taskByStatus = (mode === 'single' ? data?.taskByStatus : A?.taskByStatus) || {};
 const taskPieData = [
   { name: 'Cần làm', value: taskByStatus.todo || 0, color: '#8c8c8c' },
   { name: 'Đang làm', value: taskByStatus.inprogress || 0, color: '#1677ff' },
@@ -213,7 +260,7 @@ const taskPieData = [
   { name: 'Hoàn thành', value: taskByStatus.done || 0, color: '#52c41a' },
 ].filter((t) => t.value > 0);
 
-  const profitColor = filtered.totalProfit >= 0 ? '#52c41a' : '#ff4d4f';
+  const profitColor = view.totalProfit >= 0 ? '#52c41a' : '#ff4d4f';
 
   const calendarCellRender = (current) => {
     const key = toKey(current);
@@ -251,19 +298,35 @@ const taskPieData = [
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <Title level={3} style={{ marginBottom: 4 }}>📊 Dashboard Tổng quan</Title>
-          <Text type="secondary">Block B Gas Project — Golden Point Co., Ltd</Text>
+          <Text type="secondary">
+            {mode === 'aggregate' && `Tổng hợp ${agg?.projects?.length || 0} dự án — Golden Point Co., Ltd`}
+            {mode === 'single' && `${(projects.find((p) => p.id === singleId)?.name) || 'Dự án'} — Golden Point Co., Ltd`}
+            {mode === 'compare' && `So sánh ${selectedProjects.length} dự án — Golden Point Co., Ltd`}
+          </Text>
         </div>
-        <Space>
+        <Space wrap>
           <Select
-            value={filterPort}
-            onChange={setFilterPort}
-            style={{ width: 180 }}
-            suffixIcon={<FilterOutlined />}
-            options={[
-              { value: 'all', label: 'Tất cả hạng mục' },
-              ...(data.ports || []).map((p) => ({ value: p.id, label: `${p.id} - ${p.description}` })),
-            ]}
+            mode="multiple"
+            allowClear
+            value={selectedProjects}
+            onChange={setSelectedProjects}
+            style={{ minWidth: 240 }}
+            maxTagCount="responsive"
+            placeholder="Tất cả dự án (tổng hợp)"
+            options={(projects || []).map((p) => ({ value: p.id, label: p.name }))}
           />
+          {mode === 'single' && (
+            <Select
+              value={filterPort}
+              onChange={setFilterPort}
+              style={{ width: 180 }}
+              suffixIcon={<FilterOutlined />}
+              options={[
+                { value: 'all', label: 'Tất cả hạng mục' },
+                ...(data?.ports || []).map((p) => ({ value: p.id, label: `${p.id} - ${p.description}` })),
+              ]}
+            />
+          )}
           <Button type="primary" icon={<FilePdfOutlined />} onClick={() => navigate('/reports')}>
             Xuất báo cáo
           </Button>
@@ -277,7 +340,7 @@ const taskPieData = [
             icon={<DollarOutlined />}
             iconBg="linear-gradient(135deg,#2F5CE0,#5b82f0)"
             title="Doanh thu hợp đồng"
-            value={filtered.totalRevenue}
+            value={view.totalRevenue}
             formatter={(v) => fmtShort(v)}
             valueStyle={{ color: '#2F5CE0' }}
             spark={[12, 18, 15, 22, 28, 26, 34]}
@@ -287,13 +350,13 @@ const taskPieData = [
         </Col>
         <Col xs={12} md={6}>
           <KpiCard
-            icon={filtered.totalProfit >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
-            iconBg={filtered.totalProfit >= 0 ? 'linear-gradient(135deg,#1FA971,#3cc995)' : 'linear-gradient(135deg,#EF4444,#ff7875)'}
+            icon={view.totalProfit >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+            iconBg={view.totalProfit >= 0 ? 'linear-gradient(135deg,#1FA971,#3cc995)' : 'linear-gradient(135deg,#EF4444,#ff7875)'}
             title="Lợi nhuận thực tế"
-            value={filtered.totalProfit}
+            value={view.totalProfit}
             formatter={(v) => fmtShort(v)}
             valueStyle={{ color: profitColor }}
-            suffix={`(${filtered.totalProfitMargin}%)`}
+            suffix={`(${view.totalProfitMargin}%)`}
             spark={[8, 6, 10, 9, 12, 11, 14]}
             sparkColor={profitColor}
             footer="Biên lợi nhuận"
@@ -304,23 +367,23 @@ const taskPieData = [
             icon={<ExperimentOutlined />}
             iconBg="linear-gradient(135deg,#722ed1,#9254de)"
             title="Tiến độ trung bình"
-            value={filtered.avgProgress}
+            value={view.avgProgress}
             formatter={(v) => `${v}%`}
             valueStyle={{ color: '#722ed1' }}
-            progress={filtered.avgProgress}
+            progress={view.avgProgress}
             footer="Theo Items dự án"
           />
         </Col>
         <Col xs={12} md={6}>
           <KpiCard
             icon={<WarningOutlined />}
-            iconBg={filtered.openRisks > 0 ? 'linear-gradient(135deg,#EF4444,#ff7875)' : 'linear-gradient(135deg,#1FA971,#3cc995)'}
+            iconBg={view.openRisks > 0 ? 'linear-gradient(135deg,#EF4444,#ff7875)' : 'linear-gradient(135deg,#1FA971,#3cc995)'}
             title="Rủi ro đang mở"
-            value={filtered.openRisks}
-            valueStyle={{ color: filtered.openRisks > 0 ? '#EF4444' : '#1FA971' }}
-            spark={[3, 5, 4, 6, 5, 7, filtered.openRisks || 0]}
+            value={view.openRisks}
+            valueStyle={{ color: view.openRisks > 0 ? '#EF4444' : '#1FA971' }}
+            spark={[3, 5, 4, 6, 5, 7, view.openRisks || 0]}
             sparkColor="#EF4444"
-            footer={`${filtered.highRisks.length} rủi ro mức cao`}
+            footer={`${view.highRisks.length} rủi ro mức cao`}
           />
         </Col>
       </Row>
@@ -328,20 +391,20 @@ const taskPieData = [
       {/* SECONDARY STATS */}
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={12} md={6}>
-          <Card size="small"><Statistic title="Tổng số Items" value={filtered.totalItems} prefix={<CheckCircleOutlined />} /></Card>
+          <Card size="small"><Statistic title="Tổng số Items" value={view.totalItems} prefix={<CheckCircleOutlined />} /></Card>
         </Col>
         <Col xs={12} md={6}>
-          <Card size="small"><Statistic title="Items đang SX" value={filtered.itemsInFab} valueStyle={{ color: '#1677ff' }} /></Card>
+          <Card size="small"><Statistic title="Items đang SX" value={view.itemsInFab} valueStyle={{ color: '#1677ff' }} /></Card>
         </Col>
         <Col xs={12} md={6}>
-          <Card size="small"><Statistic title="Công việc tồn đọng" value={filtered.pendingTasks} valueStyle={{ color: '#faad14' }} /></Card>
+          <Card size="small"><Statistic title="Công việc tồn đọng" value={view.pendingTasks} valueStyle={{ color: '#faad14' }} /></Card>
         </Col>
         <Col xs={12} md={6}>
           <Card size="small">
             <Statistic
               title="Công việc quá hạn"
-              value={filtered.overdueTasks}
-              valueStyle={{ color: filtered.overdueTasks > 0 ? '#ff4d4f' : '#52c41a' }}
+              value={view.overdueTasks}
+              valueStyle={{ color: view.overdueTasks > 0 ? '#ff4d4f' : '#52c41a' }}
               prefix={<ClockCircleOutlined />}
             />
           </Card>
@@ -351,7 +414,7 @@ const taskPieData = [
       {/* CHARTS */}
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} lg={16}>
-          <Card title="Tiến độ & Chi phí theo Hạng mục" bordered={false} className="chart-container">
+          <Card title={mode === 'single' ? 'Tiến độ & Chi phí theo Hạng mục' : 'Tiến độ & Chi phí theo Dự án'} bordered={false} className="chart-container">
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={progressChartData} barGap={6}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
@@ -384,6 +447,32 @@ const taskPieData = [
           </Card>
         </Col>
       </Row>
+
+      {/* SO SÁNH DỰ ÁN (Tài chính) */}
+      {mode === 'compare' && (
+        <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+          <Col xs={24}>
+            <Card title="So sánh tài chính giữa các dự án (triệu ₫)" bordered={false} className="chart-container">
+              <ResponsiveContainer width="100%" height={320}>
+                <BarChart data={compareChartData} barGap={4}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#595959' }} axisLine={{ stroke: '#e8e8e8' }} tickLine={false} />
+                  <YAxis tick={{ fontSize: 12, fill: '#595959' }} axisLine={false} tickLine={false} />
+                  <RTooltip
+                    cursor={{ fill: 'rgba(22,119,255,0.06)' }}
+                    formatter={(v) => `${v} Tr`}
+                    contentStyle={{ borderRadius: 10, border: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.12)' }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+                  <Bar dataKey="Doanh thu" fill="#2F5CE0" radius={[6, 6, 0, 0]} maxBarSize={40} />
+                  <Bar dataKey="Chi phí" fill="#fa8c16" radius={[6, 6, 0, 0]} maxBarSize={40} />
+                  <Bar dataKey="Lợi nhuận" fill="#1FA971" radius={[6, 6, 0, 0]} maxBarSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            </Card>
+          </Col>
+        </Row>
+      )}
 
       {/* DEADLINE CALENDAR + UPCOMING */}
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
@@ -421,29 +510,45 @@ const taskPieData = [
       {/* PORT TABLE + RISKS + RECENT COSTS */}
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} lg={14}>
-          <Card title="Hiệu suất theo Hạng mục" bordered={false}>
-            <Table
-              dataSource={filtered.ports}
-              rowKey="id"
-              size="small"
-              pagination={false}
-              columns={[
-                { title: 'Hạng mục', dataIndex: 'id', key: 'id', render: (t, r) => <Tag color={PORT_COLORS[t] || 'blue'}>{t}</Tag> },
-                { title: 'Mô tả', dataIndex: 'description', key: 'desc', ellipsis: true },
-                { title: 'Tiến độ', dataIndex: 'progress', key: 'prog', width: 160, render: (v, r) => <Progress percent={v} size="small" strokeColor={r.color} /> },
-                { title: 'Doanh thu', dataIndex: 'revenue', key: 'rev', align: 'right', width: 130, render: (v) => <Text style={{ fontSize: 13 }}>{fmtShort(v)}</Text> },
-                { title: 'Đã ghi', dataIndex: 'logged', key: 'logged', align: 'right', width: 130, render: (v) => <Text type="secondary" style={{ fontSize: 13 }}>{fmtShort(v)}</Text> },
-                { title: 'Items', dataIndex: 'itemCount', key: 'ic', align: 'center', width: 60 },
-              ]}
-            />
+          <Card title={mode === 'single' ? 'Hiệu suất theo Hạng mục' : 'Hiệu suất theo Dự án'} bordered={false}>
+            {mode === 'single' ? (
+              <Table
+                dataSource={view.ports}
+                rowKey="id"
+                size="small"
+                pagination={false}
+                columns={[
+                  { title: 'Hạng mục', dataIndex: 'id', key: 'id', render: (t, r) => <Tag color={PORT_COLORS[t] || 'blue'}>{t}</Tag> },
+                  { title: 'Mô tả', dataIndex: 'description', key: 'desc', ellipsis: true },
+                  { title: 'Tiến độ', dataIndex: 'progress', key: 'prog', width: 160, render: (v, r) => <Progress percent={v} size="small" strokeColor={r.color} /> },
+                  { title: 'Doanh thu', dataIndex: 'revenue', key: 'rev', align: 'right', width: 130, render: (v) => <Text style={{ fontSize: 13 }}>{fmtShort(v)}</Text> },
+                  { title: 'Đã ghi', dataIndex: 'logged', key: 'logged', align: 'right', width: 130, render: (v) => <Text type="secondary" style={{ fontSize: 13 }}>{fmtShort(v)}</Text> },
+                  { title: 'Items', dataIndex: 'itemCount', key: 'ic', align: 'center', width: 60 },
+                ]}
+              />
+            ) : (
+              <Table
+                dataSource={agg?.perProject || []}
+                rowKey="id"
+                size="small"
+                pagination={false}
+                columns={[
+                  { title: 'Dự án', dataIndex: 'name', key: 'name', ellipsis: true, render: (t, r) => <a onClick={() => setSelectedProjects([r.id])}>{t}</a> },
+                  { title: 'Tiến độ', dataIndex: 'avgProgress', key: 'prog', width: 160, render: (v) => <Progress percent={v} size="small" /> },
+                  { title: 'Doanh thu', dataIndex: 'totalRevenue', key: 'rev', align: 'right', width: 130, render: (v) => <Text style={{ fontSize: 13 }}>{fmtShort(v)}</Text> },
+                  { title: 'Đã ghi', dataIndex: 'totalLoggedCost', key: 'logged', align: 'right', width: 130, render: (v) => <Text type="secondary" style={{ fontSize: 13 }}>{fmtShort(v)}</Text> },
+                  { title: 'Items', dataIndex: 'totalItems', key: 'ic', align: 'center', width: 60 },
+                ]}
+              />
+            )}
           </Card>
         </Col>
         <Col xs={24} lg={10}>
           <Card title={<span><WarningOutlined style={{ color: '#ff4d4f' }} /> Rủi ro ưu tiên</span>} bordered={false} style={{ marginBottom: 16 }}>
-            {filtered.highRisks.length === 0 ? (
+            {view.highRisks.length === 0 ? (
               <Text type="secondary">Không có rủi ro nghiêm trọng</Text>
             ) : (
-              filtered.highRisks.map((r) => {
+              view.highRisks.map((r) => {
                 const color = r.score >= 15 ? '#ff4d4f' : r.score >= 12 ? '#fa8c16' : '#faad14';
                 return (
                   <div key={r.id} style={{ padding: '10px 0', borderBottom: '1px solid #f0f0f0' }}>
@@ -452,6 +557,7 @@ const taskPieData = [
                       <Tag color={color} style={{ marginLeft: 8 }}>{r.score}</Tag>
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+                      {mode !== 'single' && r.projectName && <Tag color="geekblue" style={{ fontSize: 11, marginRight: 0 }}>{r.projectName}</Tag>}
                       <Tag color={PORT_COLORS[r.portId] || 'blue'} style={{ fontSize: 11, marginRight: 0 }}>{r.portId}</Tag>
                       <Text type="secondary" style={{ fontSize: 12 }}>{r.owner}</Text>
                     </div>
@@ -466,14 +572,15 @@ const taskPieData = [
       <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
         <Col xs={24} lg={14}>
           <Card title="Chi phí gần đây" bordered={false}>
-            {filtered.recentCosts.length === 0 ? (
+            {view.recentCosts.length === 0 ? (
               <Text type="secondary">Chưa có chi phí nào</Text>
             ) : (
-              filtered.recentCosts.map((c) => (
+              view.recentCosts.map((c) => (
                 <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f5f5f5' }}>
                   <div>
                     <Text style={{ fontSize: 13 }}>{c.description}</Text>
                     <div>
+                      {mode !== 'single' && c.projectName && <Tag color="geekblue" style={{ fontSize: 11 }}>{c.projectName}</Tag>}
                       <Tag color={PORT_COLORS[c.portId] || 'blue'} style={{ fontSize: 11 }}>{c.portId}</Tag>
                       <Text type="secondary" style={{ fontSize: 11 }}>{c.date ? new Date(c.date).toLocaleDateString('vi-VN') : '-'}</Text>
                     </div>
@@ -486,11 +593,11 @@ const taskPieData = [
         </Col>
         <Col xs={24} lg={10}>
           <Card title="Tóm tắt tài chính" bordered={false}>
-            <Statistic title="Doanh thu" value={filtered.totalRevenue} formatter={(v) => fmtVND(v)} valueStyle={{ color: '#1677ff' }} />
-            <Statistic title="Chi phí kế hoạch" value={filtered.totalPlannedCost} formatter={(v) => fmtVND(v)} style={{ marginTop: 12 }} />
-            <Statistic title="Chi phí thực tế" value={filtered.totalCost} formatter={(v) => fmtVND(v)} valueStyle={{ color: '#fa541c' }} style={{ marginTop: 12 }} />
+            <Statistic title="Doanh thu" value={view.totalRevenue} formatter={(v) => fmtVND(v)} valueStyle={{ color: '#1677ff' }} />
+            <Statistic title="Chi phí kế hoạch" value={view.totalPlannedCost} formatter={(v) => fmtVND(v)} style={{ marginTop: 12 }} />
+            <Statistic title="Chi phí thực tế" value={view.totalCost} formatter={(v) => fmtVND(v)} valueStyle={{ color: '#fa541c' }} style={{ marginTop: 12 }} />
             <div style={{ marginTop: 16, padding: 12, background: profitColor === '#52c41a' ? '#f6ffed' : '#fff2f0', borderRadius: 8 }}>
-              <Statistic title="Lợi nhuận" value={filtered.totalProfit} formatter={(v) => fmtVND(v)} valueStyle={{ color: profitColor }} />
+              <Statistic title="Lợi nhuận" value={view.totalProfit} formatter={(v) => fmtVND(v)} valueStyle={{ color: profitColor }} />
             </div>
           </Card>
         </Col>

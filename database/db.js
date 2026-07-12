@@ -738,5 +738,79 @@ export function getDashboardData(projectId) {
   };
 }
 
+// Dashboard tổng hợp nhiều dự án (portfolio view).
+// KPI tiền tệ = cộng dồn. Tiến độ TB = trung bình gộp theo item
+// (Σ item.progress / Σ số item) — GIỮ NGUYÊN công thức 1 dự án (getDashboardData),
+// chỉ mở rộng phạm vi ra nhiều dự án, không đổi cách tính.
+export function getAggregateDashboard(projectIds) {
+  const all = getProjects();
+  const ids = (Array.isArray(projectIds) && projectIds.length)
+    ? projectIds.filter((id) => all.some((p) => p.id === id))
+    : all.map((p) => p.id);
+  const nameOf = (id) => all.find((p) => p.id === id)?.name || id;
+
+  const perProject = ids.map((id) => ({ id, name: nameOf(id), ...getDashboardData(id) }));
+  const sum = (key) => perProject.reduce((s, p) => s + (Number(p[key]) || 0), 0);
+
+  // Tiến độ TB gộp: dùng item thô để đúng tuyệt đối với công thức 1 dự án.
+  let progressSum = 0;
+  let progressItemCount = 0;
+  const highRisks = [];
+  const recentCosts = [];
+  const tasks = [];
+  ids.forEach((id) => {
+    const pdb = ensureDb(id);
+    (pdb.items || []).forEach((it) => { progressSum += (it.progress || 0); progressItemCount += 1; });
+    (pdb.costLogs || []).forEach((c) => recentCosts.push({ ...c, projectId: id, projectName: nameOf(id) }));
+    (pdb.tasks || []).forEach((t) => tasks.push({ ...t, projectId: id, projectName: nameOf(id) }));
+  });
+  perProject.forEach((p) => (p.highRisks || []).forEach((r) => highRisks.push({ ...r, projectId: p.id, projectName: p.name })));
+  highRisks.sort((a, b) => b.score - a.score);
+  recentCosts.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+  const avgProgress = progressItemCount > 0 ? Math.round(progressSum / progressItemCount) : 0;
+  const totalRevenue = sum('totalRevenue');
+  const totalCost = sum('totalCost');
+  const totalProfit = totalRevenue - totalCost;
+  const taskByStatus = { todo: 0, inprogress: 0, review: 0, done: 0 };
+  perProject.forEach((p) => Object.keys(taskByStatus).forEach((k) => { taskByStatus[k] += (p.taskByStatus?.[k] || 0); }));
+
+  return {
+    projects: ids.map((id) => ({ id, name: nameOf(id) })),
+    aggregate: {
+      totalRevenue,
+      totalCost,
+      totalProfit,
+      totalProfitMargin: totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : 0,
+      totalLoggedCost: sum('totalLoggedCost'),
+      avgProgress,
+      totalItems: sum('totalItems'),
+      itemsInFab: sum('itemsInFab'),
+      openRisks: sum('openRisks'),
+      pendingTasks: sum('pendingTasks'),
+      overdueTasks: sum('overdueTasks'),
+      taskByStatus,
+      highRisks: highRisks.slice(0, 8),
+      recentCosts: recentCosts.slice(0, 8),
+      tasks,
+    },
+    perProject: perProject.map((p) => ({
+      id: p.id,
+      name: p.name,
+      totalRevenue: p.totalRevenue,
+      totalCost: p.totalCost,
+      totalLoggedCost: p.totalLoggedCost,
+      totalProfit: p.totalProfit,
+      totalProfitMargin: p.totalProfitMargin,
+      avgProgress: p.avgProgress,
+      totalItems: p.totalItems,
+      itemsInFab: p.itemsInFab,
+      openRisks: p.openRisks,
+      pendingTasks: p.pendingTasks,
+      overdueTasks: p.overdueTasks,
+    })),
+  };
+}
+
 // ============ AUTO-MIGRATE KHI IMPORT ============
 migrateOldData();
