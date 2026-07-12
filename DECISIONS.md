@@ -393,3 +393,30 @@ Consequences
 - Uploads are restricted to known business file types.
 - All API errors return consistent JSON instead of HTML.
 - Validation is intentionally lightweight (no full schema library) to avoid regressions and stay within the "minimum code" guideline.
+
+---
+
+# ADR-016
+
+Title
+
+Vision-LLM (GLM-5.2 image input) for drawing analysis — deferred pending security review
+
+Status
+
+Deferred (do not enable in M6)
+
+Context
+
+Drawing Analyzer (M6, Phase 2) needs to extract rooms/grids/walls/doors/windows/equipment from EPC drawings. The only image-capable asset available is the `nara` provider `GLM-5.2` (modalities: input image), configured in `opencode.jsonc`. No OCR engine (Tesseract) or CV/object-detection model is installed locally, and `pdf-reader MCP` is text-only (cannot detect objects).
+
+Decision
+
+- M6 implements Drawing Analyzer as a **router/spec only**: vector text-PDFs route to `pdf-reader MCP` for text/dimension extraction; object detection is marked **BLOCKED**. No fabricated detections.
+- Using the vision-LLM (`GLM-5.2` image modality) to analyze drawings is **deferred**. It MUST NOT be used until a security review is completed, because it would send company drawing files (potentially confidential EPC designs) to an external API.
+- Enabling any vision/OCR path in future requires: (1) data-egress/confidentiality sign-off, (2) accuracy validation for quantity takeoff, (3) approval per ADR non-goals (no new dependency without sign-off).
+
+Consequences
+
+- M6 cannot auto-detect drawing objects; BOQ `Drawing Data` remains PARTIAL (text only) / BLOCKED for objects.
+- A future milestone may enable local OCR (Tesseract) or a sandboxed vision model after the security review above.

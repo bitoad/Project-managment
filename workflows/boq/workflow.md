@@ -9,8 +9,8 @@ M5 kích hoạt một phần: từ **BOQ Engineer** trở đi. Phần **Drawing 
 
 ## Stages
 
-### 1. Drawing Data — [PENDING] (M6)
-Tự động trích xuất hạng mục/số lượng từ bản vẽ. CHƯA làm ở M5 (cần Drawing Analyzer).
+### 1. Drawing Data — [PARTIAL] (M6)
+Trích xuất từ bản vẽ. M6 định nghĩa Drawing Analyzer ở dạng router/spec: vector text-PDF → `pdf-reader MCP` lấy text/dimension (ĐƯỢC PHÉP); **object detection [BLOCKED]** (không OCR/CV, vision-LLM hoãn theo ADR-016). Xem `workflows/drawing-analysis/workflow.md`.
 
 ### 2. BOQ Engineer — [ACTIVE] (M5)
 Agent điều phối (xem `agents/boq-engineer/SKILL.md`). Nhận input thủ công `{itemCode, quantity?}` từ `itemsApi`, tính BOQ + MTO + Cost Estimate theo `output-schema.json`.

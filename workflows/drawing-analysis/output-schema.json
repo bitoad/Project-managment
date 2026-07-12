@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DrawingAnalysisResult",
+  "description": "Kết quả phân tích bản vẽ (M6 limited): template output. Text-extraction từ vector PDF qua pdf-reader MCP; object-detection BLOCKED. KHÔNG chứa dữ liệu bịa từ drawing thật.",
+  "type": "object",
+  "required": ["inputType", "objectsDetected"],
+  "additionalProperties": false,
+  "properties": {
+    "inputType": {
+      "type": "string",
+      "enum": ["vector-pdf", "scanned-pdf", "image", "unknown"]
+    },
+    "extractedText": {
+      "type": "string",
+      "description": "Text thô từ pdf-reader MCP (chỉ khi vector-pdf). Rỗng nếu không có."
+    },
+    "dimensions": {
+      "type": "array",
+      "description": "Các chuỗi dimension/room-tag tìm được trong text.",
+      "items": { "type": "string" }
+    },
+    "objectsDetected": {
+      "type": "string",
+      "description": "LUÔN 'BLOCKED' ở M6 — object detection chưa khả thi.",
+      "enum": ["BLOCKED"]
+    },
+    "objectsNote": { "type": "string" },
+    "recommendation": { "type": "string" },
+    "note": { "type": "string" }
+  }
+}
