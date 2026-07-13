@@ -198,7 +198,7 @@ export const rbacApi = {
 
 // ============ RESEARCH (Document Researcher agent) ============
 export const researchApi = {
-  query: (data) => api.post('/research/query', data).then((r) => r.data),
+  query: (data) => api.post('/research/query', data, { timeout: 120000 }).then((r) => r.data),
 };
 
 export default api;

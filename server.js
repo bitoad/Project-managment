@@ -706,6 +706,7 @@ async function searchFirecrawl(query, limit = 5) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${FIRECRAWL_API_KEY}` },
     body: JSON.stringify({ query, limit, scrapeOptions: { formats: ['markdown'], onlyMainContent: true } }),
+    signal: AbortSignal.timeout(30000),
   });
   if (!resp.ok) throw new Error(`firecrawl ${resp.status}`);
   const json = await resp.json();
@@ -738,7 +739,7 @@ function parseDdg(html) {
 
 async function searchFallback(query, limit = 5) {
   const url = 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query);
-  const resp = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+  const resp = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(15000) });
   if (!resp.ok) throw new Error(`ddg ${resp.status}`);
   return parseDdg(await resp.text()).slice(0, limit);
 }
@@ -762,11 +763,15 @@ app.post('/api/research/query', requireAuth, async (req, res) => {
 
   try {
     const out = { query, sources, datasheets: [], catalogues: [], standards: [], technicalSummary: '' };
-    for (const src of sources) {
+    const searchOne = async (src) => {
       const q = src === 'datasheet' ? `${query} datasheet`
         : src === 'catalogue' ? `${query} catalogue`
         : `${query} standard`;
       const found = await searchDocuments(q);
+      return { src, found };
+    };
+    const results = await Promise.all(sources.map((s) => searchOne(s)));
+    for (const { src, found } of results) {
       const bucket = src === 'datasheet' ? out.datasheets : src === 'catalogue' ? out.catalogues : out.standards;
       for (const f of found) bucket.push({ ...f, retrievedAt: new Date().toISOString().slice(0, 10) });
     }
