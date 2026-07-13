@@ -166,6 +166,11 @@ function ensureDb(projectId) {
   return db;
 }
 
+export function getProjectSearchData(projectId) {
+  const db = ensureDb(projectId);
+  return { items: db.items || [], tasks: db.tasks || [] };
+}
+
 // Atomic JSON write (ADR-011 follow-up): ghi ra file .tmp rồi rename để tránh
 // file cụt/hỏng nếu process crash giữa lúc ghi. rename cùng volume là atomic.
 function writeJsonAtomic(filePath, dataStr) {

@@ -201,4 +201,9 @@ export const researchApi = {
   query: (data) => api.post('/research/query', data, { timeout: 120000 }).then((r) => r.data),
 };
 
+// ============ GLOBAL SEARCH ============
+export const searchApi = {
+  query: (q) => api.get('/search', { params: { q } }).then((r) => r.data),
+};
+
 export default api;

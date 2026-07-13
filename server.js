@@ -786,6 +786,40 @@ app.post('/api/research/query', requireAuth, async (req, res) => {
   }
 });
 
+// ============ GLOBAL SEARCH ============
+// Tìm kiếm nhanh across projects + items + tasks trong project hiện tại.
+// GET mở (ADR-12). Kết quả giới hạn 5 mỗi loại để tránh overload.
+app.get('/api/search', (req, res) => {
+  const q = String(req.query.q || '').trim().toLowerCase();
+  if (!q || q.length < 2) return res.json({ projects: [], items: [], tasks: [] });
+
+  // Projects — search trong _index (name, id)
+  const allProjects = db.getProjects()
+    .filter((p) => (p.name || '').toLowerCase().includes(q) || (p.id || '').toLowerCase().includes(q))
+    .slice(0, 5)
+    .map((p) => ({ id: p.id, name: p.name, type: 'project', path: '/dashboard' }));
+
+  // Items + Tasks — search trong project hiện tại (nếu có x-project-id)
+  const pid = req.headers['x-project-id'];
+  let items = [];
+  let tasks = [];
+  if (pid) {
+    try {
+      const { items: pItems, tasks: pTasks } = db.getProjectSearchData(pid);
+      items = (pItems || [])
+        .filter((it) => (it.code || '').toLowerCase().includes(q) || (it.name || '').toLowerCase().includes(q))
+        .slice(0, 5)
+        .map((it) => ({ id: it.code, name: `${it.code} — ${it.name}`, port: it.port, type: 'item', path: '/items' }));
+      tasks = (pTasks || [])
+        .filter((t) => (t.title || '').toLowerCase().includes(q))
+        .slice(0, 5)
+        .map((t) => ({ id: t.id, name: t.title, status: t.status, type: 'task', path: '/kanban' }));
+    } catch { /* project not found */ }
+  }
+
+  res.json({ projects: allProjects, items, tasks });
+});
+
 // ============ Serve built frontend ============
 const distPath = path.join(__dirname, 'dist');
 app.use(express.static(distPath));

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import companyLogo from '../assets/company-logo.png';
 import { Layout, Menu, Avatar, Badge, Dropdown, Typography, Select, Modal, Input, Spin, Button, Tag, Popover, List, Empty, Drawer, Grid } from 'antd';
 import {
@@ -26,11 +26,12 @@ import {
   CheckSquareOutlined,
   FieldTimeOutlined,
   RobotOutlined,
+  SearchOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext.jsx';
 import { useUser } from '../context/UserContext.jsx';
-import { tasksApi } from '../api/api.js';
+import { tasksApi, searchApi } from '../api/api.js';
 
 const { Sider, Header, Content } = Layout;
 const { Text } = Typography;
@@ -120,6 +121,11 @@ export default function AppLayout() {
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchTimer = useRef(null);
+  const searchRef = useRef(null);
 
   useEffect(() => {
     tasksApi.getAll().then(setTasks).catch(() => setTasks([]));
@@ -136,6 +142,26 @@ export default function AppLayout() {
       return next;
     });
   };
+
+  const doSearch = useCallback((val) => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    if (!val || val.trim().length < 2) { setSearchResults(null); return; }
+    searchTimer.current = setTimeout(async () => {
+      try {
+        const r = await searchApi.query(val.trim());
+        setSearchResults(r);
+        setSearchOpen(true);
+      } catch { setSearchResults(null); }
+    }, 300);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) setSearchOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (!isMobile && screens.lg === false) setCollapsed(true);
@@ -297,7 +323,7 @@ export default function AppLayout() {
               {collapsed || isMobile ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             </span>
 
-            {/* Project Selector */}
+            {/* Project Selector — compact */}
              <Select
                 value={currentProjectId}
                 onChange={(val) => {
@@ -307,7 +333,7 @@ export default function AppLayout() {
                   }
                   selectProject(val);
                 }}
-                style={{ flex: 1, minWidth: 0 }}
+                style={{ width: 220, flexShrink: 0 }}
                 placeholder="Chọn dự án"
                optionLabelProp="label"
                options={[
@@ -316,10 +342,7 @@ export default function AppLayout() {
                    label: (
                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 0' }}>
                        <ProjectOutlined style={{ fontSize: 13, flexShrink: 0 }} />
-                       <div style={{ overflow: 'hidden', lineHeight: 1.2 }}>
-                         <div style={{ fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
-                         <div style={{ fontSize: 11, color: '#999', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>{p.description}</div>
-                       </div>
+                       <span style={{ fontWeight: 600, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
                      </div>
                    ),
                  })),
@@ -335,6 +358,83 @@ export default function AppLayout() {
                ]}
                optionRender={(option) => option.data?.label}
              />
+
+            {/* Global Search */}
+            <div ref={searchRef} style={{ position: 'relative', flex: 1, maxWidth: 420, minWidth: 160 }}>
+              <Input
+                prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                placeholder="Tìm dự án, item, công việc..."
+                allowClear
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); doSearch(e.target.value); }}
+                onFocus={() => { if (searchResults) setSearchOpen(true); }}
+                style={{ borderRadius: 20 }}
+              />
+              {searchOpen && searchResults && (
+                <div style={{
+                  position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4,
+                  background: '#fff', borderRadius: 12, boxShadow: '0 6px 24px rgba(0,0,0,0.12)',
+                  maxHeight: 380, overflow: 'auto', zIndex: 100, padding: '8px 0',
+                }}>
+                  {searchResults.projects?.length === 0 && searchResults.items?.length === 0 && searchResults.tasks?.length === 0 ? (
+                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không tìm thấy" style={{ padding: '24px 0' }} />
+                  ) : (
+                    <>
+                      {searchResults.projects?.length > 0 && (
+                        <div>
+                          <div style={{ padding: '4px 16px', fontSize: 11, color: '#999', fontWeight: 600, textTransform: 'uppercase' }}>Dự án</div>
+                          {searchResults.projects.map((p) => (
+                            <div key={p.id} style={{ padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+                              onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                              onClick={() => { selectProject(p.id); navigate(p.path); setSearchOpen(false); setSearchQuery(''); }}
+                            >
+                              <ProjectOutlined style={{ color: '#2F5CE0', fontSize: 13 }} />
+                              <span style={{ fontSize: 13, fontWeight: 500 }}>{p.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {searchResults.items?.length > 0 && (
+                        <div>
+                          <div style={{ padding: '4px 16px', fontSize: 11, color: '#999', fontWeight: 600, textTransform: 'uppercase', borderTop: '1px solid #f0f0f0', marginTop: 4 }}>Items</div>
+                          {searchResults.items.map((it) => (
+                            <div key={it.id} style={{ padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+                              onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                              onClick={() => { navigate(it.path); setSearchOpen(false); setSearchQuery(''); }}
+                            >
+                              <ContainerOutlined style={{ color: '#722ed1', fontSize: 13 }} />
+                              <div style={{ fontSize: 13 }}>
+                                <span style={{ fontWeight: 600 }}>{it.id}</span>
+                                <span style={{ color: '#999', marginLeft: 6 }}>{it.name.split('—')[1]?.trim() || ''}</span>
+                                {it.port && <Tag style={{ marginLeft: 6, fontSize: 11 }}>{it.port}</Tag>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {searchResults.tasks?.length > 0 && (
+                        <div>
+                          <div style={{ padding: '4px 16px', fontSize: 11, color: '#999', fontWeight: 600, textTransform: 'uppercase', borderTop: '1px solid #f0f0f0', marginTop: 4 }}>Công việc</div>
+                          {searchResults.tasks.map((t) => (
+                            <div key={t.id} style={{ padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+                              onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                              onClick={() => { navigate(t.path); setSearchOpen(false); setSearchQuery(''); }}
+                            >
+                              <CheckSquareOutlined style={{ color: '#fa8c16', fontSize: 13 }} />
+                              <span style={{ fontSize: 13, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</span>
+                              <Tag style={{ margin: 0, fontSize: 11 }}>{t.status}</Tag>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
            <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
