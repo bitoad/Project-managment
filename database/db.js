@@ -697,6 +697,8 @@ export function getDashboardData(projectId) {
   const totalRevenue = items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0);
   const totalCost = items.reduce((sum, i) => sum + (i.qty * (i.internalCost ?? i.unitCost ?? 0)), 0);
   const totalProfit = totalRevenue - totalCost;
+  // Simple average — mỗi item nặng bằng nhau khi nhìn 1 dự án.
+  // Multi-project aggregate (getAggregateDashboard) dùng weighted theo contract value thay vì simple.
   const avgProgress = items.length > 0
     ? Math.round(items.reduce((sum, i) => sum + (i.progress || 0), 0) / items.length)
     : 0;
@@ -739,9 +741,17 @@ export function getDashboardData(projectId) {
 }
 
 // Dashboard tổng hợp nhiều dự án (portfolio view).
-// KPI tiền tệ = cộng dồn. Tiến độ TB = trung bình gộp theo item
-// (Σ item.progress / Σ số item) — GIỮ NGUYÊN công thức 1 dự án (getDashboardData),
-// chỉ mở rộng phạm vi ra nhiều dự án, không đổi cách tính.
+//
+// KPI tiền tệ (revenue/cost/profit): cộng dồn tuyệt đối từ mọi dự án.
+//
+// Tiến độ TB weighted theo giá trị hợp đồng (aggregate only):
+//   Σ (item.progress × itemRevenue) / Σ (itemRevenue)
+//   where itemRevenue = qty × unitPrice.
+//   Công thức này khác với single-project (getDashboardData) —
+//   single-project dùng simple average Σprogress/itemCount vì mọi item
+//   trong 1 dự án có trọng số tương đương khi nhìn tổng thể dự án đó.
+//   Khi gộp nhiều dự án, hợp đồng lớn (như Block B 1.78 tỷ) phải nặng
+//   hơn hợp đồng nhỏ (Aesop 0), nên dùng weighted theo doanh thu.
 export function getAggregateDashboard(projectIds) {
   const all = getProjects();
   const ids = (Array.isArray(projectIds) && projectIds.length)
@@ -752,15 +762,19 @@ export function getAggregateDashboard(projectIds) {
   const perProject = ids.map((id) => ({ id, name: nameOf(id), ...getDashboardData(id) }));
   const sum = (key) => perProject.reduce((s, p) => s + (Number(p[key]) || 0), 0);
 
-  // Tiến độ TB gộp: dùng item thô để đúng tuyệt đối với công thức 1 dự án.
-  let progressSum = 0;
-  let progressItemCount = 0;
+  // Tiến độ TB weighted by contract value across ALL items.
+  let weightedProgressSum = 0;
+  let totalRevenueForProgress = 0;
   const highRisks = [];
   const recentCosts = [];
   const tasks = [];
   ids.forEach((id) => {
     const pdb = ensureDb(id);
-    (pdb.items || []).forEach((it) => { progressSum += (it.progress || 0); progressItemCount += 1; });
+    (pdb.items || []).forEach((it) => {
+      const rev = (it.qty || 0) * (it.unitPrice || 0);
+      weightedProgressSum += (it.progress || 0) * rev;
+      totalRevenueForProgress += rev;
+    });
     (pdb.costLogs || []).forEach((c) => recentCosts.push({ ...c, projectId: id, projectName: nameOf(id) }));
     (pdb.tasks || []).forEach((t) => tasks.push({ ...t, projectId: id, projectName: nameOf(id) }));
   });
@@ -768,7 +782,9 @@ export function getAggregateDashboard(projectIds) {
   highRisks.sort((a, b) => b.score - a.score);
   recentCosts.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 
-  const avgProgress = progressItemCount > 0 ? Math.round(progressSum / progressItemCount) : 0;
+  const avgProgress = totalRevenueForProgress > 0
+    ? Math.round(weightedProgressSum / totalRevenueForProgress)
+    : 0;
   const totalRevenue = sum('totalRevenue');
   const totalCost = sum('totalCost');
   const totalProfit = totalRevenue - totalCost;
@@ -784,6 +800,8 @@ export function getAggregateDashboard(projectIds) {
       totalProfitMargin: totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : 0,
       totalLoggedCost: sum('totalLoggedCost'),
       avgProgress,
+      progressFormula: 'weighted_by_contract_value',
+      totalRevenueForProgress,
       totalItems: sum('totalItems'),
       itemsInFab: sum('itemsInFab'),
       openRisks: sum('openRisks'),

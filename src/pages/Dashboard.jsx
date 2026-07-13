@@ -371,7 +371,7 @@ const taskPieData = [
             formatter={(v) => `${v}%`}
             valueStyle={{ color: '#722ed1' }}
             progress={view.avgProgress}
-            footer="Theo Items dự án"
+            footer={mode === 'single' ? 'Theo Items dự án' : 'Trung bình theo GT HĐ'}
           />
         </Col>
         <Col xs={12} md={6}>
