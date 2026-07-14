@@ -1,0 +1,227 @@
+{
+  "meta": {
+    "projectName": "PVD TECH - TROLLEY",
+    "contractor": "Golden Point Co., Ltd",
+    "client": "PTSC M&C (via Hà Quang)",
+    "location": "Vung Tau, Vietnam",
+    "address": "69/20 Nguyen Gia Tri, Thanh My Tay, HCM",
+    "phone": "(84) 08-2216 9998 / 2219 0888",
+    "fax": "(84) 08-2217 7633",
+    "createdAt": "2026-07-13T07:24:50.852Z"
+  },
+  "settings": {
+    "statusProgress": {
+      "Engineering": 0.1,
+      "Approved": 0.2,
+      "Procurement": 0.3,
+      "Fabrication": 0.6,
+      "Delivery": 0.8,
+      "Installation": 0.9,
+      "Completed": 1
+    },
+    "costTypes": [
+      {
+        "code": "Material",
+        "description": "Material → vật tư"
+      },
+      {
+        "code": "Fabrication",
+        "description": "Fabrication → gia công"
+      },
+      {
+        "code": "Installation",
+        "description": "Installation → nhân công lắp đặt"
+      },
+      {
+        "code": "Logistics",
+        "description": "Logistics → vận chuyển"
+      },
+      {
+        "code": "Equipment",
+        "description": "Equipment → máy móc thuê/mua"
+      },
+      {
+        "code": "Subcontractor",
+        "description": "Subcontractor → thầu phụ"
+      },
+      {
+        "code": "Overhead",
+        "description": "Overhead → chi phí quản lý"
+      },
+      {
+        "code": "Design",
+        "description": "Design → bản vẽ, shopdrawing"
+      },
+      {
+        "code": "Testing & Inspection",
+        "description": "Testing & Inspection → test, QC"
+      },
+      {
+        "code": "Temporary Work",
+        "description": "Temporary Work → giàn giáo, bảo vệ"
+      },
+      {
+        "code": "Contingency",
+        "description": "Contingency → dự phòng"
+      }
+    ]
+  },
+  "ports": [
+    {
+      "id": "Trolley-Guard",
+      "name": "Gia Công Tay Nắm Kho Lạnh.",
+      "description": "Gia công tay nắm kho lạnh và lắp đặt inox ss304",
+      "status": "Fabrication",
+      "progress": 80,
+      "contractValue": 61146000,
+      "paymentReceived": 0,
+      "budget": 0,
+      "actual": 0,
+      "plannedProgress": 0,
+      "createdAt": "2026-07-13T07:49:37.737Z"
+    }
+  ],
+  "items": [
+    {
+      "code": "TRLL-900",
+      "name": "Trolley Guard - 900mm",
+      "port": "Trolley-Guard",
+      "qty": 6,
+      "unit": "pcs",
+      "unitCost": 1708000,
+      "unitPrice": 3816000,
+      "status": "Delivery",
+      "progress": 80,
+      "drawingCode": "260506 - BLOCK B GAS PROJECT - TROLLEY - PVD 4",
+      "startDate": null,
+      "endDate": null
+    },
+    {
+      "code": "TRLL- 1500",
+      "name": "Trolley Guard - 1500mm",
+      "port": "Trolley-Guard",
+      "qty": 3,
+      "unit": "pcs",
+      "unitCost": 2438000,
+      "unitPrice": 4976000,
+      "status": "Delivery",
+      "progress": 80,
+      "drawingCode": "260506 - BLOCK B GAS PROJECT - TROLLEY - PVD 4",
+      "startDate": null,
+      "endDate": null
+    },
+    {
+      "code": "TRLL-2300",
+      "name": "Trolley Guard - 2300mm",
+      "port": "Trolley-Guard",
+      "qty": 3,
+      "unit": "pcs",
+      "unitCost": 3670000,
+      "unitPrice": 7774000,
+      "status": "Delivery",
+      "progress": 80,
+      "drawingCode": "260506 - BLOCK B GAS PROJECT - TROLLEY - PVD 4",
+      "startDate": null,
+      "endDate": null
+    }
+  ],
+  "suppliers": [],
+  "supplierPorts": [],
+  "risks": [],
+  "tasks": [
+    {
+      "id": "T-001",
+      "title": "Lên bản vẽ",
+      "owner": "Trần Thị Phụng Anh ",
+      "portId": "PORT 1",
+      "itemCode": "",
+      "endDate": "2026-06-10",
+      "status": "done",
+      "priority": "medium",
+      "progress": 100,
+      "createdAt": "2026-07-13T07:43:32.932Z"
+    },
+    {
+      "id": "T-002",
+      "title": "Giao hàng",
+      "owner": "Nguyễn Thanh Lương",
+      "portId": "PORT 1",
+      "endDate": "2026-07-16",
+      "status": "inprogress",
+      "priority": "high",
+      "progress": 50,
+      "note": "Cần phiếu giao hàng, biên bản nghiệm thu",
+      "createdAt": "2026-07-13T07:44:26.643Z"
+    },
+    {
+      "id": "T-003",
+      "title": "Kiểm tra bàn giao tới khách hàng",
+      "owner": "Nguyễn Ngọc Khôi Nguyên ",
+      "portId": "PORT 1",
+      "endDate": "2026-07-16",
+      "status": "review",
+      "priority": "high",
+      "progress": 30,
+      "note": "Cần xác nhận phiếu giao hàng các thủ tục để hoàn thành giao hàng",
+      "createdAt": "2026-07-13T07:45:26.578Z"
+    }
+  ],
+  "costLogs": [
+    {
+      "id": "CL-001",
+      "date": "2026-07-13",
+      "portId": "Trolley-Guard",
+      "itemCode": "TRLL-900",
+      "costType": "Fabrication",
+      "description": "Gia công tay nắm kho lạnh",
+      "amount": 10248000,
+      "remarks": "Tay nắm kho lạnh bắt tường chất liệu ss304 hairlines",
+      "createdAt": "2026-07-13T07:40:03.652Z",
+      "quantity": 6,
+      "unitPrice": 1708000
+    },
+    {
+      "id": "CL-002",
+      "date": "2026-07-13",
+      "portId": "PORT 1",
+      "itemCode": "TRLL- 1500",
+      "costType": "Fabrication",
+      "description": "Gia công tay nắm kho lạnh",
+      "amount": 7314000,
+      "remarks": "Tay nắm kho lạnh bắt tường chất liệu ss304 hairlines",
+      "createdAt": "2026-07-13T07:40:52.814Z",
+      "quantity": 3,
+      "unitPrice": 2438000
+    },
+    {
+      "id": "CL-003",
+      "date": "2026-07-13",
+      "portId": "PORT 1",
+      "itemCode": "TRLL-2300",
+      "costType": "Fabrication",
+      "description": "Gia công tay nắm kho lạnh",
+      "amount": 11010000,
+      "remarks": "Tay nắm kho lạnh bắt tường chất liệu ss304 hairlines",
+      "createdAt": "2026-07-13T07:41:12.403Z",
+      "quantity": 3,
+      "unitPrice": 3670000
+    }
+  ],
+  "supplierQuotations": [],
+  "sCurve": [],
+  "team": [
+    {
+      "id": "TM-001",
+      "name": "Nguyễn Ngọc Khôi Nguyên",
+      "position": "Project Leader",
+      "role": "Lead",
+      "phone": "0975741434",
+      "ports": [
+        "All"
+      ],
+      "email": "nguyen.nguyen@goldenpointgroup.com.vn",
+      "createdAt": "2026-07-13T07:46:03.768Z"
+    }
+  ],
+  "documents": []
+}

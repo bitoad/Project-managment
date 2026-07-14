@@ -3,7 +3,6 @@ import {
   Badge,
   Button,
   Card,
-  Col,
   Empty,
   Form,
   Input,
@@ -11,10 +10,8 @@ import {
   Modal,
   Popconfirm,
   Progress,
-  Row,
   Select,
   Space,
-  Statistic,
   Table,
   Tag,
   Timeline,
@@ -39,9 +36,12 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { costLogsApi, itemsApi, portsApi, supplierPortsApi, suppliersApi, tasksApi } from '../api/api.js';
-import { fmtDate, fmtShort, fmtVND, PORT_COLORS, statusColor, costOf, STATUS_LIST } from '../components/helpers.js';
+import { useProject } from '../context/ProjectContext.jsx';
+import { fmtDate, fmtVND, PORT_COLORS, statusColor, STATUS_LIST } from '../components/helpers.js';
+import { sumRevenue, sumPlannedCost, sumActualCost, sumContractValue } from '../../shared/formulas.js';
+import StatCard from '../components/StatCard.jsx';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const STATUS_LABELS = {
   Engineering: 'Engineering',
@@ -145,6 +145,7 @@ function getPortManageUrl(portId, tab = 'items') {
 
 export default function Ports() {
   const navigate = useNavigate();
+  const { currentProjectId, portfolioView } = useProject();
   const [ports, setPorts] = useState([]);
   const [supplierPorts, setSupplierPorts] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
@@ -164,12 +165,12 @@ export default function Ports() {
     try {
       setLoading(true);
       const [p, sp, sup, itemList, taskList, logList] = await Promise.all([
-        portsApi.getAll(),
-        supplierPortsApi.getAll(),
-        suppliersApi.getAll(),
-        itemsApi.getAll(),
-        tasksApi.getAll(),
-        costLogsApi.getAll(),
+        portsApi.getAll(currentProjectId, portfolioView),
+        supplierPortsApi.getAll(currentProjectId, portfolioView),
+        suppliersApi.getAll(currentProjectId, portfolioView),
+        itemsApi.getAll(currentProjectId, portfolioView),
+        tasksApi.getAll(currentProjectId, portfolioView),
+        costLogsApi.getAll(currentProjectId, portfolioView),
       ]);
       setPorts(p);
       setSupplierPorts(sp);
@@ -186,7 +187,7 @@ export default function Ports() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [currentProjectId, portfolioView]);
 
   const openAdd = () => {
     setModalMode('add');
@@ -247,15 +248,15 @@ export default function Ports() {
 
   const enrichedPorts = useMemo(() => {
     return ports.map((port) => {
-      const portItems = items.filter((item) => item.port === port.id || item.portId === port.id);
-      const portTasks = tasks.filter((task) => task.portId === port.id);
-      const portCostLogs = costLogs.filter((log) => log.portId === port.id);
-      const portSupplierPorts = supplierPorts.filter((sp) => sp.portId === port.id);
+       const portItems = items.filter((item) => (item.port === port.id || item.portId === port.id) && (!portfolioView || item.projectId === port.projectId));
+       const portTasks = tasks.filter((task) => task.portId === port.id && (!portfolioView || task.projectId === port.projectId));
+       const portCostLogs = costLogs.filter((log) => log.portId === port.id && (!portfolioView || log.projectId === port.projectId));
+       const portSupplierPorts = supplierPorts.filter((sp) => sp.portId === port.id && (!portfolioView || sp.projectId === port.projectId));
       const deadline = getPortDeadline(port, portItems, portTasks);
       const deadlineState = getDeadlineState(deadline, port.progress || 0);
-      const plannedCost = portItems.reduce((sum, item) => sum + ((item.qty || 0) * costOf(item)), 0);
-      const plannedRevenue = portItems.reduce((sum, item) => sum + ((item.qty || 0) * (item.unitPrice || 0)), 0);
-      const actualCost = portCostLogs.reduce((sum, log) => sum + (log.amount || 0), 0);
+      const plannedCost = sumPlannedCost(portItems);
+      const plannedRevenue = sumRevenue(portItems);
+      const actualCost = sumActualCost(portCostLogs);
       const suppliersForPort = portSupplierPorts.map((sp) => ({
         ...sp,
         supplier: suppliersById.get(sp.supplierId),
@@ -275,7 +276,7 @@ export default function Ports() {
         history: buildHistory(port, portItems, portTasks, portSupplierPorts, suppliersById),
       };
     });
-  }, [costLogs, items, ports, supplierPorts, suppliersById, tasks]);
+  }, [costLogs, items, ports, supplierPorts, suppliersById, tasks, portfolioView]);
 
   const supplierOptions = useMemo(() => {
     const optionMap = new Map();
@@ -302,7 +303,7 @@ export default function Ports() {
   }, [enrichedPorts, search, statusFilter, supplierFilter]);
 
   const stats = useMemo(() => {
-    const totalValue = enrichedPorts.reduce((sum, port) => sum + (port.contractValue || 0), 0);
+    const totalValue = sumContractValue(enrichedPorts);
     return {
       total: enrichedPorts.length,
       signed: enrichedPorts.filter((port) => port.contractValue > 0).length,
@@ -318,56 +319,52 @@ export default function Ports() {
   };
 
   return (
-    <div className="page-container">
-      <div className="page-header">
+    <div className="ds-container">
+      <div className="ds-page-header">
         <div>
-          <Title level={3} style={{ marginBottom: 4 }}>
-            <AppstoreOutlined /> Quản lý Hạng mục (Ports)
-          </Title>
-          <Text type="secondary">
-            {stats.total} hạng mục - Hợp đồng Golden Point x PTSC M&C (via Hà Quang)
-          </Text>
+          <div className="ds-h1">Ports</div>
+          <div className="ds-caption">Hạng mục công việc (Port)</div>
         </div>
+        <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd} disabled={portfolioView} title={portfolioView ? 'Chọn 1 dự án để thêm Port' : undefined}>
+          Thêm Port
+        </Button>
       </div>
 
       <div className="ev-guide">
         <InfoCircleOutlined /> <b>Port</b> là hạng mục/cụm công việc của dự án. Mỗi Port có tiến độ, doanh thu (giá trị hợp đồng), chi phí kế hoạch &amp; chi phí thực tế. Bảng bên dưới so sánh hiệu suất từng Port — tiến độ càng cao và chi phí thực tế càng thấp kế hoạch là tốt.
       </div>
 
-      <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card size="small" className="stat-card">
-            <Statistic title="Tổng số Port" value={stats.total} prefix={<AppstoreOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card size="small" className="stat-card">
-            <Statistic
-              title="Đã ký hợp đồng"
-              value={stats.signed}
-              prefix={<FileDoneOutlined />}
-              valueStyle={{ color: '#22a35d' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card size="small" className="stat-card">
-            <Statistic title="Tổng giá trị HĐ" value={fmtShort(stats.totalValue)} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card size="small" className="stat-card">
-            <Statistic
-              title="Quá hạn"
-              value={stats.overdue}
-              prefix={<WarningOutlined />}
-              valueStyle={{ color: '#d64545' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <div className="ds-stat-grid">
+        <StatCard
+          icon={<AppstoreOutlined />}
+          accent="linear-gradient(135deg,#2F5CE0,#5b82f0)"
+          title="Tổng số Port"
+          value={stats.total}
+        />
+        <StatCard
+          icon={<FileDoneOutlined />}
+          accent="linear-gradient(135deg,#1FA971,#3cc995)"
+          title="Đã ký hợp đồng"
+          value={stats.signed}
+          valueStyle={{ color: '#1FA971' }}
+        />
+        <StatCard
+          icon={<DollarOutlined />}
+          accent="linear-gradient(135deg,#722ed1,#9254de)"
+          title="Tổng giá trị HĐ"
+          value={fmtVND(stats.totalValue)}
+          formatter={(v) => v}
+        />
+        <StatCard
+          icon={<WarningOutlined />}
+          accent="linear-gradient(135deg,#EF4444,#ff7875)"
+          title="Quá hạn"
+          value={stats.overdue}
+          valueStyle={{ color: '#EF4444' }}
+        />
+      </div>
 
-      <Card style={{ marginTop: 16 }} styles={{ body: { padding: 16 } }}>
+      <Card className="ds-section" style={{ marginTop: 16 }} styles={{ body: { padding: 16 } }}>
         <Space wrap style={{ width: '100%', justifyContent: 'space-between' }}>
           <Space wrap>
             <Input
@@ -400,9 +397,6 @@ export default function Ports() {
             <Button icon={<ClearOutlined />} onClick={clearFilters}>
               Xóa bộ lọc
             </Button>
-            <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd}>
-              Thêm Port
-            </Button>
           </Space>
           <Text type="secondary">
             Hiển thị {filteredPorts.length} / {enrichedPorts.length} port
@@ -410,10 +404,11 @@ export default function Ports() {
         </Space>
       </Card>
 
-      <Card title="Danh sách Port" style={{ marginTop: 16 }}>
+      <Card className="ds-chart-card" bordered={false} title="Danh sách Port" style={{ marginTop: 16 }}>
         <Table
+          className="ds-table-premium"
           dataSource={filteredPorts}
-          rowKey="id"
+          rowKey={(record) => record.__key || record.id}
           loading={loading}
           pagination={false}
           scroll={{ x: 1180 }}
@@ -448,6 +443,9 @@ export default function Ports() {
             ),
           }}
           columns={[
+            ...(portfolioView
+              ? [{ title: 'Dự án', dataIndex: 'projectName', key: 'projectName', width: 160, ellipsis: true, fixed: 'left' }]
+              : []),
             {
               title: 'Port',
               dataIndex: 'id',
@@ -527,7 +525,7 @@ export default function Ports() {
               key: 'contractValue',
               width: 150,
               align: 'right',
-              render: (value) => (value > 0 ? <Text strong>{fmtVND(value)}</Text> : <Text type="secondary">Chưa ký</Text>),
+              render: (value) => (value > 0 ? <Text strong><span className="ds-num">{fmtVND(value)}</span></Text> : <Text type="secondary">Chưa ký</Text>),
             },
             {
               title: 'Nhà cung cấp',
@@ -553,9 +551,9 @@ export default function Ports() {
               align: 'right',
               render: (_, record) => (
                 <Space direction="vertical" size={0}>
-                  <Text strong>{fmtShort(record.actualCost || record.plannedCost)}</Text>
+                  <Text strong><span className="ds-num">{fmtVND(record.actualCost || record.plannedCost)}</span></Text>
                   <Text type="secondary" style={{ fontSize: 12 }}>
-                    KH: {fmtShort(record.plannedCost)} / DT: {fmtShort(record.plannedRevenue)}
+                    KH: <span className="ds-num">{fmtVND(record.plannedCost)}</span> / DT: <span className="ds-num">{fmtVND(record.plannedRevenue)}</span>
                   </Text>
                 </Space>
               ),
@@ -567,13 +565,13 @@ export default function Ports() {
               fixed: 'right',
               render: (_, record) => (
                 <Space>
-                  <Button size="small" icon={<ProfileOutlined />} onClick={() => navigate(getPortManageUrl(record.id, 'items'))}>
+                  <Button size="small" icon={<ProfileOutlined />} onClick={() => navigate(getPortManageUrl(record.id, 'items'))} disabled={portfolioView}>
                     Item
                   </Button>
-                  <Button size="small" icon={<DollarOutlined />} onClick={() => navigate(getPortManageUrl(record.id, 'costs'))}>
+                  <Button size="small" icon={<DollarOutlined />} onClick={() => navigate(getPortManageUrl(record.id, 'costs'))} disabled={portfolioView}>
                     Chi phí
                   </Button>
-                  <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(record)}>
+                  <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(record)} disabled={portfolioView}>
                     Sửa
                   </Button>
                   <Popconfirm
@@ -582,13 +580,14 @@ export default function Ports() {
                     okText="Xóa"
                     cancelText="Hủy"
                     okButtonProps={{ danger: true }}
+                    disabled={portfolioView}
                     onConfirm={() => onDelete(record)}
                   >
                     <Button
                       size="small"
                       danger
                       icon={<DeleteOutlined />}
-                      disabled={record.hasChildren}
+                      disabled={portfolioView || record.hasChildren}
                     >
                       Xóa
                     </Button>

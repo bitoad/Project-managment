@@ -12,7 +12,6 @@ import {
   Row,
   Select,
   Space,
-  Statistic,
   Table,
   Tag,
   Typography,
@@ -28,9 +27,11 @@ import {
 import dayjs from 'dayjs';
 import { costLogsApi, itemsApi } from '../api/api.js';
 import { useProject } from '../context/ProjectContext.jsx';
-import { COST_TYPES, fmtShort, PORT_COLORS } from '../components/helpers.js';
+import { COST_TYPES, fmtVND, PORT_COLORS } from '../components/helpers.js';
+import { sumActualCost } from '../../shared/formulas.js';
+import StatCard from '../components/StatCard.jsx';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 function getCostGroup(costType = '') {
   const value = String(costType).toLowerCase();
@@ -48,7 +49,7 @@ const COST_GROUP_LABELS = {
 };
 
 export default function CostLog({ initialPortFilter = null }) {
-  const { ports } = useProject();
+  const { ports, currentProjectId, portfolioView } = useProject();
   const portOptions = useMemo(() => ports.map((p) => ({ value: p.id, label: p.id })), [ports]);
   const [logs, setLogs] = useState([]);
   const [items, setItems] = useState([]);
@@ -62,7 +63,10 @@ export default function CostLog({ initialPortFilter = null }) {
   const load = async () => {
     try {
       setLoading(true);
-      const [logList, itemList] = await Promise.all([costLogsApi.getAll(), itemsApi.getAll()]);
+      const [logList, itemList] = await Promise.all([
+        costLogsApi.getAll(currentProjectId, portfolioView),
+        itemsApi.getAll(currentProjectId, portfolioView),
+      ]);
       setLogs(logList);
       setItems(itemList);
     } catch (e) {
@@ -74,7 +78,7 @@ export default function CostLog({ initialPortFilter = null }) {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [currentProjectId, portfolioView]);
 
   useEffect(() => {
     setFilterPort(initialPortFilter || 'all');
@@ -94,13 +98,13 @@ export default function CostLog({ initialPortFilter = null }) {
   }, [filterPort, items]);
 
   const totals = useMemo(() => {
-    return filteredLogs.reduce((acc, log) => {
+    const groups = filteredLogs.reduce((acc, log) => {
       const amount = log.amount || 0;
       const group = getCostGroup(log.costType);
-      acc.total += amount;
       acc[group] += amount;
       return acc;
-    }, { total: 0, material: 0, production: 0, logistics: 0, other: 0 });
+    }, { material: 0, production: 0, logistics: 0, other: 0 });
+    return { ...groups, total: sumActualCost(filteredLogs) };
   }, [filteredLogs]);
 
   const openAdd = () => {
@@ -110,6 +114,8 @@ export default function CostLog({ initialPortFilter = null }) {
       date: dayjs(),
       portId: filterPort === 'all' ? 'PORT 1' : filterPort,
       costType: 'Material',
+      quantity: 1,
+      unitPrice: 0,
       amount: 0,
     });
     setModalOpen(true);
@@ -127,8 +133,13 @@ export default function CostLog({ initialPortFilter = null }) {
   const onSubmit = async () => {
     try {
       const values = await form.validateFields();
+      const quantity = Number(values.quantity) || 0;
+      const unitPrice = Number(values.unitPrice) || 0;
       const payload = {
         ...values,
+        quantity,
+        unitPrice,
+        amount: quantity * unitPrice,
         date: values.date ? (values.date.format ? values.date.format('YYYY-MM-DD') : values.date) : null,
       };
       if (editLog) {
@@ -153,11 +164,11 @@ export default function CostLog({ initialPortFilter = null }) {
   };
 
   return (
-    <div className="page-container">
-      <div className="page-header">
+    <div className="ds-container">
+      <div className="ds-page-header">
         <div>
-          <Title level={3} style={{ marginBottom: 4 }}><DollarOutlined /> Cost Log</Title>
-          <Text type="secondary">Theo dõi chi phí thực tế: nhập vật tư, gia công/sản xuất, vận chuyển và chi phí phát sinh.</Text>
+          <div className="ds-h1"><DollarOutlined /> Cost Log</div>
+          <div className="ds-caption">Sổ chi phí dự án</div>
         </div>
         <Space wrap>
           <Select
@@ -172,36 +183,58 @@ export default function CostLog({ initialPortFilter = null }) {
             style={{ width: 190 }}
             options={[{ value: 'all', label: 'Tất cả loại chi phí' }, ...Object.entries(COST_GROUP_LABELS).map(([value, label]) => ({ value, label }))]}
           />
-          <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd}>Thêm chi phí</Button>
+          <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd} disabled={portfolioView} title={portfolioView ? 'Chọn 1 dự án để thêm chi phí' : undefined}>Thêm chi phí</Button>
         </Space>
       </div>
 
-      <div className="ev-guide">
+      <div className="ds-card" style={{ padding: 16 }}>
         <InfoCircleOutlined /> <b>Cost Log</b> ghi nhận chi phí thực tế phát sinh. Mỗi bản ghi thuộc một nhóm: <b>Nhập vật tư</b> (Material), <b>Gia công/Sản xuất</b> (Fabrication/Installation/Subcontractor), <b>Vận chuyển</b> (Logistics/Transport) hoặc <b>Chi phí khác</b>. Tổng thực tế được so sánh với chi phí kế hoạch (từ giá internal của Item) để theo dõi vượt chi.
       </div>
 
-      <Row gutter={[16, 16]} style={{ marginTop: 20, marginBottom: 8 }}>
-        <Col xs={24} sm={12} xl={5}>
-          <Card size="small"><Statistic title="Số bản ghi" value={filteredLogs.length} /></Card>
-        </Col>
-        <Col xs={24} sm={12} xl={5}>
-          <Card size="small"><Statistic title="Tổng chi phí thực tế" value={fmtShort(totals.total)} valueStyle={{ color: '#fa541c' }} /></Card>
-        </Col>
-        <Col xs={24} sm={12} xl={5}>
-          <Card size="small"><Statistic title="Nhập vật tư" value={fmtShort(totals.material)} /></Card>
-        </Col>
-        <Col xs={24} sm={12} xl={5}>
-          <Card size="small"><Statistic title="Gia công / sản xuất" value={fmtShort(totals.production)} /></Card>
-        </Col>
-        <Col xs={24} sm={12} xl={4}>
-          <Card size="small"><Statistic title="Vận chuyển" value={fmtShort(totals.logistics)} /></Card>
-        </Col>
-      </Row>
+      <div className="ds-stat-grid" style={{ marginTop: 16 }}>
+        <StatCard
+          icon={<DollarOutlined />}
+          accent="linear-gradient(135deg,#2F5CE0,#5b82f0)"
+          title="Số bản ghi"
+          value={filteredLogs.length}
+          formatter={(v) => `${v}`}
+        />
+        <StatCard
+          icon={<DollarOutlined />}
+          accent="linear-gradient(135deg,#fa541c,#ff8c5b)"
+          title="Tổng chi phí thực tế"
+          value={totals.total}
+          formatter={(v) => fmtVND(v)}
+          valueStyle={{ color: '#fa541c' }}
+        />
+        <StatCard
+          icon={<DollarOutlined />}
+          accent="linear-gradient(135deg,#1677ff,#69b1ff)"
+          title="Nhập vật tư"
+          value={totals.material}
+          formatter={(v) => fmtVND(v)}
+        />
+        <StatCard
+          icon={<DollarOutlined />}
+          accent="linear-gradient(135deg,#722ed1,#9254de)"
+          title="Gia công / sản xuất"
+          value={totals.production}
+          formatter={(v) => fmtVND(v)}
+        />
+        <StatCard
+          icon={<DollarOutlined />}
+          accent="linear-gradient(135deg,#13c2c2,#5cdbd3)"
+          title="Vận chuyển"
+          value={totals.logistics}
+          formatter={(v) => fmtVND(v)}
+        />
+      </div>
 
-      <Card style={{ marginTop: 16 }}>
+      <Card className="ds-chart-card" bordered={false} style={{ marginTop: 16 }} title="Danh sách chi phí">
         <Table
+          className="ds-table-premium"
           dataSource={filteredLogs}
-          rowKey="id"
+          rowKey={(record) => record.__key || record.id}
           loading={loading}
           scroll={{ x: 1000 }}
           pagination={{ pageSize: 15 }}
@@ -226,12 +259,28 @@ export default function CostLog({ initialPortFilter = null }) {
             { title: 'Loại', dataIndex: 'costType', key: 'type', width: 130, render: (type) => <Tag>{type}</Tag> },
             { title: 'Mô tả', dataIndex: 'description', key: 'description', ellipsis: true },
             {
+              title: 'SL',
+              dataIndex: 'quantity',
+              key: 'quantity',
+              width: 70,
+              align: 'right',
+              render: (value) => <span className="ds-num">{value != null && value !== '' ? value : '-'}</span>,
+            },
+            {
+              title: 'Đơn giá',
+              dataIndex: 'unitPrice',
+              key: 'unitPrice',
+              width: 120,
+              align: 'right',
+              render: (value) => <span className="ds-num">{value != null && value !== '' ? fmtVND(value) : '-'}</span>,
+            },
+            {
               title: 'Số tiền',
               dataIndex: 'amount',
               key: 'amount',
               width: 140,
               align: 'right',
-              render: (value) => <Text strong style={{ color: '#fa541c' }}>{fmtShort(value)}</Text>,
+              render: (value) => <Text strong style={{ color: '#fa541c' }} className="ds-num">{fmtVND(value)}</Text>,
               sorter: (a, b) => (a.amount || 0) - (b.amount || 0),
             },
             { title: 'Ghi chú', dataIndex: 'remarks', key: 'remarks', ellipsis: true },
@@ -241,9 +290,9 @@ export default function CostLog({ initialPortFilter = null }) {
               width: 90,
               render: (_, record) => (
                 <Space>
-                  <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(record)} />
-                  <Popconfirm title="Xóa?" onConfirm={() => onDelete(record.id)}>
-                    <Button size="small" danger icon={<DeleteOutlined />} />
+                  <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(record)} disabled={portfolioView} />
+                  <Popconfirm title="Xóa?" onConfirm={() => onDelete(record.id)} disabled={portfolioView}>
+                    <Button size="small" danger icon={<DeleteOutlined />} disabled={portfolioView} />
                   </Popconfirm>
                 </Space>
               ),
@@ -283,8 +332,28 @@ export default function CostLog({ initialPortFilter = null }) {
           <Form.Item name="description" label="Mô tả" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="amount" label="Số tiền (VND)" rules={[{ required: true }]}>
-            <InputNumber min={0} style={{ width: '100%' }} formatter={(value) => `${value || ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item name="quantity" label="Số lượng" rules={[{ required: true }]}>
+                <InputNumber min={0} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col span={16}>
+              <Form.Item name="unitPrice" label="Đơn giá (VND)" rules={[{ required: true }]}>
+                <InputNumber min={0} style={{ width: '100%' }} formatter={(value) => `${value || ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item noStyle shouldUpdate>
+            {() => {
+              const qty = Number(form.getFieldValue('quantity')) || 0;
+              const price = Number(form.getFieldValue('unitPrice')) || 0;
+              return (
+                <Form.Item label="Thành tiền (SL × Đơn giá)">
+                  <Text strong style={{ color: '#fa541c', fontSize: 16 }}>{fmtVND(qty * price)}</Text>
+                </Form.Item>
+              );
+            }}
           </Form.Item>
           <Form.Item name="remarks" label="Ghi chú">
             <Input />

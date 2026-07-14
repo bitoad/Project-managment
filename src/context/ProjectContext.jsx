@@ -11,6 +11,9 @@ export function ProjectProvider({ children }) {
   );
   const [ports, setPorts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [portfolioView, setPortfolioView] = useState(
+    () => localStorage.getItem('portfolioView') === 'true'
+  );
 
   const loadProjects = useCallback(async () => {
     try {
@@ -50,6 +53,13 @@ export function ProjectProvider({ children }) {
   const selectProject = useCallback((projectId) => {
     setCurrentProjectId(projectId);
     localStorage.setItem('currentProjectId', projectId);
+    setPortfolioView(false);
+    localStorage.setItem('portfolioView', 'false');
+  }, []);
+
+  const selectAllProjects = useCallback(() => {
+    setPortfolioView(true);
+    localStorage.setItem('portfolioView', 'true');
   }, []);
 
   const createProject = useCallback(async (name, description) => {
@@ -78,7 +88,10 @@ export function ProjectProvider({ children }) {
     currentProjectId,
     ports,
     loading,
+    portfolioView,
+    setPortfolioView,
     selectProject,
+    selectAllProjects,
     createProject,
     deleteProject,
     reloadProjects: loadProjects,

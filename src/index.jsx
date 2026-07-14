@@ -7,6 +7,7 @@ import App from './App.jsx';
 import { ProjectProvider } from './context/ProjectContext.jsx';
 import { UserProvider } from './context/UserContext.jsx';
 import './index.css';
+import './theme.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

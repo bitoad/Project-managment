@@ -1,7 +1,7 @@
 // Hàm tiện ích dùng chung cho toàn app
 
-// Đơn giá vốn (giá internal) — ưu tiên internalCost, fallback unitCost
-export const costOf = (item) => (item?.internalCost ?? item?.unitCost ?? 0);
+// costOf là công thức tập trung ở engine — re-export để giữ nguyên các import cũ
+export { costOf } from '../../shared/formulas.js';
 
 // Format tiền VND đầy đủ
 export const fmtVND = (n) => {
@@ -69,11 +69,58 @@ export const riskColor = (score) => {
   return '#52c41a';
 };
 
+// Mức độ khẩn cấp của deadline theo số ngày còn lại (đồng bộ màu Risk Matrix)
+// 🔴 Đỏ: quá hạn hoặc còn ≤1 ngày | 🟠 Cam: 2–3 ngày | 🟡 Vàng: 4–7 ngày | 🟢 Xanh: >7 ngày
+export const getUrgencyColor = (days) => {
+  if (days == null) return '#8c8c8c';
+  if (days < 0) return '#ff4d4f';
+  if (days <= 1) return '#ff4d4f';
+  if (days <= 3) return '#fa8c16';
+  if (days <= 7) return '#faad14';
+  return '#52c41a';
+};
+
+export const getUrgencyLevel = (days) => {
+  if (days == null) return { color: '#8c8c8c', label: 'Chưa rõ', level: 'default' };
+  if (days < 0) return { color: '#ff4d4f', label: `Quá hạn ${Math.abs(days)} ngày`, level: 'error' };
+  if (days <= 1) return { color: '#ff4d4f', label: 'Còn 1 ngày', level: 'error' };
+  if (days <= 3) return { color: '#fa8c16', label: `Còn ${days} ngày`, level: 'warning' };
+  if (days <= 7) return { color: '#faad14', label: `Còn ${days} ngày`, level: 'warning' };
+  return { color: '#52c41a', label: `Còn ${days} ngày`, level: 'success' };
+};
+
+export const URGENCY_LEGEND = [
+  { color: '#ff4d4f', label: 'Quá hạn / ≤1 ngày' },
+  { color: '#fa8c16', label: '2–3 ngày' },
+  { color: '#faad14', label: '4–7 ngày' },
+  { color: '#52c41a', label: '>7 ngày' },
+];
+
 // Danh sách Port
 export const PORT_LIST = ['PORT 1', 'PORT 2', 'PORT 3', 'PORT 4', 'PORT 5', 'PORT 6', 'PORT 7'];
 
 // Danh sách trạng thái Item/Task
 export const STATUS_LIST = ['Engineering', 'Approved', 'Procurement', 'Fabrication', 'Delivery', 'Installation', 'Completed'];
+
+// Trạng thái mua hàng / giao hàng (procurement) — trường riêng procStatus ở Item
+export const PROC_STATUS_LIST = ['Chưa đặt', 'Đã đặt hàng', 'Đang SX', 'Đã giao', 'Lắp đặt xong'];
+
+export const procStatusColor = (status) => ({
+  'Chưa đặt': 'default',
+  'Đã đặt hàng': 'blue',
+  'Đang SX': 'processing',
+  'Đã giao': 'cyan',
+  'Lắp đặt xong': 'green',
+}[status] || 'default');
+
+// Map trạng thái mua hàng → % hoàn thành (chia đều tới 100%)
+export const PROC_STATUS_PROGRESS = {
+  'Chưa đặt': 0,
+  'Đã đặt hàng': 25,
+  'Đang SX': 50,
+  'Đã giao': 75,
+  'Lắp đặt xong': 100,
+};
 
 // Map trạng thái → % tiến độ mặc định
 export const STATUS_PROGRESS = {

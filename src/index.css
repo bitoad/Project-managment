@@ -132,12 +132,12 @@ body {
 }
 .kanban-column {
   flex: 0 0 300px;
-  background: #f7f8fa;
+  background: var(--color-surface-2);
   border-radius: var(--radius);
   padding: 14px;
   display: flex;
   flex-direction: column;
-  border: 1px solid #eef0f3;
+  border: 1px solid var(--color-border);
 }
 .kanban-column-header {
   display: flex;
@@ -148,15 +148,15 @@ body {
 }
 .kanban-card {
   background: var(--color-surface);
-  border-radius: 10px;
+  border-radius: var(--radius);
   padding: 14px;
   margin-bottom: 10px;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--elevation-2);
   cursor: grab;
   transition: box-shadow 0.2s, transform 0.2s;
 }
 .kanban-card:hover {
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--elevation-3);
   transform: translateY(-2px);
 }
 .kanban-card.dragging {
@@ -277,6 +277,18 @@ body {
 }
 /* Khi thu gọn: ẩn nhãn nhóm để icon-only sạch sẽ */
 .app-sider .ant-menu-inline-collapsed .ant-menu-item-group-title {
+  display: none !important;
+}
+/* Menu dùng group → item lồng trong group-list, antd không áp dụng flex
+   nên icon bị lệch dọc do nhãn (opacity:0) căn baseline. Ép căn giữa icon. */
+.app-sider .ant-menu-inline-collapsed .ant-menu-item,
+.app-sider .ant-menu-inline-collapsed .ant-menu-submenu-title {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding-inline: 0 !important;
+}
+.app-sider .ant-menu-inline-collapsed .ant-menu-item .ant-menu-title-content {
   display: none !important;
 }
 /* Active rõ hơn: chữ đậm + nhãn không xuống dòng/cắt chữ gọn */

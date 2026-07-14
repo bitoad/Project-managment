@@ -36,7 +36,8 @@ import Team from './Team';
 import Quotations from './Quotations';
 import SCurve from './SCurve';
 import { costLogsApi, dashboardApi, itemsApi, portsApi, risksApi, tasksApi, teamApi } from '../api/api.js';
-import { fmtShort, costOf } from '../components/helpers.js';
+import { fmtVND } from '../components/helpers.js';
+import { sumRevenue, sumPlannedCost, sumActualCost } from '../../shared/formulas.js';
 import { useProject } from '../context/ProjectContext.jsx';
 
 const { Title, Text, Paragraph } = Typography;
@@ -164,9 +165,9 @@ export default function DataEntry() {
   const focusedPortCosts = focusedPort
     ? summary.costLogs.filter((log) => log.portId === focusedPort)
     : [];
-  const focusedPortPlannedCost = focusedPortItems.reduce((sum, item) => sum + ((item.qty || 0) * costOf(item)), 0);
-  const focusedPortRevenue = focusedPortItems.reduce((sum, item) => sum + ((item.qty || 0) * (item.unitPrice || 0)), 0);
-  const focusedPortActualCost = focusedPortCosts.reduce((sum, log) => sum + (log.amount || 0), 0);
+  const focusedPortPlannedCost = sumPlannedCost(focusedPortItems);
+  const focusedPortRevenue = sumRevenue(focusedPortItems);
+  const focusedPortActualCost = sumActualCost(focusedPortCosts);
 
   return (
     <div className="page-container">
@@ -204,8 +205,8 @@ export default function DataEntry() {
         </Col>
         <Col xs={24} md={12} xl={6}>
           <Card size="small" className="stat-card">
-            <Statistic title="Doanh thu dự kiến" value={fmtShort(dashboard.totalRevenue || 0)} prefix={<DollarOutlined />} />
-            <Text type="secondary">Chi phí: {fmtShort(dashboard.totalCost || 0)}</Text>
+            <Statistic title="Doanh thu dự kiến" value={fmtVND(dashboard.totalRevenue || 0)} prefix={<DollarOutlined />} />
+            <Text type="secondary">Chi phí: {fmtVND(dashboard.totalCost || 0)}</Text>
           </Card>
         </Col>
         <Col xs={24} md={12} xl={6}>
@@ -227,9 +228,9 @@ export default function DataEntry() {
           description={
             <Space wrap>
               <Tag color="blue">{focusedPortItems.length} item</Tag>
-              <Tag color="orange">Chi phí kế hoạch: {fmtShort(focusedPortPlannedCost)}</Tag>
-              <Tag color="red">Chi phí thực tế: {fmtShort(focusedPortActualCost)}</Tag>
-              <Tag color="green">Doanh thu dự kiến: {fmtShort(focusedPortRevenue)}</Tag>
+              <Tag color="orange">Chi phí kế hoạch: {fmtVND(focusedPortPlannedCost)}</Tag>
+              <Tag color="red">Chi phí thực tế: {fmtVND(focusedPortActualCost)}</Tag>
+              <Tag color="green">Doanh thu dự kiến: {fmtVND(focusedPortRevenue)}</Tag>
             </Space>
           }
           action={<Button size="small" onClick={clearFocusedPort}>Xem tất cả Port</Button>}

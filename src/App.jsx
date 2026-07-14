@@ -22,6 +22,7 @@ const Timeline = lazy(() => import('./pages/Timeline.jsx'));
 const MyTasks = lazy(() => import('./pages/MyTasks.jsx'));
 const DataEntry = lazy(() => import('./pages/DataEntry.jsx'));
 const AISearch = lazy(() => import('./pages/AISearch.jsx'));
+const ItemWatchlist = lazy(() => import('./pages/ItemWatchlist.jsx'));
 
 const PageLoader = (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
@@ -81,6 +82,7 @@ export default function App() {
             <Route path="/team" element={<Team />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/ai-search" element={<AISearch />} />
+            <Route path="/item-watchlist" element={<ItemWatchlist />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Card, Table, Tag, Typography, Button, Modal, Form, Input, Select,
-  Space, message, Popconfirm, Row, Col, Statistic, Avatar,
+  Space, message, Popconfirm, Row, Col, Avatar,
 } from 'antd';
 import {
   TeamOutlined, PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined,
@@ -9,10 +9,13 @@ import {
 } from '@ant-design/icons';
 import { teamApi, tasksApi } from '../api/api.js';
 import { PORT_LIST, PORT_COLORS } from '../components/helpers.js';
+import { useProject } from '../context/ProjectContext.jsx';
+import StatCard from '../components/StatCard.jsx';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 export default function Team() {
+  const { currentProjectId, portfolioView } = useProject();
   const [members, setMembers] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +26,10 @@ export default function Team() {
   const load = async () => {
     try {
       setLoading(true);
-      const [m, t] = await Promise.all([teamApi.getAll(), tasksApi.getAll()]);
+      const [m, t] = await Promise.all([
+        teamApi.getAll(currentProjectId, portfolioView),
+        tasksApi.getAll(currentProjectId, portfolioView),
+      ]);
       setMembers(m);
       setTasks(t);
     } catch (e) {
@@ -33,7 +39,7 @@ export default function Team() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [currentProjectId, portfolioView]);
 
   const openAdd = () => {
     setEditMem(null);
@@ -81,30 +87,59 @@ export default function Team() {
   };
 
   return (
-    <div className="page-container">
-      <div className="page-header">
+    <div className="ds-container">
+
+      <div className="ds-page-header">
         <div>
-          <Title level={3} style={{ marginBottom: 4 }}><TeamOutlined /> Quản lý Team</Title>
-          <Text type="secondary">Danh sách nhân sự & phân công công việc (REGISTRATION LIST)</Text>
+          <div className="ds-h1">Team</div>
+          <div className="ds-caption">Nhân sự dự án</div>
         </div>
-          <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd}>Thêm thành viên</Button>
+        <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd} disabled={portfolioView} title={portfolioView ? 'Chọn 1 dự án để thêm thành viên' : undefined}>Thêm thành viên</Button>
       </div>
 
-      <Row gutter={[16, 16]} style={{ marginTop: 20, marginBottom: 8 }}>
-        <Col xs={6}><Card size="small"><Statistic title="Tổng nhân sự" value={members.length} prefix={<TeamOutlined />} /></Card></Col>
-        <Col xs={6}><Card size="small"><Statistic title="Quản lý/Lead" value={members.filter(m => ['Director', 'Manager', 'Lead'].includes(m.role)).length} valueStyle={{ color: '#1677ff' }} /></Card></Col>
-        <Col xs={6}><Card size="small"><Statistic title="Kỹ thuật" value={members.filter(m => ['Technician', 'CAD', 'QC'].includes(m.role)).length} valueStyle={{ color: '#52c41a' }} /></Card></Col>
-        <Col xs={6}><Card size="small"><Statistic title="Tổng công việc" value={tasks.length} valueStyle={{ color: '#fa8c16' }} /></Card></Col>
-      </Row>
+      <div className="ds-stat-grid">
+        <StatCard
+          icon={<TeamOutlined />}
+          accent="linear-gradient(135deg,#2F5CE0,#5b82f0)"
+          title="Tổng nhân sự"
+          value={members.length}
+          valueStyle={{ color: '#2F5CE0' }}
+        />
+        <StatCard
+          icon={<TeamOutlined />}
+          accent="linear-gradient(135deg,#722ed1,#9254de)"
+          title="Quản lý/Lead"
+          value={members.filter(m => ['Director', 'Manager', 'Lead'].includes(m.role)).length}
+          valueStyle={{ color: '#722ed1' }}
+        />
+        <StatCard
+          icon={<TeamOutlined />}
+          accent="linear-gradient(135deg,#1FA971,#3cc995)"
+          title="Kỹ thuật"
+          value={members.filter(m => ['Technician', 'CAD', 'QC'].includes(m.role)).length}
+          valueStyle={{ color: '#1FA971' }}
+        />
+        <StatCard
+          icon={<TeamOutlined />}
+          accent="linear-gradient(135deg,#FA8C16,#ffa940)"
+          title="Tổng công việc"
+          value={tasks.length}
+          valueStyle={{ color: '#FA8C16' }}
+        />
+      </div>
 
-      <Card style={{ marginTop: 16 }}>
+      <Card className="ds-chart-card" style={{ marginTop: 16 }} title={<span className="ds-card-head-icon"><TeamOutlined style={{ color: '#2F5CE0' }} /> Danh sách nhân sự</span>}>
         <Table
+          className="ds-table-premium"
           dataSource={members}
-          rowKey="id"
+          rowKey={(r) => r.__key || r.id}
           loading={loading}
           scroll={{ x: 1000 }}
           pagination={false}
           columns={[
+            ...(portfolioView
+              ? [{ title: 'Dự án', dataIndex: 'projectName', key: 'projectName', width: 160, ellipsis: true }]
+              : []),
             {
               title: 'Thành viên', dataIndex: 'name', key: 'name',
               render: (t, r) => (
@@ -142,16 +177,16 @@ export default function Team() {
               render: (_, r) => {
                 const total = taskCountByOwner(r.name);
                 const done = doneCountByOwner(r.name);
-                return <Tag color={done === total && total > 0 ? 'green' : 'blue'}>{done}/{total}</Tag>;
+                return <Tag color={done === total && total > 0 ? 'green' : 'blue'}><span className="ds-num">{done}/{total}</span></Tag>;
               },
             },
             {
               title: '', key: 'action', width: 90,
               render: (_, r) => (
                 <Space>
-                  <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(r)} />
-                  <Popconfirm title="Xóa?" onConfirm={() => onDelete(r.id)}>
-                    <Button size="small" danger icon={<DeleteOutlined />} />
+                  <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(r)} disabled={portfolioView} />
+                  <Popconfirm title="Xóa?" onConfirm={() => onDelete(r.id)} disabled={portfolioView}>
+                    <Button size="small" danger icon={<DeleteOutlined />} disabled={portfolioView} />
                   </Popconfirm>
                 </Space>
               ),

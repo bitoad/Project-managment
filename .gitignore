@@ -38,3 +38,13 @@ Thumbs.db
 coverage/
 # AI Platform (separate sub-project, không commit vào repo ERP)
 Workspace/
+
+# Playwright
+playwright-report/
+test-results/
+
+
+# Local artifacts
+.image/
+.playwright-mcp/
+

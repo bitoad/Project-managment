@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Typography, Spin, Table, Tag, message, Row, Col, Statistic } from 'antd';
+import { Card, Table, Tag, message, Typography, Spin } from 'antd';
 import {
   LineChartOutlined, RiseOutlined, FallOutlined, InfoCircleOutlined,
+  InboxOutlined,
 } from '@ant-design/icons';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, Legend,
   ResponsiveContainer, ReferenceLine, Area, ComposedChart,
 } from 'recharts';
 import { sCurveApi } from '../api/api.js';
+import StatCard from '../components/StatCard.jsx';
+import { sCurveCumulative, evm } from '../../shared/formulas.js';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 export default function SCurve() {
   const [data, setData] = useState([]);
@@ -19,19 +22,7 @@ export default function SCurve() {
     try {
       setLoading(true);
       const raw = await sCurveApi.getAll();
-      // Tính cumulative planned & actual
-      let cumPlan = 0;
-      let cumActual = 0;
-      const computed = raw.map((p) => {
-        cumPlan += p.planned || 0;
-        cumActual += p.actual || 0;
-        return {
-          ...p,
-          cumPlan: Number(cumPlan.toFixed(2)),
-          cumActual: Number(cumActual.toFixed(2)),
-          variance: Number(((p.actual || 0) - (p.planned || 0)).toFixed(2)),
-        };
-      });
+      const computed = sCurveCumulative(raw);
       setData(computed);
     } catch (e) {
       message.error('Không tải được S-Curve');
@@ -43,19 +34,40 @@ export default function SCurve() {
   useEffect(() => { load(); }, []);
 
   if (loading) {
-    return <div style={{ textAlign: 'center', paddingTop: 100 }}><Spin size="large" /></div>;
+    return (
+      <div className="ds-container" style={{ maxWidth: 1400, margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', paddingTop: 100 }}><Spin size="large" /></div>
+      </div>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <div className="ds-container" style={{ maxWidth: 1400, margin: '0 auto' }}>
+        <div className="ds-page-header">
+          <div>
+            <div className="ds-h1"><LineChartOutlined /> S-Curve</div>
+            <div className="ds-caption">Phân tích Earned Value (EV / PV / AC)</div>
+          </div>
+        </div>
+        <div className="ds-empty" style={{ marginTop: 48 }}>
+          <div className="ds-empty-icon"><InboxOutlined /></div>
+          <div className="ds-empty-text">Chưa có dữ liệu S-Curve</div>
+        </div>
+      </div>
+    );
   }
 
   const last = data[data.length - 1] || {};
-  const spi = last.cumPlan > 0 ? (last.cumActual / last.cumPlan).toFixed(2) : '0.00';
+  const spi = evm({ PV: last.cumPlan, EV: last.cumActual }).SPI;
   const latestVariance = last.variance || 0;
 
   return (
-    <div className="page-container">
-      <div className="page-header">
+    <div className="ds-container" style={{ maxWidth: 1400, margin: '0 auto' }}>
+      <div className="ds-page-header">
         <div>
-          <Title level={3} style={{ marginBottom: 4 }}><LineChartOutlined /> S-Curve (Earned Value)</Title>
-          <Text type="secondary">Theo dõi tiến độ kế hoạch so với thực tế theo thời gian</Text>
+          <div className="ds-h1"><LineChartOutlined /> S-Curve</div>
+          <div className="ds-caption">Phân tích Earned Value (EV / PV / AC)</div>
         </div>
       </div>
 
@@ -65,26 +77,34 @@ export default function SCurve() {
         <b>PV</b> = giá trị kế hoạch (Planned), <b>EV</b> = giá trị thực đạt được (Earned). Đường Cong tích lũy càng sát nhau càng tốt.
       </div>
 
-      <Row gutter={[16, 16]} style={{ marginTop: 16, marginBottom: 8 }}>
-        <Col xs={8}>
-          <Card size="small"><Statistic title="Cum. Planned (PV)" value={last.cumPlan || 0} suffix="%" valueStyle={{ color: '#faad14' }} /></Card>
-        </Col>
-        <Col xs={8}>
-          <Card size="small"><Statistic title="Cum. Actual (EV)" value={last.cumActual || 0} suffix="%" valueStyle={{ color: '#2F5CE0' }} /></Card>
-        </Col>
-        <Col xs={8}>
-          <Card size="small">
-            <Statistic
-              title="SPI"
-              value={spi}
-              prefix={Number(spi) >= 1 ? <RiseOutlined /> : <FallOutlined />}
-              valueStyle={{ color: Number(spi) >= 1 ? '#52c41a' : '#ff4d4f' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <div className="ds-stat-grid">
+        <StatCard
+          icon={<LineChartOutlined />}
+          accent="linear-gradient(135deg,#fa8c16,#ffc069)"
+          title="Cum. Planned (PV)"
+          value={last.cumPlan || 0}
+          suffix="%"
+          valueStyle={{ color: '#fa8c16' }}
+        />
+        <StatCard
+          icon={<LineChartOutlined />}
+          accent="linear-gradient(135deg,#2F5CE0,#5b82f0)"
+          title="Cum. Actual (EV)"
+          value={last.cumActual || 0}
+          suffix="%"
+          valueStyle={{ color: '#2F5CE0' }}
+        />
+        <StatCard
+          icon={Number(spi) >= 1 ? <RiseOutlined /> : <FallOutlined />}
+          accent={Number(spi) >= 1 ? 'linear-gradient(135deg,#1FA971,#3cc995)' : 'linear-gradient(135deg,#EF4444,#ff7875)'}
+          title="SPI"
+          value={spi}
+          valueStyle={{ color: Number(spi) >= 1 ? '#52c41a' : '#ff4d4f' }}
+          trend={{ dir: Number(spi) >= 1 ? 'up' : 'down', value: '', label: Number(spi) >= 1 ? '>= kế hoạch' : '< kế hoạch' }}
+        />
+      </div>
 
-      <Card title="Đường cong tiến độ S-Curve" className="chart-container" style={{ marginTop: 16 }}>
+      <Card className="ds-chart-card" bordered={false} title="Đường cong tiến độ S-Curve" style={{ marginTop: 16 }}>
         <ResponsiveContainer width="100%" height={380}>
           <ComposedChart data={data}>
             <defs>
@@ -112,8 +132,9 @@ export default function SCurve() {
         </ResponsiveContainer>
       </Card>
 
-      <Card title="Bảng dữ liệu chi tiết" style={{ marginTop: 16 }}>
+      <Card className="ds-chart-card" bordered={false} title="Bảng dữ liệu chi tiết" style={{ marginTop: 16 }}>
         <Table
+          className="ds-table-premium"
           dataSource={data}
           rowKey="week"
           size="small"
@@ -121,10 +142,10 @@ export default function SCurve() {
           columns={[
             { title: 'Tuần', dataIndex: 'week', key: 'w', width: 80, render: (t) => <Text strong>{t}</Text> },
             { title: 'Ngày', dataIndex: 'date', key: 'd', width: 120, render: (v) => v ? new Date(v).toLocaleDateString('vi-VN') : '-' },
-            { title: 'KH tuần (%)', dataIndex: 'planned', key: 'p', width: 110, align: 'right', render: (v) => v + '%' },
-            { title: 'TH tuần (%)', dataIndex: 'actual', key: 'a', width: 110, align: 'right', render: (v) => (v || 0) + '%' },
-            { title: 'Cum. Plan', dataIndex: 'cumPlan', key: 'cp', width: 110, align: 'right', render: (v) => <Text style={{ color: '#fa8c16' }}>{v}%</Text> },
-            { title: 'Cum. Actual', dataIndex: 'cumActual', key: 'ca', width: 110, align: 'right', render: (v) => <Text strong style={{ color: '#1677ff' }}>{v}%</Text> },
+            { title: 'KH tuần (%)', dataIndex: 'planned', key: 'p', width: 110, align: 'right', render: (v) => <span className="ds-num">{v}%</span> },
+            { title: 'TH tuần (%)', dataIndex: 'actual', key: 'a', width: 110, align: 'right', render: (v) => <span className="ds-num">{(v || 0)}%</span> },
+            { title: 'Cum. Plan', dataIndex: 'cumPlan', key: 'cp', width: 110, align: 'right', render: (v) => <Text style={{ color: '#fa8c16' }} className="ds-num">{v}%</Text> },
+            { title: 'Cum. Actual', dataIndex: 'cumActual', key: 'ca', width: 110, align: 'right', render: (v) => <Text strong style={{ color: '#1677ff' }} className="ds-num">{v}%</Text> },
             {
               title: 'Variance', dataIndex: 'variance', key: 'v', width: 100, align: 'right',
               render: (v) => <Tag color={v >= 0 ? 'green' : 'red'}>{v >= 0 ? '+' : ''}{v}%</Tag>,

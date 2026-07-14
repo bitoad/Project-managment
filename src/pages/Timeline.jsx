@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Card, Typography, Spin, message, Empty, Select, Tag, Segmented, Tooltip } from 'antd';
+import { Card, Typography, Spin, message, Select, Tag, Segmented, Tooltip } from 'antd';
 import { FieldTimeOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { tasksApi, portsApi } from '../api/api.js';
 import { PORT_COLORS, statusColor } from '../components/helpers.js';
+import { useProject } from '../context/ProjectContext.jsx';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const STATUS_LABEL = {
   todo: 'Cần làm',
@@ -17,6 +18,7 @@ const DAY_WIDTH = 40; // px mỗi ngày
 const ROW_HEIGHT = 40;
 
 export default function Timeline() {
+  const { currentProjectId, portfolioView } = useProject();
   const [tasks, setTasks] = useState([]);
   const [ports, setPorts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +28,10 @@ export default function Timeline() {
   const load = async () => {
     try {
       setLoading(true);
-      const [t, p] = await Promise.all([tasksApi.getAll(), portsApi.getAll()]);
+      const [t, p] = await Promise.all([
+        tasksApi.getAll(currentProjectId, portfolioView),
+        portsApi.getAll(currentProjectId, portfolioView),
+      ]);
       setTasks(t);
       setPorts(p);
     } catch (e) {
@@ -38,7 +43,7 @@ export default function Timeline() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [currentProjectId, portfolioView]);
 
   // Lọc task có ngày bắt đầu & kết thúc
   const validTasks = useMemo(() => {
@@ -117,7 +122,7 @@ export default function Timeline() {
   };
 
   if (loading) {
-    return <div style={{ textAlign: 'center', paddingTop: 100 }}><Spin size="large" /></div>;
+    return <div className="ds-container" style={{ textAlign: 'center', paddingTop: 100 }}><Spin size="large" /></div>;
   }
 
   const today = new Date();
@@ -126,13 +131,11 @@ export default function Timeline() {
   const sidebarWidth = 220;
 
   return (
-    <div className="page-container">
-      <div className="page-header">
+    <div className="ds-container">
+      <div className="ds-page-header">
         <div>
-          <Title level={3} style={{ marginBottom: 4 }}>
-            <FieldTimeOutlined /> Timeline (Gantt Chart)
-          </Title>
-          <Text type="secondary">Lịch trình công việc theo thời gian</Text>
+          <div className="ds-h1"><FieldTimeOutlined /> Timeline</div>
+          <div className="ds-caption">Tiến độ theo thời gian</div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <Text type="secondary">Nhóm theo:</Text>
@@ -162,17 +165,20 @@ export default function Timeline() {
       </div>
 
       {validTasks.length === 0 ? (
-        <Card>
-          <Empty description="Không có công việc có ngày bắt đầu & kết thúc để hiển thị" />
-        </Card>
+        <div className="ds-section">
+          <div className="ds-empty">
+            <div className="ds-empty-icon"><FieldTimeOutlined /></div>
+            <div className="ds-empty-text">Không có công việc có ngày bắt đầu &amp; kết thúc để hiển thị</div>
+          </div>
+        </div>
       ) : (
-        <Card styles={{ body: { padding: 0 } }}>
+        <Card className="ds-chart-card" bordered={false} styles={{ body: { padding: 0 } }}>
           <div style={{ overflowX: 'auto' }}>
             <div style={{ minWidth: sidebarWidth + timelineWidth + 20, position: 'relative' }}>
               {/* Header: tuần / ngày */}
               <div style={{ display: 'flex', position: 'sticky', top: 0, zIndex: 6, background: '#fff', flexDirection: 'column', borderBottom: '2px solid #f0f0f0' }}>
                 {/* Hàng tuần */}
-                <div style={{ display: 'flex', borderBottom: '1px solid #e8e8e8' }}>
+                <div style={{ display: 'flex', borderBottom: '1px solid #f5f5f5' }}>
                   <div style={{ width: sidebarWidth, padding: '8px 12px', fontWeight: 700, background: '#fafafa', borderRight: '1px solid #f0f0f0' }}>
                     Tuần
                   </div>
@@ -184,7 +190,7 @@ export default function Timeline() {
                           width: (w.endIdx - w.startIdx + 1) * DAY_WIDTH,
                           textAlign: 'center',
                           padding: '6px 0',
-                          borderRight: '1px solid #e8e8e8',
+                          borderRight: '1px solid #f5f5f5',
                           fontSize: 11,
                           fontWeight: 600,
                           color: '#333',

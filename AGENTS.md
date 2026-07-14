@@ -138,3 +138,52 @@ Use project-manager when:
 - Timeline
 - Schedule
 - WBS
+
+# Figma Design-to-Code Skill — EPC Web App (React + Express)
+
+Đặt file này vào gốc repo web app dưới tên `AGENTS.md` (hoặc gộp vào AGENTS.md hiện có, thêm section này). OpenCode sẽ tự đọc khi khởi động phiên làm việc trong project.
+
+---
+
+## Khi nào dùng skill này
+Kích hoạt bất cứ khi nào prompt có: link Figma, "implement design", "convert frame to component", "match Figma", hoặc khi đang làm UI cho các module: Kanban, Gantt/Timeline, Risk Matrix, Cost Log, S-Curve, Supplier Quotation Comparison.
+
+## Yêu cầu trước khi bắt đầu
+- Figma desktop app đang mở, Dev Mode MCP Server đã bật (Preferences → Enable Dev Mode MCP Server).
+- MCP server `figma` đã enabled trong `opencode.json`, trỏ tới `http://127.0.0.1:3845/sse`.
+- Dự án dùng Tailwind (hoặc CSS module — xác nhận với người dùng nếu chưa rõ).
+
+---
+
+## Issue → Solution → Action Workflow
+
+### Bước 1 — Lấy context kép (bắt buộc, không được bỏ qua)
+Không bao giờ implement chỉ từ 1 nguồn. Luôn gọi cả hai:
+1. `get_design_context` cho node-id được chọn.
+2. `get_screenshot` cho cùng node-id.
+
+Đối chiếu JSON với ảnh: các chi tiết dễ bị JSON bỏ sót — drop shadow, gradient, overlapping layers, opacity blend — phải lấy từ ảnh chụp, không suy diễn.
+
+### Bước 2 — Trích xuất design tokens
+Trước khi viết code, liệt kê rõ:
+- Màu sắc (hex/token name), khoảng cách (spacing scale), font-family + size + weight, border-radius, shadow values.
+- Nếu Figma file đã có Variables/Styles đặt tên (vd. `color/primary/600`), dùng đúng tên đó — không tự quy đổi sang giá trị gần đúng.
+- Nếu phát hiện giá trị lệch với Tailwind config hiện tại của repo, báo cho người dùng thay vì tự ý thêm class mới.
+
+### Bước 3 — Map sang component
+- Ưu tiên tái sử dụng component có sẵn trong `src/components/` trước khi tạo mới — quét thư mục trước khi generate.
+- Đặt tên component theo convention hiện tại của repo (kiểm tra 2-3 file component gần nhất để suy ra pattern).
+- Với các frame nhiều bước/nhiều màn hình (vd. luồng duyệt Gantt qua nhiều trạng thái), convert từng frame riêng lẻ trước, rồi mới ghép thành component tổng — không gộp 1 lần.
+
+### Bước 4 — Checklist review trước khi merge
+- [ ] Màu, spacing, font khớp 100% với token Figma — không có giá trị "áng chừng".
+- [ ] Responsive behavior được xác nhận nếu Figma có nhiều breakpoint (kiểm tra frame Desktop/Tablet/Mobile nếu có).
+- [ ] Không có logic nghiệp vụ nào bị mất khi regenerate từ Figma (props, state, event handler cũ phải được giữ lại thủ công — Figma MCP không hiểu logic code hiện tại).
+- [ ] Đối chiếu lại bằng screenshot lần cuối trước khi báo hoàn thành.
+
+---
+
+## Giới hạn cần nhớ (tránh kỳ vọng sai)
+- Figma MCP không "update" component cũ một cách thông minh — mỗi lần design đổi, cần regenerate hoặc merge tay, không có diff tự động.
+- OpenCode hiện dùng Desktop MCP Server (local) do Figma remote MCP chưa whitelist OpenCode — nghĩa là không có tính năng "Code to Canvas" (đẩy code ngược lại Figma). Nếu cần tính năng này, phải làm qua Claude Code.
+- Không tự bịa spacing/màu khi thiếu token rõ ràng — dừng lại và hỏi người dùng thay vì đoán.

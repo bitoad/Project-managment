@@ -2,6 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import bcrypt from 'bcrypt';
 import { fileURLToPath } from 'url';
+import {
+  sumRevenue, sumPlannedCost, sumActualCost, sumVAT,
+  revenueInclVAT as computeRevenueInclVAT,
+  profit, profitMargin, avgProgress as computeAvgProgress,
+} from '../shared/formulas.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -169,6 +174,23 @@ function ensureDb(projectId) {
 export function getProjectSearchData(projectId) {
   const db = ensureDb(projectId);
   return { items: db.items || [], tasks: db.tasks || [] };
+}
+
+// ============ PORTFOLIO (Tất cả dự án) ============
+// Gộp một entity từ TẤT CẢ dự án thành một mảng, đánh dấu mỗi bản ghi bằng
+// projectId + projectName để frontend hiển thị/phân biệt. Chế độ này CHỈ đọc
+// (read-only); ghi vẫn dùng requireProject trên từng dự án cụ thể.
+export function aggregateEntity(entity) {
+  const all = getProjects();
+  return all.flatMap((p) => {
+    const rows = ensureDb(p.id)[entity] || [];
+    return rows.map((r) => ({
+      ...r,
+      projectId: p.id,
+      projectName: p.name,
+      __key: `${p.id}__${r.id ?? r.code}`,
+    }));
+  });
 }
 
 // Atomic JSON write (ADR-011 follow-up): ghi ra file .tmp rồi rename để tránh
@@ -699,16 +721,13 @@ export function exportAllData(projectId) {
 export function getDashboardData(projectId) {
   const db = ensureDb(projectId);
   const items = db.items;
-  const totalRevenue = items.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0);
-  const totalCost = items.reduce((sum, i) => sum + (i.qty * (i.internalCost ?? i.unitCost ?? 0)), 0);
-  const totalProfit = totalRevenue - totalCost;
-  // Simple average — mỗi item nặng bằng nhau khi nhìn 1 dự án.
-  // Multi-project aggregate (getAggregateDashboard) dùng weighted theo contract value thay vì simple.
-  const avgProgress = items.length > 0
-    ? Math.round(items.reduce((sum, i) => sum + (i.progress || 0), 0) / items.length)
-    : 0;
-  const totalLoggedCost = db.costLogs.reduce((sum, c) => sum + (c.amount || 0), 0);
-  // Tổng chi phí thực tế = totalLoggedCost (tính từ costLogs, không phải từ item.unitCost)
+  const totalRevenue = sumRevenue(items);
+  const totalCost = sumPlannedCost(items);
+  const totalProfit = profit(totalRevenue, totalCost);
+  const avgProgress = computeAvgProgress(items, 'simple');
+  const totalLoggedCost = sumActualCost(db.costLogs);
+  const totalVAT = sumVAT(items, 10);
+  const revenueInclVAT = computeRevenueInclVAT(totalRevenue, totalVAT);
   const taskByStatus = {
     todo: db.tasks.filter(t => t.status === 'todo').length,
     inprogress: db.tasks.filter(t => t.status === 'inprogress').length,
@@ -722,18 +741,18 @@ export function getDashboardData(projectId) {
     .map(r => ({ ...r, portName: db.ports.find(p => p.id === r.portId)?.name || '' }));
 
   return {
-    totalRevenue, totalCost, totalProfit,
-    totalProfitMargin: totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : 0,
+    totalRevenue, totalCost, totalProfit, totalVAT, revenueInclVAT,
+    totalProfitMargin: profitMargin(totalProfit, totalRevenue).toFixed(1),
     avgProgress, totalItems: items.length,
     itemsDone: items.filter(i => i.status === 'Completed').length,
     itemsInFab: items.filter(i => i.status === 'Fabrication').length,
     totalLoggedCost,
     ports: db.ports.map(p => {
       const portItems = items.filter(i => i.port === p.id);
-      const portRevenue = portItems.reduce((s, i) => s + (i.qty * i.unitPrice), 0);
-      const portCost = portItems.reduce((s, i) => s + (i.qty * (i.internalCost ?? i.unitCost ?? 0)), 0);
-      const portProgress = portItems.length > 0 ? Math.round(portItems.reduce((s, i) => s + (i.progress || 0), 0) / portItems.length) : 0;
-      const portLogged = db.costLogs.filter(c => c.portId === p.id).reduce((s, c) => s + (c.amount || 0), 0);
+      const portRevenue = sumRevenue(portItems);
+      const portCost = sumPlannedCost(portItems);
+      const portProgress = computeAvgProgress(portItems, 'simple');
+      const portLogged = sumActualCost(db.costLogs.filter(c => c.portId === p.id));
       return { id: p.id, name: p.name, description: p.description, status: p.status, progress: portProgress, revenue: portRevenue, cost: portCost, logged: portLogged, itemCount: portItems.length, color: p.color };
     }),
     taskByStatus,
@@ -767,46 +786,47 @@ export function getAggregateDashboard(projectIds) {
   const perProject = ids.map((id) => ({ id, name: nameOf(id), ...getDashboardData(id) }));
   const sum = (key) => perProject.reduce((s, p) => s + (Number(p[key]) || 0), 0);
 
-  // Tiến độ TB weighted by contract value across ALL items.
-  let weightedProgressSum = 0;
-  let totalRevenueForProgress = 0;
   const highRisks = [];
   const recentCosts = [];
   const tasks = [];
+  const allItems = [];
+  const allCostLogs = [];
   ids.forEach((id) => {
     const pdb = ensureDb(id);
-    (pdb.items || []).forEach((it) => {
-      const rev = (it.qty || 0) * (it.unitPrice || 0);
-      weightedProgressSum += (it.progress || 0) * rev;
-      totalRevenueForProgress += rev;
+    (pdb.items || []).forEach((it) => allItems.push({ ...it, projectId: id, projectName: nameOf(id) }));
+    (pdb.costLogs || []).forEach((c) => {
+      const enriched = { ...c, id: `${id}__${c.id}`, projectId: id, projectName: nameOf(id) };
+      recentCosts.push(enriched);
+      allCostLogs.push(enriched);
     });
-    (pdb.costLogs || []).forEach((c) => recentCosts.push({ ...c, projectId: id, projectName: nameOf(id) }));
     (pdb.tasks || []).forEach((t) => tasks.push({ ...t, projectId: id, projectName: nameOf(id) }));
   });
   perProject.forEach((p) => (p.highRisks || []).forEach((r) => highRisks.push({ ...r, projectId: p.id, projectName: p.name })));
   highRisks.sort((a, b) => b.score - a.score);
   recentCosts.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 
-  const avgProgress = totalRevenueForProgress > 0
-    ? Math.round(weightedProgressSum / totalRevenueForProgress)
-    : 0;
+  const avgProgress = computeAvgProgress(allItems, 'simple');
   const totalRevenue = sum('totalRevenue');
   const totalCost = sum('totalCost');
-  const totalProfit = totalRevenue - totalCost;
+  const totalProfit = profit(totalRevenue, totalCost);
+  const totalVAT = sumVAT(allItems, 10);
   const taskByStatus = { todo: 0, inprogress: 0, review: 0, done: 0 };
   perProject.forEach((p) => Object.keys(taskByStatus).forEach((k) => { taskByStatus[k] += (p.taskByStatus?.[k] || 0); }));
 
   return {
     projects: ids.map((id) => ({ id, name: nameOf(id) })),
+    items: allItems,
+    costLogs: allCostLogs,
     aggregate: {
       totalRevenue,
       totalCost,
       totalProfit,
-      totalProfitMargin: totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : 0,
+      totalVAT,
+      revenueInclVAT: computeRevenueInclVAT(totalRevenue, totalVAT),
+      totalProfitMargin: profitMargin(totalProfit, totalRevenue).toFixed(1),
       totalLoggedCost: sum('totalLoggedCost'),
       avgProgress,
-      progressFormula: 'weighted_by_contract_value',
-      totalRevenueForProgress,
+      progressFormula: 'simple',
       totalItems: sum('totalItems'),
       itemsInFab: sum('itemsInFab'),
       openRisks: sum('openRisks'),

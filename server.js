@@ -90,6 +90,25 @@ function requireProject(req, res, next) {
   next();
 }
 
+// Middleware xác định phạm vi đọc: một dự án cụ thể HOẶC toàn bộ portfolio.
+// Khi header/x-query `portfolio=true`, đặt req.portfolio để route trả về dữ
+// liệu tổng hợp (read-only). Ngược lại validate projectId như requireProject.
+function resolveScope(req, res, next) {
+  const isPortfolio =
+    req.headers['x-portfolio'] === 'true' || req.query.portfolio === 'true';
+  if (isPortfolio) {
+    req.portfolio = true;
+    return next();
+  }
+  const pid = getProjectId(req);
+  const project = db.getProjectById(pid);
+  if (!project) {
+    return res.status(404).json({ error: `Dự án không tồn tại: ${pid}` });
+  }
+  req.projectId = pid;
+  next();
+}
+
 // ============ AUTH (hotfix ADR-012) ============
 // In-memory session store. Minimum viable gate: a valid session token is
 // required for ALL state-changing requests (POST/PUT/DELETE). RBAC is deferred
@@ -191,7 +210,7 @@ app.put('/api/meta', requireProject, validateBody({}), (req, res) => res.json(db
 app.get('/api/settings', requireProject, (req, res) => res.json(db.getSettings(req.projectId)));
 
 // ============ PORTS ============
-app.get('/api/ports', requireProject, (req, res) => res.json(db.getPorts(req.projectId)));
+app.get('/api/ports', resolveScope, (req, res) => res.json(req.portfolio ? db.aggregateEntity('ports') : db.getPorts(req.projectId)));
 app.post('/api/ports', requireProject,
   validateBody({
     id: 'string', name: 'string',
@@ -232,7 +251,7 @@ app.delete('/api/ports/:id', requireProject, (req, res) => {
 });
 
 // ============ ITEMS ============
-app.get('/api/items', requireProject, (req, res) => res.json(db.getItems(req.projectId)));
+app.get('/api/items', resolveScope, (req, res) => res.json(req.portfolio ? db.aggregateEntity('items') : db.getItems(req.projectId)));
 app.get('/api/items/:code', requireProject, (req, res) => {
   const item = db.getItemByCode(req.projectId, req.params.code);
   if (!item) return res.status(404).json({ error: 'Item not found' });
@@ -258,7 +277,7 @@ app.delete('/api/items/:code', requireProject, (req, res) => {
 });
 
 // ============ SUPPLIERS ============
-app.get('/api/suppliers', requireProject, (req, res) => res.json(db.getSuppliers(req.projectId)));
+app.get('/api/suppliers', resolveScope, (req, res) => res.json(req.portfolio ? db.aggregateEntity('suppliers') : db.getSuppliers(req.projectId)));
 app.post('/api/suppliers', requireProject, validateBody({ name: 'string' }), (req, res) => res.status(201).json(db.addSupplier(req.projectId, req.body)));
 app.put('/api/suppliers/:id', requireProject, validateBody({ name: { type: 'string', required: false } }), (req, res) => res.json(db.updateSupplier(req.projectId, req.params.id, req.body)));
 app.delete('/api/suppliers/:id', requireProject, (req, res) => {
@@ -267,7 +286,8 @@ app.delete('/api/suppliers/:id', requireProject, (req, res) => {
 });
 
 // ============ SUPPLIER PORTS ============
-app.get('/api/supplier-ports', requireProject, (req, res) => {
+app.get('/api/supplier-ports', resolveScope, (req, res) => {
+  if (req.portfolio) return res.json(db.aggregateEntity('supplierPorts'));
   if (req.query.portId) return res.json(db.getSupplierPortsByPort(req.projectId, req.query.portId));
   res.json(db.getSupplierPorts(req.projectId));
 });
@@ -283,7 +303,7 @@ app.delete('/api/supplier-ports/:id', requireProject, (req, res) => {
 });
 
 // ============ RISKS ============
-app.get('/api/risks', requireProject, (req, res) => res.json(db.getRisks(req.projectId)));
+app.get('/api/risks', resolveScope, (req, res) => res.json(req.portfolio ? db.aggregateEntity('risks') : db.getRisks(req.projectId)));
 app.post('/api/risks', requireProject,
   validateBody({
     title: 'string',
@@ -305,7 +325,7 @@ app.delete('/api/risks/:id', requireProject, (req, res) => {
 });
 
 // ============ TASKS ============
-app.get('/api/tasks', requireProject, (req, res) => res.json(db.getTasks(req.projectId)));
+app.get('/api/tasks', resolveScope, (req, res) => res.json(req.portfolio ? db.aggregateEntity('tasks') : db.getTasks(req.projectId)));
 app.post('/api/tasks', requireProject,
   validateBody({ title: 'string', portId: { type: 'string', required: false } }),
   (req, res) => res.status(201).json(db.addTask(req.projectId, req.body)));
@@ -318,7 +338,7 @@ app.delete('/api/tasks/:id', requireProject, (req, res) => {
 });
 
 // ============ TEAM ============
-app.get('/api/team', requireProject, (req, res) => res.json(db.getTeam(req.projectId)));
+app.get('/api/team', resolveScope, (req, res) => res.json(req.portfolio ? db.aggregateEntity('team') : db.getTeam(req.projectId)));
 app.post('/api/team', requireProject, validateBody({ name: 'string' }), (req, res) => res.status(201).json(db.addMember(req.projectId, req.body)));
 app.put('/api/team/:id', requireProject, validateBody({ name: { type: 'string', required: false } }), (req, res) => res.json(db.updateMember(req.projectId, req.params.id, req.body)));
 app.delete('/api/team/:id', requireProject, (req, res) => {
@@ -327,7 +347,7 @@ app.delete('/api/team/:id', requireProject, (req, res) => {
 });
 
 // ============ COST LOGS ============
-app.get('/api/cost-logs', requireProject, (req, res) => res.json(db.getCostLogs(req.projectId)));
+app.get('/api/cost-logs', resolveScope, (req, res) => res.json(req.portfolio ? db.aggregateEntity('costLogs') : db.getCostLogs(req.projectId)));
 app.post('/api/cost-logs', requireProject,
   validateBody({ amount: 'nonNegNum', portId: { type: 'string', required: false } }),
   (req, res) => res.status(201).json(db.addCostLog(req.projectId, req.body)));
@@ -340,7 +360,7 @@ app.delete('/api/cost-logs/:id', requireProject, (req, res) => {
 });
 
 // ============ QUOTATIONS ============
-app.get('/api/quotations', requireProject, (req, res) => res.json(db.getSupplierQuotations(req.projectId)));
+app.get('/api/quotations', resolveScope, (req, res) => res.json(req.portfolio ? db.aggregateEntity('supplierQuotations') : db.getSupplierQuotations(req.projectId)));
 app.post('/api/quotations', requireProject, validateBody({ itemCode: 'string' }), (req, res) => res.status(201).json(db.addSupplierQuotation(req.projectId, req.body)));
 app.put('/api/quotations/:id', requireProject, validateBody({ itemCode: { type: 'string', required: false } }), (req, res) => res.json(db.updateSupplierQuotation(req.projectId, req.params.id, req.body)));
 app.delete('/api/quotations/:id', requireProject, (req, res) => {
@@ -355,7 +375,8 @@ app.put('/api/s-curve/:week', requireProject,
   (req, res) => res.json(db.updateSCurvePoint(req.projectId, req.params.week, req.body)));
 
 // ============ DOCUMENTS ============
-app.get('/api/documents', requireProject, (req, res) => {
+app.get('/api/documents', resolveScope, (req, res) => {
+  if (req.portfolio) return res.json(db.aggregateEntity('documents'));
   if (req.query.portId) return res.json(db.getDocumentsByPort(req.projectId, req.query.portId));
   res.json(db.getDocuments(req.projectId));
 });

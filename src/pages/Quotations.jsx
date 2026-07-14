@@ -7,11 +7,14 @@ import {
   FileSearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined, InfoCircleOutlined,
 } from '@ant-design/icons';
 import { quotationsApi } from '../api/api.js';
-import { fmtShort } from '../components/helpers.js';
+import { fmtVND } from '../components/helpers.js';
+import { useProject } from '../context/ProjectContext.jsx';
+import { quotationBest, quotationTotalBest } from '../../shared/formulas.js';
 
 const { Title, Text } = Typography;
 
 export default function Quotations() {
+  const { currentProjectId, portfolioView } = useProject();
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -21,7 +24,7 @@ export default function Quotations() {
   const load = async () => {
     try {
       setLoading(true);
-      setQuotes(await quotationsApi.getAll());
+      setQuotes(await quotationsApi.getAll(currentProjectId, portfolioView));
     } catch (e) {
       message.error('Không tải được báo giá');
     } finally {
@@ -29,7 +32,7 @@ export default function Quotations() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [currentProjectId, portfolioView]);
 
   const openAdd = () => {
     setEditQ(null);
@@ -69,17 +72,8 @@ export default function Quotations() {
   };
 
   // Tính giá tốt nhất cho mỗi item
-  const getBest = (r) => {
-    const prices = [
-      { name: 'Supplier A', val: r.supplierA },
-      { name: 'Supplier B', val: r.supplierB },
-      { name: 'Supplier C', val: r.supplierC },
-    ].filter((p) => p.val != null);
-    if (prices.length === 0) return { name: '-', val: 0 };
-    return prices.reduce((min, p) => (p.val < min.val ? p : min));
-  };
-
-  const totalBest = quotes.reduce((s, q) => s + getBest(q).val * q.qty, 0);
+  const getBest = quotationBest;
+  const totalBest = quotationTotalBest(quotes);
 
   return (
     <div className="page-container">
@@ -88,7 +82,7 @@ export default function Quotations() {
           <Title level={3} style={{ marginBottom: 4 }}><FileSearchOutlined /> So sánh Báo giá</Title>
           <Text type="secondary">So sánh 3 nhà cung cấp & chọn giá tốt nhất (SUPPLIER_QUOTATION)</Text>
         </div>
-          <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd}>Thêm báo giá</Button>
+          <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd} disabled={portfolioView} title={portfolioView ? 'Chọn 1 dự án để thêm báo giá' : undefined}>Thêm báo giá</Button>
       </div>
 
       <div className="ev-guide">
@@ -97,18 +91,21 @@ export default function Quotations() {
 
       <Row gutter={[16, 16]} style={{ marginTop: 16, marginBottom: 8 }}>
         <Col xs={8}><Card size="small"><Statistic title="Số mục báo giá" value={quotes.length} /></Card></Col>
-        <Col xs={8}><Card size="small"><Statistic title="Tổng giá trị (giá tốt nhất)" value={fmtShort(totalBest)} valueStyle={{ color: '#52c41a' }} /></Card></Col>
+        <Col xs={8}><Card size="small"><Statistic title="Tổng giá trị (giá tốt nhất)" value={fmtVND(totalBest)} valueStyle={{ color: '#52c41a' }} /></Card></Col>
         <Col xs={8}><Card size="small"><Statistic title="Đã chốt" value={quotes.filter(q => q.selected).length} /></Card></Col>
       </Row>
 
       <Card style={{ marginTop: 16 }}>
         <Table
           dataSource={quotes}
-          rowKey="id"
+          rowKey={(r) => r.__key || r.id}
           loading={loading}
           scroll={{ x: 1100 }}
           pagination={{ pageSize: 12 }}
           columns={[
+            ...(portfolioView
+              ? [{ title: 'Dự án', dataIndex: 'projectName', key: 'projectName', width: 160, ellipsis: true }]
+              : []),
             { title: 'Item', dataIndex: 'itemCode', key: 'ic', width: 80, render: (t) => <Text strong>{t}</Text> },
             { title: 'Tên hạng mục', dataIndex: 'itemName', key: 'in', ellipsis: true },
             { title: 'ĐVT', dataIndex: 'unit', key: 'unit', width: 70 },
@@ -117,7 +114,7 @@ export default function Quotations() {
               title: 'Supplier A', dataIndex: 'supplierA', key: 'sA', width: 120, align: 'right',
               render: (v, r) => (
                 <Text style={{ color: r.selected === 'Supplier A' ? '#52c41a' : undefined, fontWeight: r.selected === 'Supplier A' ? 700 : 400 }}>
-                  {fmtShort(v)}
+                  {fmtVND(v)}
                 </Text>
               ),
             },
@@ -125,7 +122,7 @@ export default function Quotations() {
               title: 'Supplier B', dataIndex: 'supplierB', key: 'sB', width: 120, align: 'right',
               render: (v, r) => (
                 <Text style={{ color: r.selected === 'Supplier B' ? '#52c41a' : undefined, fontWeight: r.selected === 'Supplier B' ? 700 : 400 }}>
-                  {fmtShort(v)}
+                  {fmtVND(v)}
                 </Text>
               ),
             },
@@ -133,7 +130,7 @@ export default function Quotations() {
               title: 'Supplier C', dataIndex: 'supplierC', key: 'sC', width: 120, align: 'right',
               render: (v, r) => (
                 <Text style={{ color: r.selected === 'Supplier C' ? '#52c41a' : undefined, fontWeight: r.selected === 'Supplier C' ? 700 : 400 }}>
-                  {fmtShort(v)}
+                  {fmtVND(v)}
                 </Text>
               ),
             },
@@ -143,7 +140,7 @@ export default function Quotations() {
                 const best = getBest(r);
                 return (
                   <Tooltip title={best.name}>
-                    <Tag color="green" icon={<CheckCircleOutlined />}>{fmtShort(best.val)}</Tag>
+                    <Tag color="green" icon={<CheckCircleOutlined />}>{fmtVND(best.val)}</Tag>
                   </Tooltip>
                 );
               },
@@ -156,9 +153,9 @@ export default function Quotations() {
               title: '', key: 'action', width: 90,
               render: (_, r) => (
                 <Space>
-                  <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(r)} />
-                  <Popconfirm title="Xóa?" onConfirm={() => onDelete(r.id)}>
-                    <Button size="small" danger icon={<DeleteOutlined />} />
+                  <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(r)} disabled={portfolioView} />
+                  <Popconfirm title="Xóa?" onConfirm={() => onDelete(r.id)} disabled={portfolioView}>
+                    <Button size="small" danger icon={<DeleteOutlined />} disabled={portfolioView} />
                   </Popconfirm>
                 </Space>
               ),

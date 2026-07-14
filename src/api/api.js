@@ -80,8 +80,15 @@ export const dashboardApi = {
   },
 };
 
-// Ghi đè x-project-id cho 1 request (dùng khi Dashboard drill-down 1 dự án khác dự án đang chọn ở header)
-const withProject = (projectId) => (projectId ? { headers: { 'x-project-id': projectId } } : {});
+// Ghi đè x-project-id / x-portfolio cho 1 request.
+// - projectId: ghim dự án cụ thể (bỏ qua nếu undefined → interceptor dùng currentProjectId).
+// - portfolio: true → gửi header x-portfolio để backend trả dữ liệu tổng hợp TẤT CẢ dự án (read-only).
+const withProject = (projectId, portfolio) => {
+  const headers = {};
+  if (projectId) headers['x-project-id'] = projectId;
+  if (portfolio) headers['x-portfolio'] = 'true';
+  return { headers };
+};
 
 // ============ META & SETTINGS ============
 export const metaApi = {
@@ -95,7 +102,7 @@ export const settingsApi = {
 
 // ============ PORTS ============
 export const portsApi = {
-  getAll: () => api.get('/ports').then((r) => r.data),
+  getAll: (projectId, portfolio) => api.get('/ports', withProject(projectId, portfolio)).then((r) => r.data),
   get: (id) => api.get(`/ports/${id}`).then((r) => r.data),
   create: (data) => api.post('/ports', data).then((r) => r.data),
   update: (id, data) => api.put(`/ports/${id}`, data).then((r) => r.data),
@@ -104,7 +111,7 @@ export const portsApi = {
 
 // ============ ITEMS ============
 export const itemsApi = {
-  getAll: (projectId) => api.get('/items', withProject(projectId)).then((r) => r.data),
+  getAll: (projectId, portfolio) => api.get('/items', withProject(projectId, portfolio)).then((r) => r.data),
   get: (code) => api.get(`/items/${code}`).then((r) => r.data),
   create: (data) => api.post('/items', data).then((r) => r.data),
   update: (code, data) => api.put(`/items/${code}`, data).then((r) => r.data),
@@ -113,7 +120,7 @@ export const itemsApi = {
 
 // ============ SUPPLIERS ============
 export const suppliersApi = {
-  getAll: () => api.get('/suppliers').then((r) => r.data),
+  getAll: (projectId, portfolio) => api.get('/suppliers', withProject(projectId, portfolio)).then((r) => r.data),
   get: (id) => api.get(`/suppliers/${id}`).then((r) => r.data),
   create: (data) => api.post('/suppliers', data).then((r) => r.data),
   update: (id, data) => api.put(`/suppliers/${id}`, data).then((r) => r.data),
@@ -122,7 +129,7 @@ export const suppliersApi = {
 
 // ============ SUPPLIER PORTS ============
 export const supplierPortsApi = {
-  getAll: (portId) => api.get('/supplier-ports', { params: { portId } }).then((r) => r.data),
+  getAll: (portId, portfolio) => api.get('/supplier-ports', { params: portId ? { portId } : {}, ...withProject(undefined, portfolio) }).then((r) => r.data),
   create: (data) => api.post('/supplier-ports', data).then((r) => r.data),
   update: (id, data) => api.put(`/supplier-ports/${id}`, data).then((r) => r.data),
   remove: (id) => api.delete(`/supplier-ports/${id}`).then((r) => r.data),
@@ -130,7 +137,7 @@ export const supplierPortsApi = {
 
 // ============ RISKS ============
 export const risksApi = {
-  getAll: () => api.get('/risks').then((r) => r.data),
+  getAll: (projectId, portfolio) => api.get('/risks', withProject(projectId, portfolio)).then((r) => r.data),
   create: (data) => api.post('/risks', data).then((r) => r.data),
   update: (id, data) => api.put(`/risks/${id}`, data).then((r) => r.data),
   remove: (id) => api.delete(`/risks/${id}`).then((r) => r.data),
@@ -138,7 +145,7 @@ export const risksApi = {
 
 // ============ TASKS ============
 export const tasksApi = {
-  getAll: (projectId) => api.get('/tasks', withProject(projectId)).then((r) => r.data),
+  getAll: (projectId, portfolio) => api.get('/tasks', withProject(projectId, portfolio)).then((r) => r.data),
   create: (data) => api.post('/tasks', data).then((r) => r.data),
   update: (id, data) => api.put(`/tasks/${id}`, data).then((r) => r.data),
   remove: (id) => api.delete(`/tasks/${id}`).then((r) => r.data),
@@ -146,7 +153,7 @@ export const tasksApi = {
 
 // ============ TEAM ============
 export const teamApi = {
-  getAll: () => api.get('/team').then((r) => r.data),
+  getAll: (projectId, portfolio) => api.get('/team', withProject(projectId, portfolio)).then((r) => r.data),
   create: (data) => api.post('/team', data).then((r) => r.data),
   update: (id, data) => api.put(`/team/${id}`, data).then((r) => r.data),
   remove: (id) => api.delete(`/team/${id}`).then((r) => r.data),
@@ -154,7 +161,7 @@ export const teamApi = {
 
 // ============ COST LOGS ============
 export const costLogsApi = {
-  getAll: (projectId) => api.get('/cost-logs', withProject(projectId)).then((r) => r.data),
+  getAll: (projectId, portfolio) => api.get('/cost-logs', withProject(projectId, portfolio)).then((r) => r.data),
   create: (data) => api.post('/cost-logs', data).then((r) => r.data),
   update: (id, data) => api.put(`/cost-logs/${id}`, data).then((r) => r.data),
   remove: (id) => api.delete(`/cost-logs/${id}`).then((r) => r.data),
@@ -162,7 +169,7 @@ export const costLogsApi = {
 
 // ============ QUOTATIONS ============
 export const quotationsApi = {
-  getAll: () => api.get('/quotations').then((r) => r.data),
+  getAll: (projectId, portfolio) => api.get('/quotations', withProject(projectId, portfolio)).then((r) => r.data),
   create: (data) => api.post('/quotations', data).then((r) => r.data),
   update: (id, data) => api.put(`/quotations/${id}`, data).then((r) => r.data),
   remove: (id) => api.delete(`/quotations/${id}`).then((r) => r.data),
@@ -170,13 +177,13 @@ export const quotationsApi = {
 
 // ============ S-CURVE ============
 export const sCurveApi = {
-  getAll: () => api.get('/s-curve').then((r) => r.data),
+  getAll: (projectId) => api.get('/s-curve', withProject(projectId)).then((r) => r.data),
   update: (week, data) => api.put(`/s-curve/${week}`, data).then((r) => r.data),
 };
 
 // ============ DOCUMENTS ============
 export const documentsApi = {
-  getAll: (portId) => api.get('/documents', { params: { portId } }).then((r) => r.data),
+  getAll: (portId, portfolio) => api.get('/documents', { params: portId ? { portId } : {}, ...withProject(undefined, portfolio) }).then((r) => r.data),
   create: (formData) =>
     api
       .post('/documents', formData, { headers: { 'Content-Type': 'multipart/form-data' } })

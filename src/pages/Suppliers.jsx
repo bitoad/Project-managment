@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import {
   Card, Table, Tag, Typography, Button, Modal, Form, Input, Select, Rate,
-  Space, message, Popconfirm, Row, Col, Statistic,
+  Space, message, Popconfirm, Row, Col,
 } from 'antd';
 import {
   ShopOutlined, PlusOutlined, EditOutlined, DeleteOutlined, PhoneOutlined, MailOutlined,
 } from '@ant-design/icons';
 import { suppliersApi } from '../api/api.js';
 import { PORT_LIST } from '../components/helpers.js';
+import { useProject } from '../context/ProjectContext.jsx';
+import StatCard from '../components/StatCard.jsx';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 export default function Suppliers() {
+  const { currentProjectId, portfolioView } = useProject();
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -21,7 +24,7 @@ export default function Suppliers() {
   const load = async () => {
     try {
       setLoading(true);
-      setSuppliers(await suppliersApi.getAll());
+      setSuppliers(await suppliersApi.getAll(currentProjectId, portfolioView));
     } catch (e) {
       message.error('Không tải được NCC');
     } finally {
@@ -29,7 +32,7 @@ export default function Suppliers() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [currentProjectId, portfolioView]);
 
   const openAdd = () => {
     setEditSup(null);
@@ -68,24 +71,48 @@ export default function Suppliers() {
     load();
   };
 
+  const totalSuppliers = suppliers.length;
+  const activeSuppliers = suppliers.filter((s) => s.status === 'active').length;
+
   return (
-    <div className="page-container">
-      <div className="page-header">
+    <div className="ds-container">
+      <div className="ds-page-header">
         <div>
-          <Title level={3} style={{ marginBottom: 4 }}><ShopOutlined /> Quản lý Nhà cung cấp</Title>
-          <Text type="secondary">Danh mục nhà cung cấp & đối tác (SUPPLIER_QUOTATION)</Text>
+          <div className="ds-h1">Nhà cung cấp</div>
+          <div className="ds-caption">Quản lý nhà cung cấp</div>
         </div>
-          <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd}>Thêm NCC</Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openAdd} disabled={portfolioView} title={portfolioView ? 'Chọn 1 dự án để thêm NCC' : undefined}>Thêm NCC</Button>
       </div>
 
-      <Card style={{ marginTop: 20 }}>
+      <div className="ds-stat-grid">
+        <StatCard
+          icon={<ShopOutlined />}
+          accent="linear-gradient(135deg,#2F5CE0,#5b82f0)"
+          title="Tổng nhà cung cấp"
+          value={totalSuppliers}
+          valueStyle={{ color: '#2F5CE0' }}
+        />
+        <StatCard
+          icon={<ShopOutlined />}
+          accent="linear-gradient(135deg,#1FA971,#3cc995)"
+          title="Đang hoạt động"
+          value={activeSuppliers}
+          valueStyle={{ color: '#1FA971' }}
+        />
+      </div>
+
+      <Card className="ds-section" bordered={false} style={{ marginTop: 0 }}>
         <Table
+          className="ds-table-premium"
           dataSource={suppliers}
-          rowKey="id"
+          rowKey={(r) => r.__key || r.id}
           loading={loading}
           scroll={{ x: 900 }}
           columns={[
-            { title: 'Mã', dataIndex: 'id', key: 'id', width: 90, render: (t) => <Text strong>{t}</Text> },
+            ...(portfolioView
+              ? [{ title: 'Dự án', dataIndex: 'projectName', key: 'projectName', width: 160, ellipsis: true }]
+              : []),
+            { title: 'Mã', dataIndex: 'id', key: 'id', width: 90, render: (t) => <Text strong className="ds-num">{t}</Text> },
             { title: 'Tên nhà cung cấp', dataIndex: 'name', key: 'name',
               render: (t) => <Text strong>{t}</Text> },
             { title: 'Loại sản phẩm', dataIndex: 'type', key: 'type', ellipsis: true },
@@ -117,9 +144,9 @@ export default function Suppliers() {
               title: '', key: 'action', width: 90,
               render: (_, r) => (
                 <Space>
-                  <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(r)} />
-                  <Popconfirm title="Xóa NCC?" onConfirm={() => onDelete(r.id)}>
-                    <Button size="small" danger icon={<DeleteOutlined />} />
+                  <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(r)} disabled={portfolioView} />
+                  <Popconfirm title="Xóa NCC?" onConfirm={() => onDelete(r.id)} disabled={portfolioView}>
+                    <Button size="small" danger icon={<DeleteOutlined />} disabled={portfolioView} />
                   </Popconfirm>
                 </Space>
               ),

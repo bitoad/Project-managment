@@ -1,517 +1,902 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Card, Progress, message, Select, Tag, Button, Modal, Form, Input, Tooltip } from 'antd';
 import {
-  Row, Col, Card, Statistic, Progress, Table, Tag, Spin, message, Typography, Button, Select, Space, Calendar, Badge, Tooltip,
-} from 'antd';
-import {
-  ArrowUpOutlined, ArrowDownOutlined, DollarOutlined,
-  ExperimentOutlined, WarningOutlined, ClockCircleOutlined,
-  FilePdfOutlined, FilterOutlined,
+  ArrowUpOutlined,
+  DollarOutlined,
+  ExperimentOutlined,
+  WarningOutlined,
+  ClockCircleOutlined,
+  FilePdfOutlined,
+  FilterOutlined,
+  ThunderboltOutlined,
+  InboxOutlined,
+  UnorderedListOutlined,
+  AppstoreOutlined,
+  ShopOutlined,
+  CalendarOutlined,
+  LineChartOutlined,
+  BarChartOutlined,
+  PieChartOutlined,
+  ProjectOutlined,
+  TeamOutlined,
+  SolutionOutlined,
+  CheckSquareOutlined,
+  FundOutlined,
+  PlusOutlined,
+  DownloadOutlined,
+  RiseOutlined,
 } from '@ant-design/icons';
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip as RTooltip, Legend,
-  ResponsiveContainer, PieChart, Pie, Cell,
-} from 'recharts';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, LabelList } from 'recharts';
 import { useNavigate } from 'react-router-dom';
-import { dashboardApi, itemsApi, costLogsApi, tasksApi } from '../api/api.js';
+import { dashboardApi, itemsApi, costLogsApi, tasksApi, sCurveApi } from '../api/api.js';
+import { sCurveCumulative } from '../../shared/formulas.js';
 import { useUser } from '../context/UserContext.jsx';
 import { useProject } from '../context/ProjectContext.jsx';
-import { costOf } from '../components/helpers.js';
+import { fmtVND, fmtShort, fmtDate, getUrgencyColor, URGENCY_LEGEND } from '../components/helpers.js';
+import ItemWatchlist from '../components/ItemWatchlist.jsx';
+import KpiCard from '../components/shared/KpiCard.jsx';
+import KpiMiniStat from '../components/shared/KpiMiniStat.jsx';
+import ChartCard from '../components/shared/ChartCard.jsx';
+import { fmtChart } from '../components/shared/tokens.js';
+import ProjectProgressChart from '../components/dashboard/ProjectProgressChart.jsx';
+import ProjectHealth from '../components/dashboard/ProjectHealth.jsx';
+import RiskAlertsTable from '../components/dashboard/RiskAlertsTable.jsx';
+import NotificationsTimeline from '../components/dashboard/NotificationsTimeline.jsx';
+import MilestonesPanel from '../components/dashboard/MilestonesPanel.jsx';
+import PerformanceTable from '../components/dashboard/PerformanceTable.jsx';
+import ModuleStatusCard from '../components/dashboard/ModuleStatusCard.jsx';
+import KanbanSnapshot from '../components/dashboard/KanbanSnapshot.jsx';
+import ResourceAllocation from '../components/dashboard/ResourceAllocation.jsx';
 
-const { Text, Title } = Typography;
+// ===== helpers =====
+const toKey = (s) => (s || '').toString().trim().toLowerCase().replace(/\s+/g, '_');
 
-const fmtVND = (n) => {
-  if (!n && n !== 0) return '-';
-  return new Intl.NumberFormat('vi-VN').format(n) + ' ₫';
+const getBarColor = (v, avg) => {
+  if (v >= avg) return '#2F5CE0';
+  if (v >= avg * 0.6) return '#3B82F6';
+  return '#A5B4FC';
 };
-const fmtShort = (n) => {
-  if (!n && n !== 0) return '0';
-  if (Math.abs(n) >= 1e9) return (n / 1e9).toFixed(1) + ' Tỷ';
-  if (Math.abs(n) >= 1e6) return (n / 1e6).toFixed(0) + ' Tr';
-  if (Math.abs(n) >= 1e3) return (n / 1e3).toFixed(0) + ' K';
-  return String(n);
+
+// Canonical EPC phase progress weights (from project settings.statusProgress)
+const STATUS_PROGRESS = {
+  engineering: 0.1,
+  approved: 0.2,
+  procurement: 0.3,
+  fabrication: 0.6,
+  delivery: 0.8,
+  installation: 0.9,
+  completed: 1.0,
 };
 
-const PORT_COLORS = {
-  'PORT 1': '#1677ff', 'PORT 2': '#52c41a', 'PORT 3': '#faad14',
-  'PORT 4': '#eb2f96', 'PORT 5': '#722ed1', 'PORT 6': '#13c2c2', 'PORT 7': '#fa8c16',
+const phaseWeight = (status) => STATUS_PROGRESS[toKey(status)] ?? null;
+
+// % of items that have reached (or passed) a given phase weight
+const pctReached = (items, minWeight) => {
+  const n = items.length;
+  if (!n) return 0;
+  const reached = items.filter((it) => {
+    const w = phaseWeight(it.status);
+    return w != null && w >= minWeight;
+  }).length;
+  return Math.round((reached / n) * 100);
 };
 
-const KpiCard = ({ icon, iconBg, title, value, valueStyle, formatter, suffix, progress, footer, extra }) => (
-  <Card className="stat-card stat-card-accent" bordered={false} style={{ height: '100%' }}>
-    <div className="kpi-card-body">
-      <div className="kpi-icon" style={{ background: iconBg }}>{icon}</div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <Statistic title={title} value={value} formatter={formatter} suffix={suffix} valueStyle={valueStyle} />
-        {progress != null && (
-          <Progress percent={progress} showInfo={false} size="small" strokeColor={valueStyle?.color || '#2F5CE0'} style={{ marginTop: 4 }} />
-        )}
-        {extra && <div style={{ marginTop: 4 }}>{extra}</div>}
-        {footer && <div className="stat-label">{footer}</div>}
-      </div>
-    </div>
-  </Card>
-);
+const TASK_STATUS = {
+  todo: { label: 'Cần làm', color: '#4B5563' },
+  inprogress: { label: 'Đang làm', color: '#3B82F6' },
+  review: { label: 'Kiểm tra', color: '#F59E0B' },
+  done: { label: 'Hoàn thành', color: '#10B981' },
+};
+
+const quickLinks = [
+  { to: '/projects', label: 'Dự án', icon: <ProjectOutlined />, tone: '#2F5CE0' },
+  { to: '/ports', label: 'Cảng', icon: <AppstoreOutlined />, tone: '#1FA971' },
+  { to: '/items', label: 'Hạng mục', icon: <InboxOutlined />, tone: '#F5A623' },
+  { to: '/kanban', label: 'Kanban', icon: <UnorderedListOutlined />, tone: '#8B5CF6' },
+  { to: '/timeline', label: 'Tiến độ', icon: <CalendarOutlined />, tone: '#0EA5E9' },
+  { to: '/team', label: 'Nhóm', icon: <TeamOutlined />, tone: '#EF4444' },
+  { to: '/cost', label: 'Chi phí', icon: <DollarOutlined />, tone: '#10B981' },
+  { to: '/risk', label: 'Rủi ro', icon: <WarningOutlined />, tone: '#F5803E' },
+];
 
 export default function Dashboard() {
-  const [data, setData] = useState(null);
-  const [agg, setAgg] = useState(null);
-  const [items, setItems] = useState([]);
-  const [costLogs, setCostLogs] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filterPort, setFilterPort] = useState('all');
-  const [selectedProjects, setSelectedProjects] = useState([]);
   const navigate = useNavigate();
-  const { currentUser } = useUser();
-  const { projects } = useProject();
-
-  const mode = selectedProjects.length >= 2 ? 'compare' : selectedProjects.length === 1 ? 'single' : 'aggregate';
-  const singleId = mode === 'single' ? selectedProjects[0] : null;
+  const { user } = useUser();
+  const {
+    currentProjectId,
+    currentProject,
+    projects,
+    portfolioView,
+    setPortfolioView,
+    selectProject,
+    selectAllProjects,
+    createProject,
+  } = useProject();
+  const projectId = currentProjectId;
+  const projectName = currentProject?.name;
+  const [loading, setLoading] = useState(true);
+  const [view, setView] = useState({});
+  const [items, setItems] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [costLogs, setCostLogs] = useState([]);
+  const [sCurve, setSCurve] = useState([]);
+  const [sortBy, setSortBy] = useState('variance');
+  const [createOpen, setCreateOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [form] = Form.useForm();
 
   const load = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      if (mode === 'single') {
-        const [d, i, c, t] = await Promise.all([
-          dashboardApi.get(singleId), itemsApi.getAll(singleId), costLogsApi.getAll(singleId), tasksApi.getAll(singleId),
-        ]);
-        setData(d); setItems(i); setCostLogs(c); setTasks(t); setAgg(null);
+      if (portfolioView) {
+        // Aggregate (portfolio) response has a different shape:
+        // { projects, items, costLogs, aggregate:{...flat kpis...}, perProject:[...] }
+        const raw = await dashboardApi.aggregate();
+        const agg = raw.aggregate || {};
+        // Build a "ports" proxy from per-project summaries so charts/tables work
+        const ports = (raw.perProject || []).map((p) => ({
+          id: p.id,
+          name: p.name,
+          progress: p.avgProgress || 0,
+          virtual: false,
+        }));
+        setView({
+          ...agg,
+          totalPlannedCost: agg.totalCost || 0,
+          ports,
+          projects: raw.projects || [],
+        });
+        setItems(raw.items || []);
+        setTasks(agg.tasks || []);
+        setCostLogs(raw.costLogs || []);
       } else {
-        const a = await dashboardApi.aggregate(selectedProjects);
-        setAgg(a); setData(null); setItems([]); setCostLogs([]);
-        setTasks(a?.aggregate?.tasks || []);
-        setFilterPort('all');
+        const v = await dashboardApi.get(projectId);
+        setView({ ...v, totalPlannedCost: v.totalCost || 0 });
+        const [it, tk, cl] = await Promise.all([
+          itemsApi.getAll(projectId).catch(() => []),
+          tasksApi.getAll(projectId).catch(() => []),
+          costLogsApi.getAll(projectId).catch(() => []),
+        ]);
+        setItems(it);
+        setTasks(tk);
+        setCostLogs(cl);
+        const sc = await sCurveApi.getAll(projectId).catch(() => []);
+        setSCurve(sc || []);
       }
     } catch (e) {
-      message.error('Không tải được dữ liệu dashboard');
+      console.error('Dashboard load error', e);
+      message.error('Không thể tải dữ liệu tổng quan');
     } finally {
       setLoading(false);
     }
-  }, [mode, singleId, selectedProjects]);
+  }, [portfolioView, projectId]);
 
-  useEffect(() => { load(); }, [load]);
   useEffect(() => {
-    const onFocus = () => load();
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
+    load();
   }, [load]);
 
-  const filtered = useMemo(() => {
-    if (filterPort === 'all' || !data) {
-      const actualCost = data?.totalLoggedCost || 0;
-      const rev = data?.totalRevenue || 0;
-      return {
-        ports: data?.ports || [],
-        totalRevenue: rev, totalCost: actualCost,
-        totalPlannedCost: data?.totalCost || 0,
-        totalProfit: rev - actualCost,
-        totalProfitMargin: rev > 0 ? (((rev - actualCost) / rev) * 100).toFixed(1) : 0,
-        avgProgress: data?.avgProgress || 0,
-        totalItems: data?.totalItems || 0,
-        itemsInFab: data?.itemsInFab || 0,
-        totalLoggedCost: actualCost,
-        openRisks: data?.openRisks || 0,
-        highRisks: data?.highRisks || [],
-        pendingTasks: data?.pendingTasks || 0,
-        overdueTasks: data?.overdueTasks || 0,
-        recentCosts: (costLogs || []).slice().reverse().slice(0, 6),
-      };
-    }
-    const portItems = items.filter((it) => it.port === filterPort);
-    const portCosts = (costLogs || []).filter((c) => c.portId === filterPort);
-    const revenue = portItems.reduce((s, i) => s + (i.qty || 0) * (i.unitPrice || 0), 0);
-    const cost = portCosts.reduce((s, c) => s + (c.amount || 0), 0);
-    const profit = revenue - cost;
-    const progress = portItems.length > 0 ? Math.round(portItems.reduce((s, i) => s + (i.progress || 0), 0) / portItems.length) : 0;
-    const portData = (data.ports || []).find((p) => p.id === filterPort);
-    const plannedCost = portItems.reduce((s, i) => s + (i.qty || 0) * costOf(i), 0);
-    return {
-      ports: portData ? [portData] : [],
-      totalRevenue: revenue, totalCost: cost, totalPlannedCost: plannedCost,
-      totalProfit: profit,
-      totalProfitMargin: revenue > 0 ? ((profit / revenue) * 100).toFixed(1) : 0,
-      avgProgress: progress,
-      totalItems: portItems.length,
-      itemsInFab: portItems.filter((i) => i.status === 'Fabrication').length,
-      totalLoggedCost: cost,
-      openRisks: data.openRisks,
-      highRisks: (data.highRisks || []).filter((r) => r.portId === filterPort || r.portName === filterPort),
-      pendingTasks: data.pendingTasks,
-      overdueTasks: data.overdueTasks,
-      recentCosts: portCosts.slice().reverse().slice(0, 6),
+  const viewFilter = useMemo(() => (view.ports || []).filter((p) => !p.virtual), [view.ports]);
+  const pId = (p) => p.id || p;
+  const pName = (p) => p.name || p.id || p;
+
+  // ===== charts =====
+  const chartData = useMemo(() => {
+    const ports = (view.ports || []).map((p) => ({ id: pId(p), name: pName(p) }));
+    const costByItem = view.costByItem || [];
+    const statusCounts = {};
+    (items || []).forEach((it) => {
+      const k = toKey(it.status || 'unknown');
+      statusCounts[k] = (statusCounts[k] || 0) + 1;
+    });
+    const STATUS_LABEL = {
+      engineering: 'Thiết kế',
+      approved: 'Duyệt',
+      procurement: 'Mua sắm',
+      fabrication: 'Chế tạo',
+      delivery: 'Giao hàng',
+      installation: 'Lắp đặt',
+      completed: 'Hoàn thành',
+      unknown: 'Chưa phân loại',
     };
-  }, [filterPort, data, items, costLogs]);
+    const pie = Object.entries(statusCounts).map(([k, v]) => ({ key: k, name: STATUS_LABEL[k] || k, value: v }));
+    const pieTotal = pie.reduce((s, e) => s + e.value, 0);
+    return { ports, costByItem, pie, pieTotal };
+  }, [view, items]);
 
-  const TASK_STATUS = {
-    todo: { label: 'Cần làm', color: '#8c8c8c' },
-    inprogress: { label: 'Đang làm', color: '#1677ff' },
-    review: { label: 'Kiểm tra', color: '#faad14' },
-    done: { label: 'Hoàn thành', color: '#52c41a' },
-  };
+  // Real S-Curve from stored weekly planned/actual % (via sCurveCumulative)
+  const sCurveData = useMemo(() => {
+    if (!sCurve || !sCurve.length) return [];
+    return sCurveCumulative(sCurve);
+  }, [sCurve]);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const revenueStats = useMemo(() => {
+    const d = chartData.costByItem;
+    if (!d.length) return null;
+    const vals = d.map((x) => x.actual);
+    const max = Math.max(...vals);
+    const min = Math.min(...vals);
+    const total = vals.reduce((a, b) => a + b, 0);
+    return {
+      total,
+      max: { value: max, name: d.find((x) => x.actual === max)?.name || '' },
+      min: { value: min, name: d.find((x) => x.actual === min)?.name || '' },
+      avg: Math.round(total / d.length),
+    };
+  }, [chartData.costByItem]);
 
-  const toKey = (d) => {
-    const x = new Date(d);
-    return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
-  };
+  const costItems = useMemo(() => {
+    const arr = [...(chartData.costByItem || [])].map((c) => ({
+      code: c.code,
+      name: c.name,
+      planned: Number(c.planned) || 0,
+      actual: Number(c.actual) || 0,
+    }));
+    const max = Math.max(...arr.map((a) => a.planned), 1);
+    if (sortBy === 'value') arr.sort((a, b) => b.actual - a.actual);
+    else arr.sort((a, b) => b.actual - b.planned - (a.actual - a.planned));
+    return { max, display: arr.slice(0, 8) };
+  }, [chartData.costByItem, sortBy]);
 
-  const tasksByDate = useMemo(() => {
+  // ===== upcoming / schedule / reminders =====
+  const upcomingDeadlines = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const itemDue = (items || [])
+      .filter((it) => it.endDate)
+      .map((it) => ({ id: `i-${it.code}`, title: `${it.code} · ${it.name}`, endDate: it.endDate, owner: it.owner, kind: 'item' }));
+    const taskDue = (tasks || [])
+      .filter((t) => t.endDate)
+      .map((t) => ({ id: `t-${t.id}`, title: t.title, endDate: t.endDate, owner: t.owner, kind: 'task' }));
+    return [...itemDue, ...taskDue]
+      .map((d) => {
+        const dt = new Date(d.endDate);
+        dt.setHours(0, 0, 0, 0);
+        const diff = Math.round((dt - today) / 86400000);
+        return { ...d, daysLeft: diff };
+      })
+      .sort((a, b) => a.daysLeft - b.daysLeft)
+      .slice(0, 8);
+  }, [items, tasks]);
+
+  const weekSchedule = useMemo(() => {
     const map = {};
     (tasks || []).forEach((t) => {
       if (!t.endDate) return;
-      const key = toKey(t.endDate);
-      (map[key] = map[key] || []).push(t);
+      const dt = new Date(t.endDate);
+      const key = `${dt.getFullYear()}-${dt.getMonth()}-${dt.getDate()}`;
+      if (!map[key]) map[key] = { date: dt, items: [] };
+      map[key].items.push(t);
     });
-    return map;
+    return Object.values(map).sort((a, b) => a.date - b.date);
   }, [tasks]);
 
-  const upcomingDeadlines = useMemo(() => {
-    return (tasks || [])
-      .filter((t) => t.status !== 'done' && t.endDate)
-      .map((t) => {
-        const d = new Date(t.endDate);
-        d.setHours(0, 0, 0, 0);
-        return { ...t, days: Math.round((d - today) / 86400000) };
-      })
-      .sort((a, b) => a.days - b.days)
-      .slice(0, 8);
+  const reminders = useMemo(() => {
+    const out = [];
+    (upcomingDeadlines || []).slice(0, 4).forEach((d) => {
+      const urgent = d.daysLeft <= 3;
+      out.push({
+        id: `rem-${d.id}`,
+        type: d.kind === 'task' ? 'task' : 'deadline',
+        title: urgent ? `Sắp đến hạn: ${d.title}` : `Nhắc hạn: ${d.title}`,
+        link: d.kind === 'task' ? '/kanban' : '/items',
+        meta: d.owner || 'Chưa gán',
+        color: d.daysLeft < 0 ? '#EF4444' : d.daysLeft <= 3 ? '#F5803E' : '#2F5CE0',
+        date: d.daysLeft < 0 ? `trễ ${-d.daysLeft} ngày` : `còn ${d.daysLeft} ngày`,
+      });
+    });
+    (view.recentCosts || []).slice(0, 2).forEach((c) => {
+      out.push({
+        id: `rc-${c.id}`,
+        type: 'cost',
+        title: `Chi phí mới: ${fmtShort(c.amount)} ₫`,
+        link: '/cost',
+        meta: c.note || 'Chi phí',
+        color: '#10B981',
+        date: c.date ? new Date(c.date).toLocaleDateString('vi-VN') : '',
+      });
+    });
+    return out;
+  }, [upcomingDeadlines, view.recentCosts]);
+
+  const taskStats = useMemo(() => {
+    const s = { todo: 0, inprogress: 0, review: 0, done: 0 };
+    (tasks || []).forEach((t) => {
+      const k = toKey(t.status);
+      if (s[k] !== undefined) s[k] += 1;
+    });
+    const total = tasks.length || 1;
+    return Object.entries(s).map(([k, v]) => ({ status: k, label: TASK_STATUS[k]?.label || k, value: v, pct: Math.round((v / total) * 100), color: TASK_STATUS[k]?.color }));
   }, [tasks]);
 
-  if (loading || (!data && !agg)) {
+  const costSpark = useMemo(() => (view.recentCosts || []).slice(-12).map((c) => Number(c.amount) || 0), [view.recentCosts]);
+  const progressSpark = useMemo(() => {
+    const arr = (view.ports || []).map((p) => p.progress ?? 0);
+    return arr.length ? arr : [0];
+  }, [view.ports]);
+
+  // ===== health / module proxies (derived from real item status) =====
+  const itemStatusCounts = useMemo(() => {
+    const c = {};
+    (items || []).forEach((it) => {
+      const k = it.status || 'unknown';
+      c[k] = (c[k] || 0) + 1;
+    });
+    return c;
+  }, [items]);
+
+  const totalItems = items.length || 0;
+  const ev = view.totalPlannedCost ? Math.round((view.avgProgress / 100) * view.totalPlannedCost) : 0;
+  const ac = view.totalLoggedCost || 0;
+  const cpi = ac > 0 ? ev / ac : 1;
+  const costPct = Math.max(0, Math.min(100, Math.round(cpi * 100)));
+
+  const seg = (label, value, color) => ({ label, value, color });
+
+  // Real EPC phase distribution (counts of items currently at each phase)
+  const engCount = itemStatusCounts.Engineering || 0;
+  const approvedCount = itemStatusCounts.Approved || 0;
+  const procCount = itemStatusCounts.Procurement || 0;
+  const fabCount = itemStatusCounts.Fabrication || 0;
+  const deliveryCount = itemStatusCounts.Delivery || 0;
+  const installCount = itemStatusCounts.Installation || 0;
+  const doneCount = itemStatusCounts.Completed || 0;
+
+  // % of items that have reached (or passed) each phase — drives the gauges
+  const procurementPct = pctReached(items, 0.3);
+  const fabricationPct = pctReached(items, 0.6);
+  const installPct = pctReached(items, 0.9);
+
+  const procurementProxy = {
+    total: totalItems,
+    pct: procurementPct,
+    segments: [
+      seg('Thiết kế', engCount + approvedCount, '#2F5CE0'),
+      seg('Mua sắm', procCount, '#F5A623'),
+      seg('Chế tạo', fabCount, '#8B5CF6'),
+      seg('Đã giao', deliveryCount + installCount + doneCount, '#1FA971'),
+    ],
+  };
+  const engineeringProxy = {
+    total: totalItems,
+    pct: pctReached(items, 0.1),
+    segments: [
+      seg('Đang vẽ', engCount, '#2F5CE0'),
+      seg('Đã duyệt', approvedCount + procCount + fabCount + deliveryCount + installCount + doneCount, '#1FA971'),
+    ],
+  };
+  const installationProxy = {
+    total: totalItems,
+    pct: installPct,
+    segments: [
+      seg('Chế tạo', fabCount + deliveryCount, '#8B5CF6'),
+      seg('Lắp đặt', installCount, '#F5A623'),
+      seg('Hoàn thành', doneCount, '#1FA971'),
+    ],
+  };
+
+  const healthItems = [
+    { key: 'schedule', label: 'Tiến độ', name: 'Schedule', value: view.avgProgress || 0 },
+    { key: 'cost', label: 'Chi phí (CPI)', name: 'CPI', value: costPct },
+    { key: 'procurement', label: 'Mua sắm', name: 'Procurement', value: procurementPct },
+    { key: 'fabrication', label: 'Chế tạo', name: 'Fabrication', value: fabricationPct },
+  ];
+
+  const perPortRows = useMemo(() => {
+    return (view.ports || []).map((p) => {
+      const pid = pId(p);
+      const itemsInPort = (items || []).filter((it) => it.port === pid || (it.port && it.port.id === pid));
+      const budget = itemsInPort.reduce((s, it) => s + (Number(it.qty) * Number(it.internalCost || it.cost || 0)), 0);
+      const actual = (costLogs || []).filter((c) => c.portId === pid).reduce((s, c) => s + Number(c.amount || 0), 0);
+      const progress = itemsInPort.length
+        ? Math.round(itemsInPort.reduce((s, it) => s + (Number(it.progress) || 0), 0) / itemsInPort.length)
+        : 0;
+      const e = budget ? (progress / 100) * budget : 0;
+      const cpi = actual > 0 ? e / actual : 1;
+      return {
+        id: pid,
+        name: pName(p),
+        progress,
+        budget: Math.round(budget),
+        actual: Math.round(actual),
+        forecast: Math.round(budget),
+        spi: 1,
+        cpi: Number(cpi.toFixed(2)),
+      };
+    });
+  }, [view.ports, items, costLogs]);
+
+  const milestones = useMemo(
+    () =>
+      upcomingDeadlines
+        .map((d) => ({ id: d.id, title: d.title, date: d.endDate, owner: d.owner, days: d.daysLeft, color: getUrgencyColor(d.daysLeft) }))
+        .sort((a, b) => a.days - b.days),
+    [upcomingDeadlines]
+  );
+
+  const resourceData = useMemo(() => {
+    const map = {};
+    (tasks || []).forEach((t) => {
+      const o = t.owner || 'Chưa gán';
+      map[o] = (map[o] || 0) + 1;
+    });
+    const palette = ['#2F5CE0', '#1FA971', '#F5A623', '#8B5CF6', '#EF4444', '#3B82F6', '#14B8A6', '#F5803E'];
+    return Object.entries(map)
+      .map(([name, count], i) => ({ name, count, color: palette[i % palette.length] }))
+      .sort((a, b) => b.count - a.count);
+  }, [tasks]);
+
+  const kanbanCounts = useMemo(() => {
+    let open = 0;
+    let completed = 0;
+    let overdue = 0;
+    let blocked = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    (tasks || []).forEach((t) => {
+      if (t.status === 'done') completed++;
+      else {
+        open++;
+        if (t.endDate && new Date(t.endDate) < today) overdue++;
+      }
+      if (t.status === 'blocked') blocked++;
+    });
+    return { open, completed, overdue, blocked };
+  }, [tasks]);
+
+  const notifications = reminders.map((r) => ({ id: r.id, title: r.title, project: r.meta, date: r.date, color: r.color }));
+
+  // ===== hero header: live summary chips =====
+  const portCount = (view.ports || []).filter((p) => !p.virtual).length || (view.ports || []).length;
+  const heroStats = [
+    { key: 'progress', icon: <RiseOutlined />, label: 'Tiến độ TB', value: `${Math.round(view.avgProgress || 0)}%`, tone: '#2F5CE0' },
+    { key: 'budget', icon: <FundOutlined />, label: 'Ngân sách', value: `${fmtShort(view.totalPlannedCost || 0)} ₫`, tone: '#1FA971' },
+    { key: 'spent', icon: <DollarOutlined />, label: 'Đã chi', value: `${fmtShort(view.totalLoggedCost || 0)} ₫`, tone: '#F5A623' },
+    { key: 'ports', icon: <AppstoreOutlined />, label: portfolioView ? 'Dự án' : 'Cảng / gói', value: portfolioView ? (projects?.length || 0) : portCount, tone: '#8B5CF6' },
+    { key: 'items', icon: <InboxOutlined />, label: 'Hạng mục', value: totalItems, tone: '#0EA5E9' },
+    { key: 'risks', icon: <WarningOutlined />, label: 'Rủi ro mở', value: view.openRisks || 0, tone: '#EF4444' },
+  ];
+
+  const projectOptions = [
+    { value: 'all', label: 'Tất cả dự án' },
+    ...(projects || []).map((p) => ({ value: p.id, label: p.name || p.id })),
+  ];
+
+  const handleSelectProject = (v) => {
+    if (v === 'all') selectAllProjects();
+    else selectProject(v);
+  };
+
+  const handleCreateProject = async () => {
+    try {
+      const v = await form.validateFields();
+      setCreating(true);
+      await createProject(v.name.trim(), (v.description || '').trim());
+      setCreateOpen(false);
+      form.resetFields();
+    } catch (e) {
+      if (e?.errorFields) return; // validation error already shown
+      message.error('Không tạo được dự án');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleExport = () => {
+    setExporting(true);
+    try {
+      // PDF-safe formatters (jsPDF default font is Latin-only)
+      const money = (n) => new Intl.NumberFormat('vi-VN').format(Math.round(Number(n) || 0)) + ' VND';
+      const ascii = (s) => (s ?? '')
+        .toString()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd')
+        .replace(/Đ/g, 'D');
+      const doc = new jsPDF();
+      const title = ascii(portfolioView ? 'Tong quan toan bo du an' : (projectName || 'Tong quan du an'));
+      // Banner
+      doc.setFillColor(47, 92, 224);
+      doc.rect(0, 0, 210, 26, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(15);
+      doc.setFont(undefined, 'bold');
+      doc.text('DASHBOARD - BAO CAO NHANH', 105, 11, { align: 'center' });
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'normal');
+      doc.text(title, 105, 19, { align: 'center' });
+
+      doc.setTextColor(60, 60, 60);
+      doc.setFontSize(9);
+      doc.text(`Ngay xuat: ${new Date().toLocaleDateString('vi-VN')}`, 14, 34);
+      doc.text(`Nguoi xuat: ${ascii(user?.name || user?.username || '-')}`, 120, 34);
+
+      let y = 42;
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(20, 20, 20);
+      doc.text('1. CHI SO CHINH', 14, y);
+      y += 4;
+      autoTable(doc, {
+        startY: y,
+        head: [['Chi so', 'Gia tri']],
+        body: [
+          ['Ngan sach (ke hoach)', money(view.totalPlannedCost)],
+          ['Da chi', money(view.totalLoggedCost)],
+          ['Doanh thu', money(view.totalRevenue)],
+          ['Loi nhuan', `${money(view.totalProfit)} (bien ${Math.round(view.totalProfitMargin || 0)}%)`],
+          ['Tien do trung binh', `${Math.round(view.avgProgress || 0)}%`],
+          ['Tong hang muc', String(totalItems)],
+          ['Rui ro dang mo', String(view.openRisks || 0)],
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [47, 92, 224], fontSize: 9 },
+        bodyStyles: { fontSize: 9 },
+        columnStyles: { 0: { cellWidth: 70 } },
+      });
+      y = doc.lastAutoTable.finalY + 10;
+
+      // Performance by port
+      if (perPortRows.length) {
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.text('2. HIEU SUAT THEO CANG / GOI', 14, y);
+        y += 4;
+        autoTable(doc, {
+          startY: y,
+          head: [['Cang/Goi', 'Tien do %', 'Ngan sach', 'Da chi', 'CPI']],
+          body: perPortRows.map((p) => [
+            ascii(p.name), `${p.progress}%`, money(p.budget), money(p.actual), String(p.cpi),
+          ]),
+          theme: 'striped',
+          headStyles: { fillColor: [31, 169, 113], fontSize: 9 },
+          bodyStyles: { fontSize: 9 },
+        });
+        y = doc.lastAutoTable.finalY + 10;
+      }
+
+      // High risks
+      const highRisks = view.highRisks || [];
+      if (highRisks.length) {
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.text('3. RUI RO UU TIEN', 14, y);
+        y += 4;
+        autoTable(doc, {
+          startY: y,
+          head: [['Rui ro', 'Cang', 'Diem', 'Phu trach']],
+          body: highRisks.map((r) => [ascii(r.title), ascii(r.portName || '-'), String(r.score ?? '-'), ascii(r.owner || '-')]),
+          theme: 'striped',
+          headStyles: { fillColor: [239, 68, 68], fontSize: 9 },
+          bodyStyles: { fontSize: 9 },
+        });
+      }
+
+      // Footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`Golden Point Co., Ltd | Trang ${i}/${pageCount}`, 105, 290, { align: 'center' });
+      }
+      doc.save(`Bao_cao_dashboard_${new Date().toISOString().slice(0, 10)}.pdf`);
+      message.success('Đã xuất báo cáo PDF');
+    } catch (e) {
+      console.error(e);
+      message.error('Lỗi khi xuất báo cáo: ' + e.message);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const EmptyState = ({ text }) => (
+    <div className="ds-empty">
+      <div className="ds-empty-icon">📭</div>
+      <div>{text}</div>
+    </div>
+  );
+
+  if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '70vh' }}>
-        <Spin size="large" tip="Đang tải dashboard..." />
+      <div className="dash-shell">
+        <div className="dash-grid">
+          <div className="col-12">
+            <Card loading style={{ minHeight: 360 }} />
+          </div>
+        </div>
       </div>
     );
   }
 
-  const A = agg?.aggregate;
-  const view = mode === 'single' ? filtered : {
-    ports: [],
-    totalRevenue: A?.totalRevenue || 0,
-    totalCost: A?.totalLoggedCost || 0,
-    totalPlannedCost: A?.totalCost || 0,
-    totalProfit: (A?.totalRevenue || 0) - (A?.totalLoggedCost || 0),
-    totalProfitMargin: (A?.totalRevenue || 0) > 0 ? (((A.totalRevenue - A.totalLoggedCost) / A.totalRevenue) * 100).toFixed(1) : 0,
-    avgProgress: A?.avgProgress || 0,
-    totalItems: A?.totalItems || 0,
-    itemsInFab: A?.itemsInFab || 0,
-    totalLoggedCost: A?.totalLoggedCost || 0,
-    openRisks: A?.openRisks || 0,
-    highRisks: A?.highRisks || [],
-    pendingTasks: A?.pendingTasks || 0,
-    overdueTasks: A?.overdueTasks || 0,
-    recentCosts: A?.recentCosts || [],
-  };
-
-  const progressChartData = mode === 'single'
-    ? view.ports.map((p) => ({ name: p.id, 'Tiến độ': p.progress, 'Chi phí': Math.round(p.logged / 1e6) }))
-    : (agg?.perProject || []).map((p) => ({ name: p.name.length > 12 ? p.name.slice(0, 12) + '...' : p.name, 'Tiến độ': p.avgProgress, 'Chi phí': Math.round((p.totalLoggedCost || 0) / 1e6) }));
-
-  const compareChartData = (agg?.perProject || []).slice(0, 10).map((p) => ({
-    name: p.name.length > 12 ? p.name.slice(0, 12) + '...' : p.name,
-    'Doanh thu': Math.round((p.totalRevenue || 0) / 1e6),
-    'Chi phí': Math.round((p.totalLoggedCost || 0) / 1e6),
-    'Lợi nhuận': Math.round(((p.totalRevenue || 0) - (p.totalLoggedCost || 0)) / 1e6),
-  }));
-
-  const taskByStatus = (mode === 'single' ? data?.taskByStatus : A?.taskByStatus) || {};
-  const taskPieData = [
-    { name: 'Cần làm', value: taskByStatus.todo || 0, color: '#8c8c8c' },
-    { name: 'Đang làm', value: taskByStatus.inprogress || 0, color: '#1677ff' },
-    { name: 'Kiểm tra', value: taskByStatus.review || 0, color: '#faad14' },
-    { name: 'Hoàn thành', value: taskByStatus.done || 0, color: '#52c41a' },
-  ].filter((t) => t.value > 0);
-
-  const profitColor = view.totalProfit >= 0 ? '#52c41a' : '#ff4d4f';
-
-  const calendarCellRender = (current) => {
-    const key = toKey(current);
-    const dayTasks = tasksByDate[key];
-    if (!dayTasks || dayTasks.length === 0) return null;
-    return (
-      <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-        {dayTasks.slice(0, 2).map((t) => {
-          const overdue = t.status !== 'done' && new Date(t.endDate) < today;
-          const color = overdue ? '#ff4d4f' : TASK_STATUS[t.status]?.color || '#1677ff';
-          return (
-            <li key={t.id} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11, lineHeight: '16px' }}>
-              <Tooltip title={`${t.title} — ${TASK_STATUS[t.status]?.label || t.status}`}>
-                <Badge status={overdue ? 'error' : 'default'} color={color} />
-                <span>{t.title}</span>
-              </Tooltip>
-            </li>
-          );
-        })}
-        {dayTasks.length > 2 && <li style={{ fontSize: 11, color: '#8c8c8c' }}>+{dayTasks.length - 2} khác</li>}
-      </ul>
-    );
-  };
+  const bannerTitle = portfolioView ? 'Tổng quan toàn bộ dự án' : view.projectName || view.name || projectName || 'Tổng quan';
+  const heroInitial = (bannerTitle || 'D').trim().charAt(0).toUpperCase();
+  const todayStr = new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
-    <div className="page-container" style={{ maxWidth: 1400, margin: '0 auto' }}>
+    <div className="dash-shell">
+      <div className="dash-grid">
+        {/* ===== Hero header ===== */}
+        <section className="col-12 dash-hero">
+          <div className="dash-hero-bg" aria-hidden />
+          <div className="dash-hero-top">
+            <div className="dash-hero-id">
+              <div className="dash-hero-avatar">{portfolioView ? <ProjectOutlined /> : heroInitial}</div>
+              <div className="dash-hero-titles">
+                <div className="dash-hero-eyebrow">
+                  <span className="dash-hero-dot" /> {portfolioView ? 'Danh mục dự án' : 'Bảng điều khiển dự án'}
+                </div>
+                <h1 className="dash-hero-title">{bannerTitle}</h1>
+                <div className="dash-hero-sub">
+                  Xin chào, <b>{user?.name || user?.username || 'Người dùng'}</b>
+                  <span className="dash-hero-sep">•</span>
+                  <span className="dash-hero-date"><CalendarOutlined /> {todayStr}</span>
+                </div>
+              </div>
+            </div>
 
-      {/* HEADER */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
-        <div>
-          <Title level={4} style={{ marginBottom: 2 }}>
-            Dashboard Tổng quan
-          </Title>
-          <Text type="secondary" style={{ fontSize: 13 }}>
-            {mode === 'aggregate' && `Tổng hợp ${agg?.projects?.length || 0} dự án`}
-            {mode === 'single' && `${(projects.find((p) => p.id === singleId)?.name) || 'Dự án'}`}
-            {mode === 'compare' && `So sánh ${selectedProjects.length} dự án`}
-          </Text>
-        </div>
-        <Space wrap size={8}>
-          <Select
-            mode="multiple" allowClear
-            value={selectedProjects} onChange={setSelectedProjects}
-            style={{ minWidth: 220 }} maxTagCount="responsive"
-            placeholder="Tất cả dự án"
-            options={(projects || []).map((p) => ({ value: p.id, label: p.name }))}
-          />
-          {mode === 'single' && (
-            <Select
-              value={filterPort} onChange={setFilterPort}
-              style={{ width: 160 }} suffixIcon={<FilterOutlined />}
-              options={[
-                { value: 'all', label: 'Tất cả HP' },
-                ...(data?.ports || []).map((p) => ({ value: p.id, label: p.id })),
-              ]}
-            />
-          )}
-          <Button icon={<FilePdfOutlined />} onClick={() => navigate('/reports')}>Báo cáo</Button>
-        </Space>
-      </div>
+            <div className="dash-hero-actions">
+              <Select
+                value={portfolioView ? 'all' : projectId}
+                onChange={handleSelectProject}
+                popupMatchSelectWidth={false}
+                className="dash-hero-select"
+                options={projectOptions}
+                suffixIcon={<FilterOutlined />}
+              />
+              <Tooltip title="Tải báo cáo tổng quan (PDF)">
+                <Button icon={<DownloadOutlined />} loading={exporting} onClick={handleExport} className="dash-hero-btn">
+                  Xuất báo cáo
+                </Button>
+              </Tooltip>
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)} className="dash-hero-btn">
+                Thêm dự án
+              </Button>
+            </div>
+          </div>
 
-      {/* ROW 1: KPI CARDS — clean, no sparklines */}
-      <Row gutter={[16, 16]} align="stretch">
-        <Col xs={12} md={6}>
-          <KpiCard
-            icon={<DollarOutlined />}
-            iconBg="linear-gradient(135deg,#2F5CE0,#5b82f0)"
-            title="Doanh thu hợp đồng"
-            value={view.totalRevenue}
-            formatter={(v) => fmtShort(v)}
-            valueStyle={{ color: '#2F5CE0' }}
-            footer={<>{view.totalItems} items · {view.itemsInFab} đang SX</>}
-          />
-        </Col>
-        <Col xs={12} md={6}>
-          <KpiCard
-            icon={view.totalProfit >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
-            iconBg={view.totalProfit >= 0 ? 'linear-gradient(135deg,#1FA971,#3cc995)' : 'linear-gradient(135deg,#EF4444,#ff7875)'}
-            title="Lợi nhuận"
-            value={view.totalProfit}
-            formatter={(v) => fmtShort(v)}
-            valueStyle={{ color: profitColor }}
-            suffix={`(${view.totalProfitMargin}%)`}
-            footer={<>{fmtVND(view.totalLoggedCost)} đã ghi nhận</>}
-          />
-        </Col>
-        <Col xs={12} md={6}>
-          <KpiCard
-            icon={<ExperimentOutlined />}
-            iconBg="linear-gradient(135deg,#722ed1,#9254de)"
-            title="Tiến độ trung bình"
-            value={view.avgProgress}
-            formatter={(v) => `${v}%`}
-            valueStyle={{ color: '#722ed1' }}
-            progress={view.avgProgress}
-            footer={mode === 'single' ? 'Simple average' : 'Weighted theo GT HĐ'}
-          />
-        </Col>
-        <Col xs={12} md={6}>
-          <KpiCard
-            icon={<WarningOutlined />}
-            iconBg={view.openRisks > 0 ? 'linear-gradient(135deg,#EF4444,#ff7875)' : 'linear-gradient(135deg,#1FA971,#3cc995)'}
-            title="Rủi ro đang mở"
-            value={view.openRisks}
-            valueStyle={{ color: view.openRisks > 0 ? '#EF4444' : '#1FA971' }}
-            footer={
-              <span>
-                {view.highRisks.length} cao ·{' '}
-                <span style={{ color: view.overdueTasks > 0 ? '#ff4d4f' : '#52c41a' }}>{view.overdueTasks} quá hạn</span>
-              </span>
-            }
-          />
-        </Col>
-      </Row>
+          {/* live stat strip */}
+          <div className="dash-hero-stats">
+            {heroStats.map((s) => (
+              <div className="dash-hero-stat" key={s.key}>
+                <span className="dash-hero-stat-ic" style={{ color: s.tone, background: `${s.tone}1a` }}>{s.icon}</span>
+                <span className="dash-hero-stat-body">
+                  <span className="dash-hero-stat-val">{s.value}</span>
+                  <span className="dash-hero-stat-lbl">{s.label}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
 
-      {/* ROW 2: CHARTS — bar + donut, cleaner */}
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24} lg={16}>
-          <Card bordered={false} title={mode === 'single' ? 'Theo Hạng mục' : 'Theo Dự án'} styles={{ body: { padding: '8px 16px 16px' } }}>
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={progressChartData} barGap={4}>
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#8c8c8c' }} axisLine={false} tickLine={false} />
-                <YAxis yAxisId="left" tick={{ fontSize: 11, fill: '#8c8c8c' }} axisLine={false} tickLine={false} />
-                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: '#8c8c8c' }} axisLine={false} tickLine={false} />
-                <RTooltip
-                  cursor={{ fill: 'rgba(47,92,224,0.06)' }}
-                  formatter={(v, n) => (n === 'Chi phí' ? fmtShort(v * 1e6) + ' ₫' : v + '%')}
-                  contentStyle={{ borderRadius: 10, border: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', fontSize: 12 }}
-                />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar yAxisId="left" dataKey="Tiến độ" fill="#2F5CE0" radius={[4, 4, 0, 0]} maxBarSize={32} />
-                <Bar yAxisId="right" dataKey="Chi phí" fill="#faad14" radius={[4, 4, 0, 0]} maxBarSize={32} />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        </Col>
-        <Col xs={24} lg={8}>
-          <Card bordered={false} title="Công việc" styles={{ body: { padding: '8px 16px 16px' } }}>
-            {taskPieData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={280}>
+        {/* ===== R1: Executive KPIs ===== */}
+        <section className="col-12">
+          <div className="dash-kpi-grid">
+            <KpiCard icon={<FundOutlined style={{ color: '#2F5CE0' }} />} title="Ngân sách" value={fmtShort(view.totalPlannedCost || 0)} tone="blue" />
+            <KpiCard icon={<DollarOutlined style={{ color: '#F5A623' }} />} title="Đã chi" value={fmtShort(view.totalLoggedCost || 0)} tone="orange" />
+            <KpiCard icon={<DollarOutlined style={{ color: '#10B981' }} />} title="Doanh thu" value={fmtShort(view.totalRevenue || 0)} tone="green" />
+            <KpiCard icon={<ExperimentOutlined style={{ color: '#1FA971' }} />} title="Lợi nhuận" value={fmtShort(view.totalProfit || 0)} tone="green" footer={`Biên ${Math.round(view.totalProfitMargin || 0)}%`} />
+            <KpiCard icon={<ProjectOutlined style={{ color: '#2F5CE0' }} />} title="Tiến độ TB" value={`${Math.round(view.avgProgress || 0)}%`} tone="blue">
+              <Progress percent={Math.round(view.avgProgress || 0)} size="small" showInfo={false} />
+            </KpiCard>
+            <KpiCard icon={<WarningOutlined style={{ color: '#EF4444' }} />} title="Rủi ro" value={view.openRisks || 0} tone="red" footer={`${view.itemsInFab || 0} mục chế tạo`} />
+          </div>
+        </section>
+
+        {/* ===== Quick links ===== */}
+        <section className="col-12 ds-ql-wrap">
+          <div className="ds-ql-head">
+            <span className="ds-ql-title">Truy cập nhanh</span>
+          </div>
+          <div className="ds-quicklinks">
+            {quickLinks.map((q) => (
+              <div key={q.to} className="ds-quicklink" onClick={() => navigate(q.to)}>
+                <div className="ds-quicklink-icon" style={{ background: `${q.tone}1a`, color: q.tone }}>{q.icon}</div>
+                <span className="ds-quicklink-label">{q.label}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ===== R2: Progress + Health ===== */}
+        <section className="col-8">
+          <ChartCard icon={<LineChartOutlined style={{ color: '#2F5CE0' }} />} title="Tiến độ & Chi phí (S-Curve)" extra={<Tag color="blue">EV = {fmtShort(ev)} ₫</Tag>}>
+            <ProjectProgressChart data={sCurveData} avgProgress={view.avgProgress || 0} />
+          </ChartCard>
+        </section>
+        <section className="col-4">
+          <ChartCard icon={<FundOutlined style={{ color: '#1FA971' }} />} title="Chỉ số sức khỏe">
+            <ProjectHealth items={healthItems} />
+          </ChartCard>
+        </section>
+
+        {/* ===== Charts: Revenue / Status / Cost ===== */}
+        <section className="col-4">
+          <ChartCard icon={<BarChartOutlined style={{ color: '#2F5CE0' }} />} title="Doanh thu theo hạng mục" extra={<span className="dash-muted">tổng {fmtShort(view.totalRevenue || 0)} ₫</span>}>
+            <div className="rev-mini-row">
+              <div className="rev-mini">
+                <span className="rev-mini-val">{fmtShort(revenueStats?.total || 0)}</span>
+                <span className="rev-mini-lbl">Tổng</span>
+              </div>
+              <div className="rev-mini">
+                <span className="rev-mini-val" style={{ color: '#10B981' }}>{fmtShort(revenueStats?.max?.value || 0)}</span>
+                <span className="rev-mini-lbl">Cao nhất</span>
+              </div>
+              <div className="rev-mini">
+                <span className="rev-mini-val" style={{ color: '#F5A623' }}>{fmtShort(revenueStats?.min?.value || 0)}</span>
+                <span className="rev-mini-lbl">Thấp nhất</span>
+              </div>
+            </div>
+            <div style={{ height: 240 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData.costByItem} margin={{ top: 18, right: 6, left: -18, bottom: 0 }}>
+                  <CartesianGrid vertical={false} stroke="#eef1f5" />
+                  <XAxis dataKey="code" tick={{ fontSize: 10, fill: '#8B95A5' }} axisLine={false} tickLine={false} interval={0} angle={-35} textAnchor="end" height={54} />
+                  <YAxis tick={{ fontSize: 10, fill: '#8B95A5' }} tickFormatter={(v) => fmtChart(v)} axisLine={false} tickLine={false} width={42} />
+                  <RTooltip formatter={(v) => `${fmtVND(v)} ₫`} />
+                  <Bar dataKey="actual" radius={[4, 4, 0, 0]} maxBarSize={36}>
+                    {chartData.costByItem.map((d, i) => (
+                      <Cell key={i} fill={getBarColor(d.actual, revenueStats?.avg || 1)} />
+                    ))}
+                    <LabelList dataKey="actual" position="top" formatter={(v) => fmtChart(v)} style={{ fontSize: 9, fill: '#8B95A5' }} />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </ChartCard>
+        </section>
+        <section className="col-4">
+          <ChartCard icon={<PieChartOutlined style={{ color: '#8B5CF6' }} />} title="Trạng thái hạng mục">
+            <div className="donut-wrap">
+              <ResponsiveContainer width="100%" height={230}>
                 <PieChart>
-                  <Pie data={taskPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={3}
-                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}>
-                    {taskPieData.map((entry, i) => (<Cell key={i} fill={entry.color} />))}
+                  <Pie data={chartData.pie} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="60%" outerRadius="85%" paddingAngle={2} stroke="none">
+                    {chartData.pie.map((e, i) => (
+                      <Cell key={i} fill={['#4B5563', '#3B82F6', '#F59E0B', '#10B981', '#EF4444', '#8B5CF6'][i % 6]} />
+                    ))}
                   </Pie>
-                  <RTooltip contentStyle={{ borderRadius: 10, border: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', fontSize: 12 }} />
+                  <RTooltip formatter={(v) => `${v} mục`} />
                 </PieChart>
               </ResponsiveContainer>
-            ) : (
-              <div style={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Text type="secondary">Chưa có công việc</Text>
+              <div className="donut-center">
+                <div className="donut-total">{chartData.pieTotal}</div>
+                <div className="donut-label">Tổng số mục</div>
               </div>
-            )}
-          </Card>
-        </Col>
-      </Row>
-
-      {/* SO SÁNH (compare mode) */}
-      {mode === 'compare' && (
-        <Card bordered={false} title="So sánh tài chính (triệu ₫)" style={{ marginTop: 16 }} styles={{ body: { padding: '8px 16px 16px' } }}>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={compareChartData} barGap={4}>
-              <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#8c8c8c' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#8c8c8c' }} axisLine={false} tickLine={false} />
-              <RTooltip cursor={{ fill: 'rgba(47,92,224,0.06)' }} formatter={(v) => `${v} Tr`} contentStyle={{ borderRadius: 10, border: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', fontSize: 12 }} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="Doanh thu" fill="#2F5CE0" radius={[4, 4, 0, 0]} maxBarSize={36} />
-              <Bar dataKey="Chi phí" fill="#fa8c16" radius={[4, 4, 0, 0]} maxBarSize={36} />
-              <Bar dataKey="Lợi nhuận" fill="#1FA971" radius={[4, 4, 0, 0]} maxBarSize={36} />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
-      )}
-
-      {/* ROW 3: CALENDAR (chủ đạo) + DEADLINE LIST */}
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24} lg={14}>
-          <Card bordered={false} title="Lịch báo cáo tiến độ" styles={{ body: { padding: '4px 8px 8px' } }}>
-            <Calendar
-              cellRender={(current, info) => (info.type === 'date' ? calendarCellRender(current) : info.originNode)}
-              style={{ fontSize: 12 }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} lg={10}>
-          <Card bordered={false} title="Deadline sắp tới" styles={{ body: { padding: '8px 16px' } }} style={{ marginBottom: 16 }}>
-            {upcomingDeadlines.length === 0 ? (
-              <Text type="secondary" style={{ fontSize: 13 }}>Không có task đến hạn</Text>
-            ) : (
-              upcomingDeadlines.map((t) => {
-                const overdue = t.days < 0;
-                const color = overdue ? '#ff4d4f' : TASK_STATUS[t.status]?.color || '#1677ff';
-                return (
-                  <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', borderBottom: '1px solid #f5f5f5' }}>
-                    <Badge status={overdue ? 'error' : 'default'} color={color} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
-                      <Text type="secondary" style={{ fontSize: 11 }}>{t.owner || 'Chưa gán'}</Text>
+            </div>
+            <div className="donut-legend">
+              {chartData.pie.map((e, i) => (
+                <span key={i} className="donut-leg-item">
+                  <span className="donut-leg-dot" style={{ background: ['#4B5563', '#3B82F6', '#F59E0B', '#10B981', '#EF4444', '#8B5CF6'][i % 6] }} />
+                  {e.name} <b>{e.value}</b> ({chartData.pieTotal ? Math.round((e.value / chartData.pieTotal) * 100) : 0}%)
+                </span>
+              ))}
+            </div>
+          </ChartCard>
+        </section>
+        <section className="col-4">
+          <ChartCard
+            icon={<InboxOutlined style={{ color: '#F5A623' }} />}
+            title="Chi phí theo hạng mục"
+            extra={
+              <Select size="small" value={sortBy} onChange={setSortBy} style={{ width: 120 }} options={[{ value: 'variance', label: 'Chênh lệch' }, { value: 'value', label: 'Giá trị' }]} />
+            }
+          >
+            {costItems.display.length ? (
+              <div className="cost-list">
+                {costItems.display.map((it) => {
+                  const plannedPct = costItems.max ? (it.planned / costItems.max) * 100 : 0;
+                  const actualPct = costItems.max ? (it.actual / costItems.max) * 100 : 0;
+                  return (
+                    <div className="cost-row" key={it.code}>
+                      <div>
+                        <div className="cost-name">{it.name}<span className="cost-code">{it.code}</span></div>
+                        <div className="cost-bars">
+                          <div className="cost-bar planned" style={{ width: `${plannedPct}%` }} />
+                          <div className="cost-bar actual" style={{ width: `${actualPct}%` }} />
+                        </div>
+                      </div>
+                      <div className="cost-vals">
+                        <span>{fmtShort(it.actual)}</span>
+                        <span className="cost-planned-val">{fmtShort(it.planned)}</span>
+                      </div>
                     </div>
-                    <Tag color={overdue ? 'error' : 'default'} style={{ margin: 0, fontSize: 11 }}>
-                      {overdue ? `Quá hạn ${Math.abs(t.days)}d` : t.days === 0 ? 'Hôm nay' : `Còn ${t.days}d`}
-                    </Tag>
-                  </div>
-                );
-              })
+                  );
+                })}
+              </div>
+            ) : (
+              <EmptyState text="Chưa có dữ liệu chi phí" />
             )}
-          </Card>
+          </ChartCard>
+        </section>
 
-          {/* RỦI RO ƯU TIÊN */}
-          <Card bordered={false} title={<span><WarningOutlined style={{ color: '#ff4d4f' }} /> Rủi ro cao</span>} styles={{ body: { padding: '8px 16px' } }}>
-            {view.highRisks.length === 0 ? (
-              <Text type="secondary" style={{ fontSize: 13 }}>Không có rủi ro nghiêm trọng</Text>
-            ) : (
-              view.highRisks.slice(0, 5).map((r) => {
-                const color = r.score >= 15 ? '#ff4d4f' : r.score >= 12 ? '#fa8c16' : '#faad14';
-                return (
-                  <div key={r.id} style={{ padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text strong style={{ fontSize: 13, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.title}</Text>
-                      <Tag color={color} style={{ marginLeft: 8, flexShrink: 0 }}>{r.score}</Tag>
-                    </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center', marginTop: 2 }}>
-                      {mode !== 'single' && r.projectName && <Tag color="geekblue" style={{ fontSize: 11, margin: 0 }}>{r.projectName}</Tag>}
-                      <Tag color={PORT_COLORS[r.portId] || 'blue'} style={{ fontSize: 11, margin: 0 }}>{r.portId}</Tag>
-                      <Text type="secondary" style={{ fontSize: 11 }}>{r.owner}</Text>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </Card>
-        </Col>
-      </Row>
+        {/* ===== R3: Risk / Notifications / Milestones ===== */}
+        <section className="col-5">
+          <ChartCard icon={<WarningOutlined style={{ color: '#EF4444' }} />} title="Cảnh báo rủi ro" extra={<a className="dash-link" onClick={() => navigate('/risk')}>Xem tất cả</a>}>
+            <div className="dash-table">
+              <RiskAlertsTable risks={view.highRisks || []} />
+            </div>
+          </ChartCard>
+        </section>
+        <section className="col-4">
+          <ChartCard icon={<FilePdfOutlined style={{ color: '#2F5CE0' }} />} title="Thông báo mới">
+            <NotificationsTimeline items={notifications} />
+          </ChartCard>
+        </section>
+        <section className="col-3">
+          <ChartCard icon={<CalendarOutlined style={{ color: '#0EA5E9' }} />} title="Mốc sắp tới" extra={<a className="dash-link" onClick={() => navigate('/timeline')}>Tiến độ</a>}>
+            <MilestonesPanel items={milestones} onOpen={() => navigate('/timeline')} />
+          </ChartCard>
+        </section>
 
-      {/* ROW 4: PERFORMANCE TABLE + CHI PHÍ GẦN ĐÂY */}
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24} lg={14}>
-          <Card bordered={false} title={mode === 'single' ? 'Hiệu suất theo Hạng mục' : 'Hiệu suất theo Dự án'}>
-            {mode === 'single' ? (
-              <Table
-                dataSource={view.ports} rowKey="id" size="small" pagination={false}
-                columns={[
-                  { title: 'HP', dataIndex: 'id', key: 'id', render: (t) => <Tag color={PORT_COLORS[t] || 'blue'}>{t}</Tag> },
-                  { title: 'Mô tả', dataIndex: 'description', key: 'desc', ellipsis: true },
-                  { title: 'Tiến độ', dataIndex: 'progress', key: 'prog', width: 140, render: (v, r) => <Progress percent={v} size="small" strokeColor={r.color} /> },
-                  { title: 'Doanh thu', dataIndex: 'revenue', key: 'rev', align: 'right', width: 120, render: (v) => fmtShort(v) },
-                  { title: 'Đã ghi', dataIndex: 'logged', key: 'logged', align: 'right', width: 120, render: (v) => <Text type="secondary">{fmtShort(v)}</Text> },
-                  { title: 'Items', dataIndex: 'itemCount', key: 'ic', align: 'center', width: 50 },
-                ]}
-              />
-            ) : (
-              <Table
-                dataSource={agg?.perProject || []} rowKey="id" size="small" pagination={false}
-                columns={[
-                  { title: 'Dự án', dataIndex: 'name', key: 'name', ellipsis: true, render: (t, r) => <a onClick={() => setSelectedProjects([r.id])}>{t}</a> },
-                  { title: 'Tiến độ', dataIndex: 'avgProgress', key: 'prog', width: 140, render: (v) => <Progress percent={v} size="small" /> },
-                  { title: 'Doanh thu', dataIndex: 'totalRevenue', key: 'rev', align: 'right', width: 120, render: (v) => fmtShort(v) },
-                  { title: 'Đã ghi', dataIndex: 'totalLoggedCost', key: 'logged', align: 'right', width: 120, render: (v) => <Text type="secondary">{fmtShort(v)}</Text> },
-                  { title: 'Items', dataIndex: 'totalItems', key: 'ic', align: 'center', width: 50 },
-                ]}
-              />
-            )}
-          </Card>
-        </Col>
-        <Col xs={24} lg={10}>
-          <Card bordered={false} title="Chi phí gần đây" styles={{ body: { padding: '8px 16px' } }}>
-            {view.recentCosts.length === 0 ? (
-              <Text type="secondary" style={{ fontSize: 13 }}>Chưa có chi phí</Text>
-            ) : (
-              view.recentCosts.map((c) => (
-                <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #f5f5f5' }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.description}</div>
-                    <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginTop: 2 }}>
-                      {mode !== 'single' && c.projectName && <Tag color="geekblue" style={{ fontSize: 11, margin: 0 }}>{c.projectName}</Tag>}
-                      <Tag color={PORT_COLORS[c.portId] || 'blue'} style={{ fontSize: 11, margin: 0 }}>{c.portId}</Tag>
-                      <Text type="secondary" style={{ fontSize: 11 }}>{c.date ? new Date(c.date).toLocaleDateString('vi-VN') : '-'}</Text>
-                    </div>
-                  </div>
-                  <Text strong style={{ color: '#fa541c', flexShrink: 0, marginLeft: 8 }}>{fmtShort(c.amount)}</Text>
-                </div>
-              ))
-            )}
-          </Card>
-        </Col>
-      </Row>
+        {/* ===== R4: Performance by port ===== */}
+        <section className="col-12">
+          <ChartCard icon={<BarChartOutlined style={{ color: '#2F5CE0' }} />} title="Hiệu suất theo cảng / gói thầu" extra={<a className="dash-link" onClick={() => navigate('/cost')}>Chi tiết</a>}>
+            <div className="dash-table">
+              <PerformanceTable rows={perPortRows} onOpen={() => navigate('/cost')} />
+            </div>
+          </ChartCard>
+        </section>
+
+        {/* ===== R5: Module status (proxies) ===== */}
+        <section className="col-4">
+          <ChartCard icon={<ShopOutlined style={{ color: '#F5A623' }} />} title="Mua sắm">
+            <ModuleStatusCard title="Procurement" icon={<ShopOutlined />} color="#F5A623" segments={procurementProxy.segments} total={procurementProxy.total} empty={totalItems === 0} />
+          </ChartCard>
+        </section>
+        <section className="col-4">
+          <ChartCard icon={<SolutionOutlined style={{ color: '#2F5CE0' }} />} title="Thiết kế">
+            <ModuleStatusCard title="Engineering" icon={<SolutionOutlined />} color="#2F5CE0" segments={engineeringProxy.segments} total={engineeringProxy.total} empty={totalItems === 0} />
+          </ChartCard>
+        </section>
+        <section className="col-4">
+          <ChartCard icon={<CheckSquareOutlined style={{ color: '#1FA971' }} />} title="Lắp đặt & Nghiệm thu">
+            <ModuleStatusCard title="Installation" icon={<CheckSquareOutlined />} color="#1FA971" segments={installationProxy.segments} total={installationProxy.total} empty={totalItems === 0} />
+          </ChartCard>
+        </section>
+
+        {/* ===== R6: Kanban + Resource ===== */}
+        <section className="col-6">
+          <ChartCard icon={<UnorderedListOutlined style={{ color: '#8B5CF6' }} />} title="Tác vụ Kanban" extra={<a className="dash-link" onClick={() => navigate('/kanban')}>Mở bảng</a>}>
+            <KanbanSnapshot counts={kanbanCounts} onOpen={() => navigate('/kanban')} />
+          </ChartCard>
+        </section>
+        <section className="col-6">
+          <ChartCard icon={<TeamOutlined style={{ color: '#EF4444' }} />} title="Phân bổ nguồn lực (theo người phụ trách)">
+            <ResourceAllocation data={resourceData} />
+          </ChartCard>
+        </section>
+
+        {/* ===== Item watchlist ===== */}
+        <section className="col-12">
+          <ItemWatchlist items={items} />
+        </section>
+      </div>
+
+      <Modal
+        title="Thêm dự án mới"
+        open={createOpen}
+        onCancel={() => { setCreateOpen(false); form.resetFields(); }}
+        onOk={handleCreateProject}
+        confirmLoading={creating}
+        okText="Tạo dự án"
+        cancelText="Hủy"
+        destroyOnHidden
+      >
+        <Form form={form} layout="vertical" requiredMark={false} style={{ marginTop: 8 }}>
+          <Form.Item
+            name="name"
+            label="Tên dự án"
+            rules={[{ required: true, message: 'Vui lòng nhập tên dự án' }]}
+          >
+            <Input placeholder="VD: Block B Gas Project" autoFocus />
+          </Form.Item>
+          <Form.Item name="description" label="Mô tả (tùy chọn)">
+            <Input.TextArea rows={3} placeholder="Mô tả ngắn về phạm vi, chủ đầu tư, địa điểm..." />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }

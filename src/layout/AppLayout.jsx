@@ -19,8 +19,10 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   BellOutlined,
+  EyeOutlined,
   UserOutlined,
   ProjectOutlined,
+  GlobalOutlined,
   PlusOutlined,
   LogoutOutlined,
   CheckSquareOutlined,
@@ -76,6 +78,7 @@ const menuItems = [
       { key: '/data-entry', icon: <FormOutlined />, label: 'Nhập liệu nhanh' },
       { key: '/cost-log', icon: <DollarOutlined />, label: 'Cost Log' },
       { key: '/quotations', icon: <FileSearchOutlined />, label: 'So sánh Báo giá' },
+      { key: '/item-watchlist', icon: <EyeOutlined />, label: 'Item Watchlist' },
       { key: '/s-curve', icon: <LineChartOutlined />, label: 'S-Curve (EV)' },
     ],
   },
@@ -115,7 +118,7 @@ export default function AppLayout() {
   const [newProjectDesc, setNewProjectDesc] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
-  const { projects, currentProject, currentProjectId, selectProject, createProject, loading } = useProject();
+  const { projects, currentProject, currentProjectId, portfolioView, selectProject, selectAllProjects, createProject, loading } = useProject();
   const { currentUser, logout } = useUser();
   const [tasks, setTasks] = useState([]);
   const screens = Grid.useBreakpoint();
@@ -265,7 +268,7 @@ export default function AppLayout() {
           trigger={null}
           collapsible
           collapsed={collapsed}
-          width={248}
+          width={240}
           className="app-sider"
           style={{ overflow: 'auto', height: '100vh', position: 'sticky', top: 0, left: 0 }}
         >
@@ -323,10 +326,14 @@ export default function AppLayout() {
               {collapsed || isMobile ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             </span>
 
-            {/* Project Selector — compact */}
+             {/* Project Selector — compact */}
              <Select
-                value={currentProjectId}
+                value={portfolioView ? '__all__' : currentProjectId}
                 onChange={(val) => {
+                  if (val === '__all__') {
+                    selectAllProjects();
+                    return;
+                  }
                   if (val === '__create__') {
                     setCreateModalOpen(true);
                     return;
@@ -337,6 +344,16 @@ export default function AppLayout() {
                 placeholder="Chọn dự án"
                optionLabelProp="label"
                options={[
+                 {
+                   value: '__all__',
+                   label: (
+                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 0' }}>
+                       <GlobalOutlined style={{ fontSize: 13, flexShrink: 0, color: '#2F5CE0' }} />
+                       <span style={{ fontWeight: 600, fontSize: 13 }}>Tất cả dự án</span>
+                     </div>
+                   ),
+                 },
+                 { type: 'divider' },
                  ...projects.map((p) => ({
                    value: p.id,
                    label: (

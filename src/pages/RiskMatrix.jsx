@@ -7,17 +7,14 @@ import {
   DatePicker,
   Descriptions,
   Drawer,
-  Empty,
   Form,
   Input,
   InputNumber,
   Modal,
   Popconfirm,
-  Progress,
   Row,
   Select,
   Space,
-  Statistic,
   Table,
   Tag,
   Timeline,
@@ -39,11 +36,15 @@ import {
   ReloadOutlined,
   SafetyCertificateOutlined,
   SearchOutlined,
+  TableOutlined,
   WarningOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { portsApi, risksApi, teamApi } from '../api/api.js';
 import { PORT_COLORS, PORT_LIST, riskColor } from '../components/helpers.js';
+import { useProject } from '../context/ProjectContext.jsx';
+import StatCard from '../components/StatCard.jsx';
+import { InboxOutlined } from '@ant-design/icons';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -129,6 +130,7 @@ function dateToFormValue(value) {
 }
 
 export default function RiskMatrix() {
+  const { currentProjectId, portfolioView } = useProject();
   const [risks, setRisks] = useState([]);
   const [ports, setPorts] = useState([]);
   const [team, setTeam] = useState([]);
@@ -152,9 +154,9 @@ export default function RiskMatrix() {
     try {
       setLoading(true);
       const [riskList, portList, teamList] = await Promise.all([
-        risksApi.getAll(),
-        portsApi.getAll(),
-        teamApi.getAll(),
+        risksApi.getAll(currentProjectId, portfolioView),
+        portsApi.getAll(currentProjectId, portfolioView),
+        teamApi.getAll(currentProjectId, portfolioView),
       ]);
       setRisks(riskList);
       setPorts(portList);
@@ -168,7 +170,7 @@ export default function RiskMatrix() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [currentProjectId, portfolioView]);
 
   const portOptions = useMemo(() => {
     const list = ports.length > 0 ? ports.map((port) => port.id) : PORT_LIST;
@@ -323,50 +325,53 @@ export default function RiskMatrix() {
   };
 
   return (
-    <div className="page-container">
-      <div className="page-header">
+    <div className="ds-container">
+      <div className="ds-page-header">
         <div>
-          <Title level={3} style={{ marginBottom: 4 }}>
-            <WarningOutlined /> Ma trận rủi ro dự án
-          </Title>
-          <Text type="secondary">
-            Quản lý risk register theo xác suất, tác động, owner, deadline và hành động giảm thiểu.
-          </Text>
+          <div className="ds-h1">Ma trận Rủi ro</div>
+          <div className="ds-caption">Đánh giá &amp; phân cấp rủi ro</div>
         </div>
         <Space wrap>
           <Button icon={<ReloadOutlined />} onClick={load} loading={loading}>
             Tải lại
           </Button>
-          <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={openAdd} disabled={portfolioView} title={portfolioView ? 'Chọn 1 dự án để thêm rủi ro' : undefined}>
             Thêm rủi ro
           </Button>
         </Space>
       </div>
 
-      <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
-        <Col xs={24} sm={12} xl={6}>
-          <Card size="small" className="stat-card">
-            <Statistic title="Tổng rủi ro" value={stats.total} prefix={<AuditOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} xl={6}>
-          <Card size="small" className="stat-card">
-            <Statistic title="Đang mở" value={stats.open} valueStyle={{ color: '#ff4d4f' }} prefix={<ExclamationCircleOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} xl={6}>
-          <Card size="small" className="stat-card">
-            <Statistic title="Cao / nghiêm trọng" value={stats.high} valueStyle={{ color: '#fa541c' }} prefix={<WarningOutlined />} />
-            <Text type="secondary">{stats.severe} rủi ro nghiêm trọng</Text>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} xl={6}>
-          <Card size="small" className="stat-card">
-            <Statistic title="Tỷ lệ kiểm soát" value={stats.controlRate} suffix="%" prefix={<SafetyCertificateOutlined />} />
-            <Progress percent={stats.controlRate} size="small" />
-          </Card>
-        </Col>
-      </Row>
+      <div className="ds-stat-grid">
+        <StatCard
+          icon={<AuditOutlined />}
+          accent="linear-gradient(135deg,#2F5CE0,#5b82f0)"
+          title="Tổng rủi ro"
+          value={stats.total}
+        />
+        <StatCard
+          icon={<ExclamationCircleOutlined />}
+          accent="linear-gradient(135deg,#EF4444,#ff7875)"
+          title="Đang mở"
+          value={stats.open}
+          valueStyle={{ color: '#ff4d4f' }}
+        />
+        <StatCard
+          icon={<WarningOutlined />}
+          accent="linear-gradient(135deg,#FA8C16,#ffc069)"
+          title="Cao / nghiêm trọng"
+          value={stats.high}
+          valueStyle={{ color: '#fa541c' }}
+          footer={<>{stats.severe} rủi ro nghiêm trọng</>}
+        />
+        <StatCard
+          icon={<SafetyCertificateOutlined />}
+          accent="linear-gradient(135deg,#1FA971,#3cc995)"
+          title="Tỷ lệ kiểm soát"
+          value={stats.controlRate}
+          suffix="%"
+          progress={stats.controlRate}
+        />
+      </div>
 
       <div className="risk-guide">
         <div className="risk-guide-title">
@@ -383,6 +388,8 @@ export default function RiskMatrix() {
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} xl={14}>
           <Card
+            className="ds-chart-card"
+            bordered={false}
             title="Risk Heatmap"
             extra={
               <Space size={4} wrap>
@@ -456,9 +463,12 @@ export default function RiskMatrix() {
           </Card>
         </Col>
         <Col xs={24} xl={10}>
-          <Card title="Rủi ro ưu tiên">
+          <Card className="ds-chart-card" bordered={false} title={<span className="ds-card-head-icon"><WarningOutlined style={{ color: '#ff4d4f' }} /> Rủi ro ưu tiên</span>}>
             {enrichedRisks.filter((risk) => risk.status === 'open').sort((a, b) => b.score - a.score).slice(0, 5).length === 0 ? (
-              <Empty description="Không có rủi ro đang mở" />
+              <div className="ds-empty">
+                <div className="ds-empty-icon"><InboxOutlined /></div>
+                <div className="ds-empty-text">Không có rủi ro đang mở</div>
+              </div>
             ) : (
               <Timeline
                 items={enrichedRisks
@@ -488,7 +498,7 @@ export default function RiskMatrix() {
         </Col>
       </Row>
 
-      <Card style={{ marginTop: 16 }} styles={{ body: { padding: 16 } }}>
+      <Card className="ds-card" style={{ marginTop: 16 }} styles={{ body: { padding: 16 } }}>
         <Space wrap style={{ width: '100%', justifyContent: 'space-between' }}>
           <Space wrap>
             <Input
@@ -533,10 +543,11 @@ export default function RiskMatrix() {
         </Space>
       </Card>
 
-      <Card title="Risk Register" style={{ marginTop: 16 }}>
+      <Card className="ds-chart-card" bordered={false} title={<span className="ds-card-head-icon"><TableOutlined style={{ color: '#2F5CE0' }} /> Risk Register</span>} style={{ marginTop: 16 }}>
         <Table
+          className="ds-table-premium"
           dataSource={filteredRisks}
-          rowKey="id"
+          rowKey={(record) => record.__key || record.id}
           loading={loading}
           scroll={{ x: 1450 }}
           pagination={{ pageSize: 10 }}
@@ -544,6 +555,9 @@ export default function RiskMatrix() {
             onDoubleClick: () => setDrawerRisk(record),
           })}
           columns={[
+            ...(portfolioView
+              ? [{ title: 'Dự án', dataIndex: 'projectName', key: 'projectName', width: 160, ellipsis: true, fixed: 'left' }]
+              : []),
             {
               title: 'Mã',
               dataIndex: 'id',
@@ -612,7 +626,7 @@ export default function RiskMatrix() {
               width: 98,
               align: 'center',
               sorter: (a, b) => a.score - b.score,
-              render: (_, record) => <Tag color={record.level.color} style={{ fontWeight: 700 }}>{record.score} - {record.level.label}</Tag>,
+              render: (_, record) => <Tag color={record.level.color} style={{ fontWeight: 700 }}><span className="ds-num">{record.score}</span> - {record.level.label}</Tag>,
             },
             {
               title: 'Residual',
@@ -622,7 +636,7 @@ export default function RiskMatrix() {
               align: 'center',
               render: (_, record) => (
                 record.residualScore
-                  ? <Tag color={record.residualLevel.color}>{record.residualScore}</Tag>
+                  ? <Tag color={record.residualLevel.color}><span className="ds-num">{record.residualScore}</span></Tag>
                   : <Text type="secondary">-</Text>
               ),
             },
@@ -674,12 +688,12 @@ export default function RiskMatrix() {
               fixed: 'right',
               render: (_, record) => (
                 <Space>
-                  <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(record)} />
+                  <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(record)} disabled={portfolioView} />
                   {record.status !== 'closed' && (
-                    <Button size="small" icon={<CheckCircleOutlined />} onClick={() => updateStatus(record, 'closed')} />
+                    <Button size="small" icon={<CheckCircleOutlined />} onClick={() => updateStatus(record, 'closed')} disabled={portfolioView} />
                   )}
-                  <Popconfirm title="Xóa rủi ro?" onConfirm={() => onDelete(record.id)}>
-                    <Button size="small" danger icon={<DeleteOutlined />} />
+                  <Popconfirm title="Xóa rủi ro?" onConfirm={() => onDelete(record.id)} disabled={portfolioView}>
+                    <Button size="small" danger icon={<DeleteOutlined />} disabled={portfolioView} />
                   </Popconfirm>
                 </Space>
               ),
@@ -831,7 +845,7 @@ export default function RiskMatrix() {
         onClose={() => setDrawerRisk(null)}
         width={560}
         extra={drawerRisk && (
-          <Button icon={<EditOutlined />} onClick={() => { openEdit(drawerRisk); setDrawerRisk(null); }}>
+          <Button icon={<EditOutlined />} onClick={() => { openEdit(drawerRisk); setDrawerRisk(null); }} disabled={portfolioView}>
             Sửa
           </Button>
         )}

@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Typography, Button, Modal, Form, Input, Select, DatePicker, InputNumber,
-  Tag, Dropdown, message, Progress, Empty,
+  Tag, Dropdown, message, Progress, Card, Row, Col,
 } from 'antd';
 import dayjs from 'dayjs';
 import {
-  PlusOutlined, UserOutlined, CalendarOutlined, MoreOutlined, SearchOutlined,
+  PlusOutlined, UserOutlined, CalendarOutlined, MoreOutlined, SearchOutlined, AppstoreOutlined,
 } from '@ant-design/icons';
 import { tasksApi } from '../api/api.js';
 import { useProject } from '../context/ProjectContext.jsx';
-import { PORT_COLORS, priorityColor } from '../components/helpers.js';
+import { PORT_COLORS, priorityColor, STATUS_PROGRESS } from '../components/helpers.js';
+import StatCard from '../components/StatCard.jsx';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const COLUMNS = [
   { key: 'todo', label: 'Cần làm', color: '#8c8c8c' },
@@ -22,10 +23,8 @@ const COLUMNS = [
 
 const PRIORITY_LABEL = { high: 'Cao', medium: 'TB', low: 'Thấp' };
 
-const STATUS_PROGRESS = { todo: 0, inprogress: 30, review: 70, done: 100 };
-
 export default function Kanban() {
-  const { ports } = useProject();
+  const { ports, currentProjectId, portfolioView } = useProject();
   const portOptions = useMemo(() => ports.map((p) => ({ value: p.id, label: p.id })), [ports]);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +40,7 @@ export default function Kanban() {
   const load = async () => {
     try {
       setLoading(true);
-      setTasks(await tasksApi.getAll());
+      setTasks(await tasksApi.getAll(currentProjectId, portfolioView));
     } catch (e) {
       message.error('Không tải được công việc');
     } finally {
@@ -49,7 +48,7 @@ export default function Kanban() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [currentProjectId, portfolioView]);
 
   const openAdd = () => {
     setEditTask(null);
@@ -104,7 +103,7 @@ export default function Kanban() {
   const onDrop = async (e, newStatus) => {
     e.preventDefault();
     setDragOverCol(null);
-    if (!dragging) return;
+    if (!dragging || portfolioView) return;
     const task = tasks.find((t) => t.id === dragging);
     if (task && task.status !== newStatus) {
       const newProgress = STATUS_PROGRESS[newStatus] ?? (task.progress || 0);
@@ -133,7 +132,7 @@ export default function Kanban() {
   const renderCard = (task) => {
     const isOverdue = task.endDate && task.status !== 'done' && new Date(task.endDate) < new Date();
     const menu = {
-      items: [
+      items: portfolioView ? [] : [
         { key: 'edit', label: 'Sửa', onClick: () => openEdit(task) },
         { key: 'del', label: 'Xóa', danger: true, onClick: () => onDelete(task.id) },
       ],
@@ -142,7 +141,7 @@ export default function Kanban() {
       <div
         key={task.id}
         className="kanban-card"
-        draggable
+        draggable={!portfolioView}
         onDragStart={(e) => onDragStart(e, task.id)}
         style={{
           opacity: dragging === task.id ? 0.5 : 1,
@@ -151,13 +150,16 @@ export default function Kanban() {
       >
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <Text strong style={{ fontSize: 13 }}>{task.title}</Text>
-          <Dropdown menu={menu} trigger={['click']}>
-            <MoreOutlined style={{ cursor: 'pointer' }} />
-          </Dropdown>
+          {!portfolioView && (
+            <Dropdown menu={menu} trigger={['click']}>
+              <MoreOutlined style={{ cursor: 'pointer' }} />
+            </Dropdown>
+          )}
         </div>
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
           <Tag color={PORT_COLORS[task.portId]} style={{ fontSize: 11 }}>{task.portId}</Tag>
           {task.itemCode && <Tag style={{ fontSize: 11 }}>{task.itemCode}</Tag>}
+          {portfolioView && task.projectName && <Tag style={{ fontSize: 11 }}>{task.projectName}</Tag>}
           <Tag color={priorityColor[task.priority]} style={{ fontSize: 11 }}>{PRIORITY_LABEL[task.priority]}</Tag>
         </div>
         <div style={{ marginTop: 8, fontSize: 12, color: '#8c8c8c' }}>
@@ -177,11 +179,11 @@ export default function Kanban() {
   };
 
   return (
-    <div className="page-container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+    <div className="ds-container">
+      <div className="ds-page-header">
         <div>
-          <Title level={3} style={{ marginBottom: 4 }}>📋 Kanban Công việc</Title>
-          <Text type="secondary">Kéo thả thẻ để đổi trạng thái</Text>
+          <div className="ds-h1">Kanban</div>
+          <div className="ds-caption">Quản lý công việc theo luồng</div>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <Input
@@ -204,8 +206,52 @@ export default function Kanban() {
             style={{ width: 130 }}
             options={[{ value: 'all', label: 'Mọi ưu tiên' }, ...Object.keys(PRIORITY_LABEL).map((p) => ({ value: p, label: PRIORITY_LABEL[p] }))]}
           />
-          <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>Thêm việc</Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={openAdd} disabled={portfolioView} title={portfolioView ? 'Chọn 1 dự án để thêm việc' : undefined}>Thêm việc</Button>
         </div>
+      </div>
+
+      <Card className="ds-section" style={{ marginTop: 16 }} styles={{ body: { padding: 16 } }}>
+        <Row gutter={[16, 16]} align="middle">
+          <Col xs={24} md={8}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <Progress
+                type="dashboard"
+                percent={filtered.length ? Math.round((counts.done / filtered.length) * 100) : 0}
+                size={92}
+                strokeColor="#52c41a"
+              />
+              <div>
+                <div style={{ fontSize: 13, color: '#8c8c8c' }}>Tỷ lệ hoàn thành</div>
+                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--font-num)' }}>
+                  {counts.done}/{filtered.length} <span style={{ fontSize: 13, color: '#8c8c8c', fontWeight: 400 }}>việc</span>
+                </div>
+              </div>
+            </div>
+          </Col>
+          <Col xs={24} md={16}>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              {COLUMNS.map((c) => (
+                <div key={c.key} style={{ textAlign: 'center', minWidth: 72 }}>
+                  <div style={{ color: c.color, fontWeight: 700, fontSize: 18, fontFamily: 'var(--font-num)' }}>{counts[c.key]}</div>
+                  <div style={{ fontSize: 12, color: '#8c8c8c' }}>{c.label}</div>
+                </div>
+              ))}
+            </div>
+          </Col>
+        </Row>
+      </Card>
+
+      <div className="ds-stat-grid">
+        {COLUMNS.map((col) => (
+          <StatCard
+            key={col.key}
+            icon={<AppstoreOutlined />}
+            accent={`linear-gradient(135deg, ${col.color}, ${col.color}cc)`}
+            title={col.label}
+            value={counts[col.key] || 0}
+            valueStyle={{ color: col.color }}
+          />
+        ))}
       </div>
 
       <div className="kanban-board">
@@ -226,7 +272,10 @@ export default function Kanban() {
             <div style={{ flex: 1 }}>
               {filtered.filter((t) => t.status === col.key).map(renderCard)}
               {counts[col.key] === 0 && (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có việc" style={{ marginTop: 24, opacity: 0.5 }} />
+                <div className="ds-empty">
+                  <div className="ds-empty-icon">📋</div>
+                  <Text type="secondary">Không có việc</Text>
+                </div>
               )}
             </div>
           </div>

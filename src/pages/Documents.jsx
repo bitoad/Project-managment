@@ -10,6 +10,7 @@ import {
 } from '@ant-design/icons';
 import { documentsApi } from '../api/api.js';
 import { PORT_LIST, PORT_COLORS } from '../components/helpers.js';
+import { useProject } from '../context/ProjectContext.jsx';
 
 const { Title, Text } = Typography;
 
@@ -26,6 +27,7 @@ const fileIcon = (name) => {
 };
 
 export default function Documents() {
+  const { currentProjectId, portfolioView } = useProject();
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -35,7 +37,7 @@ export default function Documents() {
   const load = async () => {
     try {
       setLoading(true);
-      setDocs(await documentsApi.getAll(''));
+      setDocs(await documentsApi.getAll('', portfolioView));
     } catch (e) {
       message.error('Không tải được tài liệu');
     } finally {
@@ -43,7 +45,7 @@ export default function Documents() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [currentProjectId, portfolioView]);
 
   const openAdd = () => {
     setEditDoc(null);
@@ -109,7 +111,7 @@ export default function Documents() {
           <Title level={3} style={{ marginBottom: 4 }}><FolderOpenOutlined /> Bản vẽ & Tài liệu</Title>
           <Text type="secondary">Quản lý bản vẽ, MTO, BOM theo từng Port</Text>
         </div>
-          <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd}>Thêm tài liệu</Button>
+          <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd} disabled={portfolioView} title={portfolioView ? 'Chọn 1 dự án để thêm tài liệu' : undefined}>Thêm tài liệu</Button>
       </div>
 
       <Row gutter={[16, 16]} style={{ marginTop: 20, marginBottom: 8 }}>
@@ -122,11 +124,14 @@ export default function Documents() {
       <Card style={{ marginTop: 16 }}>
         <Table
           dataSource={docs}
-          rowKey="id"
+          rowKey={(r) => r.__key || r.id}
           loading={loading}
           scroll={{ x: 900 }}
           pagination={{ pageSize: 12 }}
           columns={[
+            ...(portfolioView
+              ? [{ title: 'Dự án', dataIndex: 'projectName', key: 'projectName', width: 160, ellipsis: true }]
+              : []),
             {
               title: 'Tên tài liệu', dataIndex: 'name', key: 'name',
               render: (t, r) => (
@@ -161,9 +166,9 @@ export default function Documents() {
                   {r.filePath && (
                     <Button size="small" icon={<DownloadOutlined />} href={r.filePath} target="_blank" />
                   )}
-                  <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(r)} />
-                  <Popconfirm title="Xóa?" onConfirm={() => onDelete(r.id)}>
-                    <Button size="small" danger icon={<DeleteOutlined />} />
+                  <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(r)} disabled={portfolioView} />
+                  <Popconfirm title="Xóa?" onConfirm={() => onDelete(r.id)} disabled={portfolioView}>
+                    <Button size="small" danger icon={<DeleteOutlined />} disabled={portfolioView} />
                   </Popconfirm>
                 </Space>
               ),

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Card, Typography, Button, Row, Col, Spin, message, Tag, Divider, Table,
+  Card, Typography, Button, Row, Col, Spin, message, Tag, Divider, Table, InputNumber,
 } from 'antd';
 import {
   FilePdfOutlined, FileTextOutlined, BarChartOutlined, WarningOutlined,
@@ -9,7 +9,8 @@ import {
 import {
   dashboardApi, portsApi, itemsApi, risksApi, costLogsApi, suppliersApi, metaApi,
 } from '../api/api.js';
-import { fmtVND, fmtShort, PORT_COLORS, riskColor } from '../components/helpers.js';
+import { fmtVND, PORT_COLORS, riskColor } from '../components/helpers.js';
+import { sumActualCost } from '../../shared/formulas.js';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -23,8 +24,23 @@ export default function Reports() {
   const [costLogs, setCostLogs] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [meta, setMeta] = useState({});
+  const [vatRate, setVatRate] = useState(10);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+
+  useEffect(() => {
+    if (meta && meta.vatRate != null) setVatRate(meta.vatRate);
+  }, [meta]);
+
+  const saveVat = async (v) => {
+    setVatRate(v);
+    try {
+      const updated = await metaApi.update({ ...meta, vatRate: v });
+      setMeta(updated);
+    } catch {
+      message.error('Lưu thuế VAT thất bại');
+    }
+  };
 
   const load = async () => {
     try {
@@ -100,9 +116,11 @@ doc.text(`Dia diem: ${m.location || '-'}`, 120, 36);
         startY: y,
         head: [['Chi so', 'Gia tri', 'Ghi chu']],
         body: [
-          ['Tong doanh thu', fmtShort(data.totalRevenue), 'Tong gia tri nhan thau'],
-          ['Tong chi phi', fmtShort(data.totalCost), 'Chi phi du kien'],
-          ['Loi nhuan du kien', fmtShort(data.totalProfit), `Bien LN: ${data.totalProfitMargin}%`],
+          ['Tong doanh thu', fmtVND(data.totalRevenue), 'Tong gia tri nhan thau'],
+          ['Tong chi phi', fmtVND(data.totalCost), 'Chi phi du kien'],
+          ['Loi nhuan du kien', fmtVND(data.totalProfit), `Bien LN: ${data.totalProfitMargin}%`],
+          [`Thuế VAT (${vatRate}%)`, fmtVND(data.totalRevenue * vatRate / 100), 'Tren doanh thu'],
+          ['Tong cong (gồm VAT)', fmtVND(data.totalRevenue + data.totalRevenue * vatRate / 100), 'Doanh thu + VAT'],
           ['Tien do TB', `${data.avgProgress}%`, 'Cac item'],
           ['Tong Items', String(data.totalItems), `Dang SX: ${data.itemsInFab}`],
           ['Rui ro dang mo', String(data.openRisks || 0), `Muc cao: ${(data.highRisks || []).length}`],
@@ -125,7 +143,7 @@ doc.text(`Dia diem: ${m.location || '-'}`, 120, 36);
         head: [['Port', 'Mo ta', 'Tien do %', 'Doanh thu', 'Chi phi da ghi', 'Items']],
         body: (data.ports || []).map((p) => [
           p.id, p.description, `${p.progress || 0}%`,
-          fmtShort(p.revenue), fmtShort(p.logged), String(p.itemCount || 0),
+          fmtVND(p.revenue), fmtVND(p.logged), String(p.itemCount || 0),
         ]),
         theme: 'striped',
         headStyles: { fillColor: [82, 196, 26], fontSize: 9 },
@@ -177,8 +195,8 @@ doc.text(`Dia diem: ${m.location || '-'}`, 120, 36);
         startY: y,
         head: [['Port', 'Mo ta', 'Trang thai', 'Tien do', 'Gia tri HD', 'Ghi chu']],
         body: ports.map((p) => [
-          p.id, p.description, p.status, `${p.progress || 0}%`,
-          p.contractValue > 0 ? fmtShort(p.contractValue) : 'Chua ky',
+           p.id, p.description, p.status, `${p.progress || 0}%`,
+          p.contractValue > 0 ? fmtVND(p.contractValue) : 'Chua ky',
           p.note || '-',
         ]),
         theme: 'grid',
@@ -203,7 +221,7 @@ doc.text(`Dia diem: ${m.location || '-'}`, 120, 36);
       const doc = new jsPDF();
       let y = drawHeader(doc, 'BAO CAO CHI PHI (COST LOG)');
 
-      const total = costLogs.reduce((s, c) => s + (c.amount || 0), 0);
+      const total = sumActualCost(costLogs);
       doc.setFontSize(11);
       doc.text(`Tong chi phi da ghi: ${fmtVND(total)}`, 14, y);
       y += 8;
@@ -212,13 +230,13 @@ doc.text(`Dia diem: ${m.location || '-'}`, 120, 36);
         startY: y,
         head: [['Ngay', 'Port', 'Item', 'Loai', 'Mo ta', 'So tien']],
         body: costLogs.map((c) => [
-          c.date ? new Date(c.date).toLocaleDateString('vi-VN') : '-',
-          c.portId, c.itemCode || '-', c.costType, c.description || '-', fmtShort(c.amount),
+           c.date ? new Date(c.date).toLocaleDateString('vi-VN') : '-',
+          c.portId, c.itemCode || '-', c.costType, c.description || '-', fmtVND(c.amount),
         ]),
         theme: 'striped',
         headStyles: { fillColor: [250, 84, 28], fontSize: 9 },
         bodyStyles: { fontSize: 8 },
-        foot: [['', '', '', '', 'TONG CONG', fmtShort(total)]],
+        foot: [['', '', '', '', 'TONG CONG', fmtVND(total)]],
         footStyles: { fillColor: [250, 84, 28], textColor: [255, 255, 255] },
       });
 
@@ -321,6 +339,33 @@ doc.text(`Dia diem: ${m.location || '-'}`, 120, 36);
       </div>
 
       <Divider />
+
+      <Card style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
+          <div>
+            <Text strong>Thuế VAT</Text>
+            <div style={{ marginTop: 4 }}>
+              <InputNumber
+                min={0}
+                max={100}
+                step={1}
+                value={vatRate}
+                addonAfter="%"
+                style={{ width: 120 }}
+                onChange={(v) => saveVat(v ?? 0)}
+              />
+            </div>
+          </div>
+          <div>
+            <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>Tiền thuế (trên doanh thu)</Text>
+            <Text strong style={{ fontSize: 16, color: '#fa541c' }}>{fmtVND((data.totalRevenue || 0) * vatRate / 100)}</Text>
+          </div>
+          <div>
+            <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>Tổng cộng (gồm VAT)</Text>
+            <Text strong style={{ fontSize: 16 }}>{fmtVND((data.totalRevenue || 0) + (data.totalRevenue || 0) * vatRate / 100)}</Text>
+          </div>
+        </div>
+      </Card>
 
       <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
         {reports.map((r) => (
