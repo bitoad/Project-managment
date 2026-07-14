@@ -22,10 +22,7 @@ export function UserProvider({ children }) {
     }
   }, []);
 
-  useEffect(() => {
-    loadTeam();
-  }, [loadTeam]);
-
+  // Chỉ tải team SAU khi đã login (tránh gọi API protected khi chưa có token).
   // Khi đổi dự án → tải lại team (lắng nghe currentProjectId thay đổi qua storage event)
   useEffect(() => {
     const handler = () => loadTeam();
@@ -41,6 +38,7 @@ export function UserProvider({ children }) {
       setCurrentUser(user);
       localStorage.setItem('currentUser', JSON.stringify(user));
       message.success(`Xin chào, ${res.user.name || res.user.username}!`);
+      loadTeam();
     } catch (e) {
       message.error('Đăng nhập thất bại');
       throw e;

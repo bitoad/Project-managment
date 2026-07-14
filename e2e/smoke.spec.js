@@ -1,40 +1,47 @@
 import { test, expect } from '@playwright/test';
 
-// Smoke test: ensure the app boots, login works, and the Dashboard
-// (S-Curve + health gauges) renders without JS errors.
-// Auth is injected via localStorage to keep the flow deterministic.
+// Smoke test: real login flow, then assert the Dashboard (S-Curve + health
+// gauges) renders without JS errors. Also asserts the auth gate rejects
+// unauthenticated API calls.
 
-const AUTH = {
-  authToken: 'dummy-token',
-  currentUser: JSON.stringify({
-    id: 'u1',
-    username: 'nguyen.nguyen',
-    name: 'Nguyen Nguyen',
-    role: 'admin',
-  }),
-  currentProjectId: 'block-b-gas',
-};
+const CREDS = { username: 'nguyen.nguyen', password: '123456' };
 
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript((auth) => {
-    Object.entries(auth).forEach(([k, v]) => localStorage.setItem(k, v));
-  }, AUTH);
+test('auth gate rejects unauthenticated API', async ({ request }) => {
+  const res = await request.get('/api/dashboard');
+  expect(res.status()).toBe(401);
 });
 
-test('Dashboard boots with S-Curve and health gauges', async ({ page }) => {
+test('spoofed project id is rejected (404)', async ({ page, request }) => {
+  // Log in for real to obtain a valid token
+  await page.goto('/login');
+  await page.getByPlaceholder('Tài khoản').fill('nguyen.nguyen');
+  await page.getByPlaceholder('Mật khẩu').fill('123456');
+  await page.getByRole('button', { name: /Đăng nhập/i }).click();
+  await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
+
+  const token = await page.evaluate(() => localStorage.getItem('authToken'));
+  const res = await request.get('/api/dashboard', {
+    headers: { Authorization: `Bearer ${token}`, 'x-project-id': 'project-khong-ton-tai-xyz' },
+  });
+  expect(res.status()).toBe(404);
+});
+
+test('Dashboard boots after real login (S-Curve + health gauges)', async ({ page }) => {
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   page.on('console', (m) => {
     if (m.type() !== 'error') return;
-    const t = m.text();
-    // Ignore antd deprecation warnings (logged as console.error by antd itself)
-    if (/\[antd:/i.test(t)) return;
-    errors.push(t);
+    if (/\[antd:/i.test(m.text())) return; // ignore antd deprecation warnings
+    errors.push(m.text());
   });
 
-  await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+  await page.goto('/login');
+  await page.getByPlaceholder('Tài khoản').fill(CREDS.username);
+  await page.getByPlaceholder('Mật khẩu').fill(CREDS.password);
+  await page.getByRole('button', { name: /Đăng nhập/i }).click();
 
-  // Wait for the dashboard shell to render (hero "Thêm dự án" button is always present)
+  // Landed on the dashboard
+  await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
   await expect(page.getByRole('button', { name: /Thêm dự án/i })).toBeVisible({ timeout: 15000 });
 
   // S-Curve card present

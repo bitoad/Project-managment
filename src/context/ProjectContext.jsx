@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { message } from 'antd';
 import { projectsApi, portsApi } from '../api/api.js';
+import { useUser } from './UserContext.jsx';
 
 const ProjectContext = createContext(null);
 
 export function ProjectProvider({ children }) {
+  const { isLoggedIn } = useUser();
   const [projects, setProjects] = useState([]);
   const [currentProjectId, setCurrentProjectId] = useState(
     () => localStorage.getItem('currentProjectId') || null
@@ -42,13 +44,13 @@ export function ProjectProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    loadProjects();
-  }, []);
+    if (isLoggedIn) loadProjects();
+  }, [isLoggedIn]);
 
   useEffect(() => {
-    if (currentProjectId) loadPorts();
+    if (isLoggedIn && currentProjectId) loadPorts();
     else setPorts([]);
-  }, [currentProjectId, loadPorts]);
+  }, [isLoggedIn, currentProjectId, loadPorts]);
 
   const selectProject = useCallback((projectId) => {
     setCurrentProjectId(projectId);

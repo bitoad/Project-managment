@@ -7,7 +7,7 @@ import fs from 'fs';
 import crypto from 'crypto';
 import XLSX from 'xlsx';
 import * as db from './database/db.js';
-import { ROLES, PERMISSIONS, ROLE_PERMISSIONS } from './database/rbac.js';
+import { ROLES, PERMISSIONS, ROLE_PERMISSIONS, roleCan } from './database/rbac.js';
 import { validateBody, ValidationError } from './validate.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -141,6 +141,21 @@ app.post('/api/auth/logout', (req, res) => {
   res.json({ success: true });
 });
 
+// Map an API path to its entity key for permission checks.
+const PERM_ENTITY = {
+  projects: 'project',
+  ports: 'port',
+  items: 'item',
+  tasks: 'task',
+  'cost-logs': 'cost',
+  suppliers: 'supplier',
+  quotations: 'quotation',
+  risks: 'risk',
+  team: 'team',
+  documents: 'document',
+  's-curve': 'item',
+};
+
 function requireAuth(req, res, next) {
   const auth = req.headers['authorization'] || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : (req.headers['x-auth-token'] || '');
@@ -148,6 +163,17 @@ function requireAuth(req, res, next) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   req.user = sessions.get(token);
+
+  // Enforce per-permission RBAC on mutating requests (POST/PUT/DELETE).
+  const mutating = ['POST', 'PUT', 'DELETE'].includes(req.method);
+  const isDataRoute = req.path.startsWith('/api/') && req.path !== '/api/projects' && !req.path.startsWith('/api/dashboard');
+  if (mutating && isDataRoute) {
+    const m = req.path.match(/^\/api\/([^/]+)/);
+    const entity = m && PERM_ENTITY[m[1]];
+    if (entity && !roleCan(req.user.role, `${entity}:write`)) {
+      return res.status(403).json({ error: `Forbidden: thiếu quyền ${entity}:write` });
+    }
+  }
   next();
 }
 
@@ -156,12 +182,12 @@ app.get('/api/rbac', requireAuth, (req, res) => {
   res.json({ roles: ROLES, permissions: PERMISSIONS, matrix: ROLE_PERMISSIONS });
 });
 
-// Gate every state-changing request except the auth routes themselves.
+// Require a valid session for every /api request except the auth routes themselves.
 app.use((req, res, next) => {
-  const mutating = ['POST', 'PUT', 'DELETE'].includes(req.method);
+  if (!req.path.startsWith('/api')) return next();
   const isAuthRoute = req.path === '/api/auth/login' || req.path === '/api/auth/logout';
-  if (mutating && !isAuthRoute) return requireAuth(req, res, next);
-  next();
+  if (isAuthRoute) return next();
+  return requireAuth(req, res, next);
 });
 
 // ============ PROJECTS (Quản lý dự án) ============
