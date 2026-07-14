@@ -14,10 +14,8 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: 'npx start-server-and-test dev:server http-get://localhost:3001/api/meta dev:client http-get://localhost:5173',
-    // multi-server tuple: (cmd, probe) (cmd, probe)
-    // multi-server tuple: (cmd, probe) (cmd, probe)
-    url: 'http://localhost:5173',
+    command: 'node server.js',
+    url: 'http://localhost:3001/api/projects',
     reuseExistingServer: true,
     timeout: 120000,
   },

@@ -32,11 +32,13 @@ Thumbs.db
 
 # Database (nếu sau này dùng SQLite thật)
 *.sqlite
+*.sqlite-shm
+*.sqlite-wal
 *.db
 
 # Coverage
 coverage/
-# AI Platform (separate sub-project, kh�ng commit v�o repo ERP)
+# AI Platform (separate sub-project, kh�ng commit v�o repo ERP)
 Workspace/
 
 # Playwright

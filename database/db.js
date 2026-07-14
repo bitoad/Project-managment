@@ -7,6 +7,11 @@ import {
   revenueInclVAT as computeRevenueInclVAT,
   profit, profitMargin, avgProgress as computeAvgProgress,
 } from '../shared/formulas.js';
+import {
+  loadEntity, saveEntity, createProjectRow as sqliteCreateProject,
+  getProjectRows as sqliteGetProjectRows, deleteProjectRow as sqliteDeleteProject,
+  ensureProject as sqliteEnsureProject, close as sqliteClose,
+} from './sqliteStore.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -69,31 +74,23 @@ function saveIndex(index) {
 export function createProject(name, description) {
   const idx = getIndex();
   const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now().toString(36);
+
+  // Create project row in SQLite
+  const createdAt = new Date().toISOString();
+  sqliteCreateProject(id, name, description || '', createdAt);
+
+  // Also create empty data.json for backwards compatibility
   const projectDir = path.join(PROJECTS_DIR, id);
   fs.mkdirSync(projectDir, { recursive: true });
-
-  // Copy seed data làm template
   const seed = JSON.parse(fs.readFileSync(SEED_PATH, 'utf-8'));
   seed.meta.projectName = name;
-  seed.meta.createdAt = new Date().toISOString();
-
-  // Reset data trống nhưng giữ cấu trúc. Dự án mới bắt đầu không có Port (người dùng tự thêm)
-  seed.ports = [];
-  seed.items = [];
-  seed.suppliers = [];
-  seed.supplierPorts = [];
-  seed.risks = [];
-  seed.tasks = [];
-  seed.costLogs = [];
-  seed.supplierQuotations = [];
-  seed.sCurve = [];
-  seed.team = [];
-  seed.documents = [];
-
+  seed.meta.createdAt = createdAt;
+  seed.ports = []; seed.items = []; seed.suppliers = []; seed.supplierPorts = [];
+  seed.risks = []; seed.tasks = []; seed.costLogs = []; seed.supplierQuotations = [];
+  seed.sCurve = []; seed.team = []; seed.documents = [];
   writeJsonAtomic(path.join(projectDir, 'data.json'), JSON.stringify(seed, null, 2));
-  dbCache.set(id, seed);
 
-  const project = { id, name, description: description || '', createdAt: new Date().toISOString() };
+  const project = { id, name, description: description || '', createdAt };
   idx.push(project);
   saveIndex(idx);
   return project;
@@ -120,12 +117,12 @@ export function updateProject(id, updates) {
 
 export function deleteProject(id) {
   dbCache.delete(id);
-  // Xóa thư mục dự án
+  sqliteDeleteProject(id);
+  // Also delete JSON dir
   const projectDir = path.join(PROJECTS_DIR, id);
   if (fs.existsSync(projectDir)) {
     fs.rmSync(projectDir, { recursive: true });
   }
-  // Xóa khỏi index
   const idx = getIndex().filter(p => p.id !== id);
   saveIndex(idx);
 }
@@ -160,13 +157,21 @@ function withWriteLock(projectId, task) {
 
 function ensureDb(projectId) {
   if (dbCache.has(projectId)) return dbCache.get(projectId);
-  const dbPath = getDbPath(projectId);
-  let db;
-  if (fs.existsSync(dbPath)) {
-    db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
-  } else {
-    db = JSON.parse(fs.readFileSync(SEED_PATH, 'utf-8'));
+  // Build full object from SQLite entities
+  const entities = [
+    'meta', 'settings', 'ports', 'items', 'suppliers', 'supplierPorts',
+    'risks', 'tasks', 'team', 'costLogs', 'supplierQuotations', 'sCurve', 'documents',
+  ];
+  const db = {};
+  for (const e of entities) {
+    db[e] = loadEntity(projectId, e);
   }
+  // meta is stored as a single-element array; unwrap to object
+  if (Array.isArray(db.meta) && db.meta.length > 0) db.meta = db.meta[0];
+  else if (Array.isArray(db.meta)) db.meta = {};
+  // settings similarly
+  if (Array.isArray(db.settings) && db.settings.length > 0) db.settings = db.settings[0];
+  else if (Array.isArray(db.settings)) db.settings = {};
   dbCache.set(projectId, db);
   return db;
 }
@@ -203,6 +208,18 @@ function writeJsonAtomic(filePath, dataStr) {
 
 function save(projectId, data) {
   dbCache.set(projectId, data);
+  // Save each entity to SQLite
+  const entities = [
+    'ports', 'items', 'suppliers', 'supplierPorts',
+    'risks', 'tasks', 'team', 'costLogs', 'supplierQuotations', 'sCurve', 'documents',
+  ];
+  for (const e of entities) {
+    saveEntity(projectId, e, data[e] || []);
+  }
+  // Save meta and settings as single-element arrays
+  if (data.meta) saveEntity(projectId, 'meta', [data.meta]);
+  if (data.settings) saveEntity(projectId, 'settings', [data.settings]);
+  // Also write JSON for backwards compatibility
   return withWriteLock(projectId, () => {
     const dbPath = getDbPath(projectId);
     const dir = path.dirname(dbPath);
