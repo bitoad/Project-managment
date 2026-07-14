@@ -48,3 +48,9 @@ test-results/
 .image/
 .playwright-mcp/
 
+
+dev*.err*
+dev*.out
+tests/_dev.*
+
+
