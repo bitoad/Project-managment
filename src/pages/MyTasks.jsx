@@ -8,6 +8,8 @@ import {
 import { tasksApi } from '../api/api.js';
 import { PORT_COLORS, priorityColor } from '../components/helpers.js';
 import { useUser } from '../context/UserContext.jsx';
+import { useProject } from '../context/ProjectContext.jsx';
+import PageLoader from '../components/shared/PageLoader.jsx';
 
 const { Title, Text } = Typography;
 
@@ -21,6 +23,7 @@ const PRIORITY_LABEL = { high: 'Cao', medium: 'TB', low: 'Thấp' };
 
 export default function MyTasks() {
   const { currentUser } = useUser();
+  const { portfolioView } = useProject();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -28,7 +31,7 @@ export default function MyTasks() {
   const load = async () => {
     try {
       setLoading(true);
-      setTasks(await tasksApi.getAll());
+      setTasks(await tasksApi.getAll(null, portfolioView));
     } catch (e) {
       message.error('Không tải được công việc');
     } finally {
@@ -41,7 +44,7 @@ export default function MyTasks() {
   }, []);
 
   if (loading) {
-    return <div style={{ textAlign: 'center', paddingTop: 100 }}><Spin size="large" /></div>;
+    return <PageLoader />;
   }
 
   // Lọc task theo người đăng nhập

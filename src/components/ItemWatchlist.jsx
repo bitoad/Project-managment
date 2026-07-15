@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { Table, Tag, Progress, Segmented, Empty, Tooltip } from 'antd';
+import { Table, Tag, Progress, Segmented, Tooltip } from 'antd';
 import {
-  WarningOutlined, CheckCircleOutlined, RightOutlined,
+  WarningOutlined, CheckCircleOutlined, RightOutlined, InboxOutlined,
 } from '@ant-design/icons';
 import { fmtVND, PORT_COLORS, statusColor } from './helpers.js';
 import { costOf } from '../../shared/formulas.js';
+import EmptyState from './shared/EmptyState.jsx';
 
 function buildRows(items, costLogs) {
   const logsByItem = {};
@@ -102,7 +103,7 @@ export default function ItemWatchlist({ items = [], costLogs = [], compact = fal
   ];
 
   if (rows.length === 0) {
-    return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có item nào" />;
+    return <EmptyState icon={<InboxOutlined />} title="Chưa có item nào" />;
   }
 
   return (
@@ -131,7 +132,7 @@ export default function ItemWatchlist({ items = [], costLogs = [], compact = fal
         pagination={compact ? false : { pageSize: 10, showSizeChanger: false }}
         scroll={{ x: compact ? 620 : 760 }}
         columns={columns}
-        locale={{ emptyText: <Empty description="Không có item cần làm rõ" /> }}
+        locale={{ emptyText: <EmptyState icon={<InboxOutlined />} title="Không có item cần làm rõ" /> }}
       />
     </div>
   );

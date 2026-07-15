@@ -78,7 +78,7 @@ function pct(value, total) {
 export default function DataEntry() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { currentProject } = useProject();
+  const { currentProject, portfolioView } = useProject();
   const [activeKey, setActiveKey] = useState(searchParams.get('tab') || 'items');
   const [focusedPort, setFocusedPort] = useState(searchParams.get('port') || null);
   const [loading, setLoading] = useState(true);
@@ -96,13 +96,13 @@ export default function DataEntry() {
     try {
       setLoading(true);
       const [dashboard, ports, items, tasks, risks, team, costLogs] = await Promise.all([
-        dashboardApi.get(),
-        portsApi.getAll(),
-        itemsApi.getAll(),
-        tasksApi.getAll(),
-        risksApi.getAll(),
-        teamApi.getAll(),
-        costLogsApi.getAll(),
+        portfolioView ? (await dashboardApi.aggregate()).aggregate : dashboardApi.get(),
+        portsApi.getAll(null, portfolioView),
+        itemsApi.getAll(null, portfolioView),
+        tasksApi.getAll(null, portfolioView),
+        risksApi.getAll(null, portfolioView),
+        teamApi.getAll(null, portfolioView),
+        costLogsApi.getAll(null, portfolioView),
       ]);
       setSummary({ dashboard, ports, items, tasks, risks, team, costLogs });
     } catch (e) {
@@ -114,7 +114,7 @@ export default function DataEntry() {
 
   useEffect(() => {
     loadSummary();
-  }, []);
+  }, [portfolioView]);
 
   useEffect(() => {
     setActiveKey(searchParams.get('tab') || 'items');
@@ -177,7 +177,7 @@ export default function DataEntry() {
             <ProjectOutlined /> Trung tâm nhập liệu dự án
           </Title>
           <Text type="secondary">
-            Nhập, kiểm tra và cập nhật dữ liệu vận hành cho {currentProject?.name || 'dự án hiện tại'}.
+            Nhập, kiểm tra và cập nhật dữ liệu vận hành cho {portfolioView ? 'TẤT CẢ dự án' : (currentProject?.name || 'dự án hiện tại')}.
           </Text>
         </div>
         <Space wrap>

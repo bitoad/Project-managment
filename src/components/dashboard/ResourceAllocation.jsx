@@ -1,9 +1,10 @@
 import React from 'react';
-import { Empty } from 'antd';
+import { TeamOutlined } from '@ant-design/icons';
+import EmptyState from '../shared/EmptyState.jsx';
 
 // data: { name, count, color }
 export default function ResourceAllocation({ data = [] }) {
-  if (!data.length) return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có nhiệm vụ" />;
+  if (!data.length) return <EmptyState icon={<TeamOutlined />} title="Chưa có nhiệm vụ" />;
   const max = Math.max(...data.map((d) => d.count), 1);
   return (
     <ul className="res-list">

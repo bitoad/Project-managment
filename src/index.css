@@ -1,20 +1,4 @@
-:root {
-  --color-primary: #2F5CE0;
-  --color-primary-grad: linear-gradient(135deg, #2F5CE0 0%, #5b82f0 100%);
-  --color-success: #1FA971;
-  --color-warning: #F59E0B;
-  --color-danger: #EF4444;
-  --color-purple: #8B5CF6;
-  --color-bg: #F5F7FB;
-  --color-surface: #ffffff;
-  --color-text: #1f1f1f;
-  --color-text-secondary: #8c8c8c;
-  --radius: 16px;
-  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.06);
-  --shadow-card-hover: 0 8px 28px rgba(47, 92, 224, 0.18);
-  --sidebar-gradient: linear-gradient(180deg, #0b1f3a 0%, #102a52 55%, #0a2347 100%);
-  --font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-}
+/* All CSS variables defined in theme.css — do NOT re-declare here. */
 
 * {
   margin: 0;

@@ -8,7 +8,7 @@ import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
  * Chỉ lớp UI, không chứa logic nghiệp vụ.
  */
 const StatCard = ({ icon, accent, title, value, valueStyle, formatter, suffix, progress, footer, trend }) => (
-  <Card className="ds-kpi" bordered={false} style={{ '--kpi-accent': accent, height: '100%' }}>
+  <Card className="ds-kpi" bordered={false} style={{ '--kpi-accent': accent }}>
     <div className="ds-kpi-content">
       {icon && <div className="ds-kpi-icon" style={{ background: accent }}>{icon}</div>}
       <div className="ds-kpi-body">
@@ -22,7 +22,7 @@ const StatCard = ({ icon, accent, title, value, valueStyle, formatter, suffix, p
         {progress != null && (
           <Progress percent={progress} showInfo={false} size="small" strokeColor={valueStyle?.color || '#2F5CE0'} style={{ marginTop: 6, marginBottom: 0 }} />
         )}
-        {trend && (
+        {trend ? (
           <div className="ds-kpi-footer" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <span className={trend.dir === 'up' ? 'ds-trend-up' : 'ds-trend-down'}>
               {trend.dir === 'up' ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
@@ -30,8 +30,9 @@ const StatCard = ({ icon, accent, title, value, valueStyle, formatter, suffix, p
             </span>
             <span>{trend.label}</span>
           </div>
+        ) : (
+          <div className="ds-kpi-footer">{footer}</div>
         )}
-        {!trend && footer && <div className="ds-kpi-footer">{footer}</div>}
       </div>
     </div>
   </Card>

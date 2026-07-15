@@ -1,13 +1,15 @@
 import React from 'react';
-import { Table, Tag, Empty } from 'antd';
+import { Table, Tag } from 'antd';
+import { WarningOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import EmptyState from '../shared/EmptyState.jsx';
 
-const RISK_COLOR = { critical: '#EF4444', high: '#F5803E', medium: '#F5A623', low: '#2F9E6E' };
+const RISK_COLOR = { critical: 'var(--color-danger)', high: 'var(--color-warning)', medium: 'var(--color-accent)', low: 'var(--color-success)' };
 
 // risks: from dashboardApi highRisks: { id, title, projectName, severity, status, dueDate }
 export default function RiskAlertsTable({ risks = [], onViewAll }) {
   const navigate = useNavigate();
-  if (!risks.length) return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có rủi ro" />;
+  if (!risks.length) return <EmptyState icon={<WarningOutlined />} title="Không có rủi ro" />;
 
   const columns = [
     {
@@ -49,6 +51,7 @@ export default function RiskAlertsTable({ risks = [], onViewAll }) {
 
   return (
     <Table
+      className="ds-table-premium"
       rowKey="id"
       size="small"
       pagination={false}

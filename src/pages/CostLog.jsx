@@ -5,6 +5,7 @@ import {
   Col,
   DatePicker,
   Form,
+  Grid,
   Input,
   InputNumber,
   Modal,
@@ -59,6 +60,8 @@ export default function CostLog({ initialPortFilter = null }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editLog, setEditLog] = useState(null);
   const [form] = Form.useForm();
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
 
   const load = async () => {
     try {
@@ -306,7 +309,7 @@ export default function CostLog({ initialPortFilter = null }) {
         open={modalOpen}
         onOk={onSubmit}
         onCancel={() => setModalOpen(false)}
-        width={600}
+        width={isMobile ? '92%' : 600}
         okText="Lưu"
         cancelText="Hủy"
       >

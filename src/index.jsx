@@ -8,6 +8,7 @@ import { ProjectProvider } from './context/ProjectContext.jsx';
 import { UserProvider } from './context/UserContext.jsx';
 import './index.css';
 import './theme.css';
+import './styles/glass.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

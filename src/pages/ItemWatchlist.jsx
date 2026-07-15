@@ -7,8 +7,10 @@ import { itemsApi, costLogsApi } from '../api/api.js';
 import ItemWatchlist from '../components/ItemWatchlist.jsx';
 import StatCard from '../components/StatCard.jsx';
 import { fmtVND } from '../components/helpers.js';
+import { useProject } from '../context/ProjectContext.jsx';
 
 export default function ItemWatchlistPage() {
+  const { portfolioView } = useProject();
   const [items, setItems] = useState([]);
   const [costLogs, setCostLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,7 +19,10 @@ export default function ItemWatchlistPage() {
     let active = true;
     (async () => {
       try {
-        const [i, c] = await Promise.all([itemsApi.getAll(), costLogsApi.getAll()]);
+        const [i, c] = await Promise.all([
+          itemsApi.getAll(null, portfolioView),
+          costLogsApi.getAll(null, portfolioView),
+        ]);
         if (!active) return;
         setItems(i);
         setCostLogs(c);
@@ -28,7 +33,7 @@ export default function ItemWatchlistPage() {
       }
     })();
     return () => { active = false; };
-  }, []);
+  }, [portfolioView]);
 
   const totalCost = costLogs.reduce((s, c) => s + (Number(c.amount) || 0), 0);
   const needAction = items.filter((it) => it.procStatus === 'Chưa đặt' || (it.status !== 'Approved' && it.status !== 'Completed')).length;

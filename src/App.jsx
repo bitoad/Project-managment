@@ -44,17 +44,26 @@ function ProtectedLayout() {
 export default function App() {
   const themeConfig = {
     token: {
-      colorPrimary: '#2F5CE0',
+      colorPrimary: '#166534',
+      colorPrimaryHover: '#0F5132',
+      colorSuccess: '#2F9E6E',
+      colorWarning: '#D9A441',
+      colorError: '#C1502E',
+      colorInfo: '#2F9E6E',
       borderRadius: 16,
       fontFamily: "'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif",
-      colorBgLayout: '#F5F7FB',
-      boxShadowSecondary: '0 4px 16px rgba(0, 0, 0, 0.06)',
+      colorBgLayout: '#F4F7F5',
+      colorText: '#1B2B22',
+      colorTextSecondary: '#6B8377',
+      colorBorder: '#E4EDE8',
+      colorBorderSecondary: '#D3E2DA',
+      boxShadowSecondary: '0 4px 16px rgba(16, 24, 40, 0.06)',
     },
     components: {
       Card: { borderRadiusLG: 16 },
       Statistic: { titleFontSize: 13 },
-      Table: { headerBg: '#fafafa', headerColor: '#595959', rowHoverBg: '#f0f4ff' },
-      Menu: { itemBorderRadius: 10, itemMarginInline: 8 },
+      Table: { headerBg: '#FBFCFB', headerColor: '#6B8377', rowHoverBg: '#F0F7F3' },
+      Menu: { itemBorderRadius: 10, itemMarginInline: 8, itemSelectedBg: 'rgba(22, 101, 52, 0.12)', itemSelectedColor: '#0F5132' },
     },
   };
 

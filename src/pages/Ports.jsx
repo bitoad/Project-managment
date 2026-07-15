@@ -5,6 +5,7 @@ import {
   Card,
   Empty,
   Form,
+  Grid,
   Input,
   InputNumber,
   Modal,
@@ -160,6 +161,8 @@ export default function Ports() {
   const [modalMode, setModalMode] = useState('add');
   const [editingPort, setEditingPort] = useState(null);
   const [form] = Form.useForm();
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
 
   const load = async () => {
     try {
@@ -325,9 +328,9 @@ export default function Ports() {
           <div className="ds-h1">Ports</div>
           <div className="ds-caption">Hạng mục công việc (Port)</div>
         </div>
-        <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd} disabled={portfolioView} title={portfolioView ? 'Chọn 1 dự án để thêm Port' : undefined}>
-          Thêm Port
-        </Button>
+        <button className="btn btn-primary" onClick={openAdd} disabled={portfolioView} title={portfolioView ? 'Chọn 1 dự án để thêm Port' : undefined}>
+          <PlusOutlined /> Thêm Port
+        </button>
       </div>
 
       <div className="ev-guide">
@@ -373,7 +376,7 @@ export default function Ports() {
               placeholder="Tìm theo port, mô tả, nhà cung cấp..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              style={{ width: 320 }}
+              style={{ width: isMobile ? '100%' : 320 }}
             />
             <Select
               allowClear
@@ -394,9 +397,9 @@ export default function Ports() {
               optionFilterProp="label"
               options={supplierOptions}
             />
-            <Button icon={<ClearOutlined />} onClick={clearFilters}>
-              Xóa bộ lọc
-            </Button>
+            <button className="btn btn-outline btn-sm" onClick={clearFilters}>
+              <ClearOutlined /> Xóa bộ lọc
+            </button>
           </Space>
           <Text type="secondary">
             Hiển thị {filteredPorts.length} / {enrichedPorts.length} port
@@ -564,16 +567,16 @@ export default function Ports() {
               width: 280,
               fixed: 'right',
               render: (_, record) => (
-                <Space>
-                  <Button size="small" icon={<ProfileOutlined />} onClick={() => navigate(getPortManageUrl(record.id, 'items'))} disabled={portfolioView}>
-                    Item
-                  </Button>
-                  <Button size="small" icon={<DollarOutlined />} onClick={() => navigate(getPortManageUrl(record.id, 'costs'))} disabled={portfolioView}>
-                    Chi phí
-                  </Button>
-                  <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(record)} disabled={portfolioView}>
-                    Sửa
-                  </Button>
+                <Space size={4}>
+                  <button className="btn btn-outline btn-sm" onClick={() => navigate(getPortManageUrl(record.id, 'items'))} disabled={portfolioView}>
+                    <ProfileOutlined /> Item
+                  </button>
+                  <button className="btn btn-outline btn-sm" onClick={() => navigate(getPortManageUrl(record.id, 'costs'))} disabled={portfolioView}>
+                    <DollarOutlined /> Chi phí
+                  </button>
+                  <button className="btn btn-outline btn-sm" onClick={() => openEdit(record)} disabled={portfolioView}>
+                    <EditOutlined /> Sửa
+                  </button>
                   <Popconfirm
                     title={`Xóa Port ${record.id}?`}
                     description={record.hasChildren ? 'Port đang có item/công việc/chi phí liên kết, cần xóa hết trước' : 'Hành động này không thể hoàn tác'}
@@ -583,14 +586,12 @@ export default function Ports() {
                     disabled={portfolioView}
                     onConfirm={() => onDelete(record)}
                   >
-                    <Button
-                      size="small"
-                      danger
-                      icon={<DeleteOutlined />}
+                    <button
+                      className="btn btn-danger btn-sm"
                       disabled={portfolioView || record.hasChildren}
                     >
-                      Xóa
-                    </Button>
+                      <DeleteOutlined /> Xóa
+                    </button>
                   </Popconfirm>
                 </Space>
               ),

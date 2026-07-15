@@ -9,14 +9,36 @@ import {
 import {
   dashboardApi, portsApi, itemsApi, risksApi, costLogsApi, suppliersApi, metaApi,
 } from '../api/api.js';
+import { useProject } from '../context/ProjectContext.jsx';
 import { fmtVND, PORT_COLORS, riskColor } from '../components/helpers.js';
 import { sumActualCost } from '../../shared/formulas.js';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import PageLoader from '../components/shared/PageLoader.jsx';
 
 const { Title, Text, Paragraph } = Typography;
 
+// Chuẩn hóa kết quả dashboard thành shape đơn-dự án, dùng chung cho cả
+// chế độ Portfolio (aggregate) và đơn dự án. Giữ nguyên mọi reference data.xxx.
+function normalizeDashboard(d, portfolioView) {
+  if (!portfolioView || !d) return d;
+  const a = d.aggregate || {};
+  return {
+    ...a,
+    ports: (d.perProject || []).map((p) => ({
+      id: p.id,
+      description: p.name,
+      progress: p.avgProgress,
+      revenue: p.totalRevenue,
+      logged: p.totalLoggedCost,
+      itemCount: p.totalItems,
+    })),
+    highRisks: a.highRisks || [],
+  };
+}
+
 export default function Reports() {
+  const { portfolioView } = useProject();
   const [data, setData] = useState(null);
   const [ports, setPorts] = useState([]);
   const [items, setItems] = useState([]);
@@ -46,10 +68,15 @@ export default function Reports() {
     try {
       setLoading(true);
       const [d, p, i, r, c, s, m] = await Promise.all([
-        dashboardApi.get(), portsApi.getAll(), itemsApi.getAll(),
-        risksApi.getAll(), costLogsApi.getAll(), suppliersApi.getAll(), metaApi.get(),
+        portfolioView ? dashboardApi.aggregate() : dashboardApi.get(),
+        portsApi.getAll(null, portfolioView),
+        itemsApi.getAll(null, portfolioView),
+        risksApi.getAll(null, portfolioView),
+        costLogsApi.getAll(null, portfolioView),
+        suppliersApi.getAll(null, portfolioView),
+        metaApi.get(),
       ]);
-      setData(d); setPorts(p); setItems(i); setRisks(r);
+      setData(portfolioView ? normalizeDashboard(d, true) : d); setPorts(p); setItems(i); setRisks(r);
       setCostLogs(c); setSuppliers(s); setMeta(m);
     } catch (e) {
       message.error('Không tải được dữ liệu báo cáo');
@@ -58,7 +85,7 @@ export default function Reports() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [portfolioView]);
 
   // ============ Helper vẽ header báo cáo PDF ============
   const drawHeader = (doc, subtitle) => {
@@ -76,8 +103,8 @@ export default function Reports() {
     // Info project
     doc.setTextColor(50, 50, 50);
     doc.setFontSize(9);
-const m = meta || {};
-doc.text(`Du an: ${m.projectName || '-'}`, 14, 36);
+ const m = meta || {};
+ doc.text(`Du an: ${portfolioView ? 'TAT CA DU AN' : (m.projectName || '-')}`, 14, 36);
 doc.text(`Nha thau: ${m.contractor || '-'}`, 14, 42);
 doc.text(`Khach hang: ${m.client || '-'}`, 14, 48);
 doc.text(`Dia diem: ${m.location || '-'}`, 120, 36);
@@ -314,7 +341,7 @@ doc.text(`Dia diem: ${m.location || '-'}`, 120, 36);
 
   // ============ UI ============
   if (loading || !data) {
-    return <div style={{ textAlign: 'center', paddingTop: 100 }}><Spin size="large" /></div>;
+    return <PageLoader />;
   }
 
   const reports = [

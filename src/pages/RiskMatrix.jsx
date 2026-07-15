@@ -8,6 +8,7 @@ import {
   Descriptions,
   Drawer,
   Form,
+  Grid,
   Input,
   InputNumber,
   Modal,
@@ -45,6 +46,7 @@ import { PORT_COLORS, PORT_LIST, riskColor } from '../components/helpers.js';
 import { useProject } from '../context/ProjectContext.jsx';
 import StatCard from '../components/StatCard.jsx';
 import { InboxOutlined } from '@ant-design/icons';
+import EmptyState from '../components/shared/EmptyState.jsx';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -144,6 +146,8 @@ export default function RiskMatrix() {
   const [filterLevel, setFilterLevel] = useState();
   const [selectedCell, setSelectedCell] = useState(null);
   const [form] = Form.useForm();
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
 
   const probability = Form.useWatch('probability', form) || 1;
   const impact = Form.useWatch('impact', form) || 1;
@@ -332,12 +336,12 @@ export default function RiskMatrix() {
           <div className="ds-caption">Đánh giá &amp; phân cấp rủi ro</div>
         </div>
         <Space wrap>
-          <Button icon={<ReloadOutlined />} onClick={load} loading={loading}>
-            Tải lại
-          </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={openAdd} disabled={portfolioView} title={portfolioView ? 'Chọn 1 dự án để thêm rủi ro' : undefined}>
-            Thêm rủi ro
-          </Button>
+          <button className="btn btn-outline btn-sm" onClick={load}>
+            <ReloadOutlined /> Tải lại
+          </button>
+          <button className="btn btn-primary" onClick={openAdd} disabled={portfolioView} title={portfolioView ? 'Chọn 1 dự án để thêm rủi ro' : undefined}>
+            <PlusOutlined /> Thêm rủi ro
+          </button>
         </Space>
       </div>
 
@@ -394,9 +398,9 @@ export default function RiskMatrix() {
             extra={
               <Space size={4} wrap>
                 {selectedCell && (
-                  <Button size="small" onClick={() => setSelectedCell(null)}>
+                  <button className="btn btn-outline btn-sm" onClick={() => setSelectedCell(null)}>
                     Bỏ chọn {selectedCell.impact} x {selectedCell.probability}
-                  </Button>
+                  </button>
                 )}
                 <Text type="secondary" style={{ fontSize: 12 }}>Nhấn ô để lọc bảng ↓</Text>
               </Space>
@@ -407,7 +411,7 @@ export default function RiskMatrix() {
                 TÁC ĐỘNG (I) ↑
               </div>
               <div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(64px, 1fr))', gap: 6 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: `repeat(5, minmax(${isMobile ? 46 : 64}px, 1fr))`, gap: 6 }}>
                   {[5, 4, 3, 2, 1].map((impactValue) => (
                     <React.Fragment key={impactValue}>
                       {[1, 2, 3, 4, 5].map((probabilityValue) => {
@@ -428,9 +432,12 @@ export default function RiskMatrix() {
                                 minHeight: 78,
                                 width: '100%',
                                 border: isSelected ? '3px solid #111827' : '1px solid rgba(255,255,255,0.55)',
-                                background: riskColor(score),
+                                background: `linear-gradient(135deg, ${riskColor(score)} 0%, ${riskColor(score)}cc 100%)`,
                                 opacity: cellRisks.length ? 1 : 0.4,
                                 cursor: 'pointer',
+                                borderRadius: 6,
+                                transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                                boxShadow: isSelected ? `0 0 0 2px ${riskColor(score)}` : cellRisks.length ? '0 1px 4px rgba(0,0,0,0.12)' : 'none',
                               }}
                             >
                               <div>
@@ -465,10 +472,7 @@ export default function RiskMatrix() {
         <Col xs={24} xl={10}>
           <Card className="ds-chart-card" bordered={false} title={<span className="ds-card-head-icon"><WarningOutlined style={{ color: '#ff4d4f' }} /> Rủi ro ưu tiên</span>}>
             {enrichedRisks.filter((risk) => risk.status === 'open').sort((a, b) => b.score - a.score).slice(0, 5).length === 0 ? (
-              <div className="ds-empty">
-                <div className="ds-empty-icon"><InboxOutlined /></div>
-                <div className="ds-empty-text">Không có rủi ro đang mở</div>
-              </div>
+              <EmptyState icon={<InboxOutlined />} title="Không có rủi ro đang mở" />
             ) : (
               <Timeline
                 items={enrichedRisks
@@ -507,7 +511,7 @@ export default function RiskMatrix() {
               placeholder="Tìm rủi ro, nguyên nhân, hậu quả, owner..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              style={{ width: 320 }}
+              style={{ width: isMobile ? '100%' : 320 }}
             />
             <Select
               allowClear
@@ -533,9 +537,9 @@ export default function RiskMatrix() {
               options={['Thấp', 'Trung bình', 'Cao', 'Nghiêm trọng'].map((level) => ({ value: level, label: level }))}
               style={{ width: 160 }}
             />
-            <Button icon={<ClearOutlined />} onClick={clearFilters}>
-              Xóa bộ lọc
-            </Button>
+            <button className="btn btn-outline btn-sm" onClick={clearFilters}>
+              <ClearOutlined /> Xóa bộ lọc
+            </button>
           </Space>
           <Text type="secondary">
             <FilterOutlined /> Hiển thị {filteredRisks.length} / {enrichedRisks.length}
@@ -687,13 +691,13 @@ export default function RiskMatrix() {
               width: 150,
               fixed: 'right',
               render: (_, record) => (
-                <Space>
-                  <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(record)} disabled={portfolioView} />
+                <Space size={4}>
+                  <button className="btn btn-outline btn-sm btn-icon" onClick={() => openEdit(record)} disabled={portfolioView} title="Sửa"><EditOutlined /></button>
                   {record.status !== 'closed' && (
-                    <Button size="small" icon={<CheckCircleOutlined />} onClick={() => updateStatus(record, 'closed')} disabled={portfolioView} />
+                    <button className="btn btn-outline btn-sm btn-icon" onClick={() => updateStatus(record, 'closed')} disabled={portfolioView} title="Đóng"><CheckCircleOutlined /></button>
                   )}
                   <Popconfirm title="Xóa rủi ro?" onConfirm={() => onDelete(record.id)} disabled={portfolioView}>
-                    <Button size="small" danger icon={<DeleteOutlined />} disabled={portfolioView} />
+                    <button className="btn btn-danger btn-sm btn-icon" disabled={portfolioView} title="Xóa"><DeleteOutlined /></button>
                   </Popconfirm>
                 </Space>
               ),
@@ -707,7 +711,7 @@ export default function RiskMatrix() {
         open={modalOpen}
         onOk={onSubmit}
         onCancel={() => setModalOpen(false)}
-        width={920}
+        width={isMobile ? '92%' : 920}
         okText="Lưu"
         cancelText="Hủy"
       >
@@ -843,11 +847,11 @@ export default function RiskMatrix() {
         title={drawerRisk ? `Chi tiết ${drawerRisk.id}` : ''}
         open={!!drawerRisk}
         onClose={() => setDrawerRisk(null)}
-        width={560}
+        width={isMobile ? '100%' : 560}
         extra={drawerRisk && (
-          <Button icon={<EditOutlined />} onClick={() => { openEdit(drawerRisk); setDrawerRisk(null); }} disabled={portfolioView}>
-            Sửa
-          </Button>
+          <button className="btn btn-primary" onClick={() => { openEdit(drawerRisk); setDrawerRisk(null); }} disabled={portfolioView}>
+            <EditOutlined /> Sửa
+          </button>
         )}
       >
         {drawerRisk && (

@@ -186,6 +186,7 @@ export default function Projects() {
             dataSource={projects}
             rowKey="id"
             pagination={false}
+            scroll={{ x: 920 }}
             columns={[
               {
                 title: 'Dự án', dataIndex: 'name', key: 'name',

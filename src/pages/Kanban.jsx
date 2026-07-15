@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Typography, Button, Modal, Form, Input, Select, DatePicker, InputNumber,
+  Typography, Button, Modal, Form, Grid, Input, Select, DatePicker, InputNumber,
   Tag, Dropdown, message, Progress, Card, Row, Col,
 } from 'antd';
 import dayjs from 'dayjs';
 import {
-  PlusOutlined, UserOutlined, CalendarOutlined, MoreOutlined, SearchOutlined, AppstoreOutlined,
+  PlusOutlined, UserOutlined, CalendarOutlined, MoreOutlined, SearchOutlined, AppstoreOutlined, SwapOutlined,
 } from '@ant-design/icons';
 import { tasksApi } from '../api/api.js';
 import { useProject } from '../context/ProjectContext.jsx';
 import { PORT_COLORS, priorityColor, STATUS_PROGRESS } from '../components/helpers.js';
 import StatCard from '../components/StatCard.jsx';
+import EmptyState from '../components/shared/EmptyState.jsx';
 
 const { Text } = Typography;
 
@@ -36,6 +37,8 @@ export default function Kanban() {
   const [filterPriority, setFilterPriority] = useState('all');
   const [search, setSearch] = useState('');
   const [form] = Form.useForm();
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
 
   const load = async () => {
     try {
@@ -93,6 +96,19 @@ export default function Kanban() {
     await tasksApi.remove(id);
     setTasks((prev) => prev.filter((t) => t.id !== id));
     message.success('Đã xóa');
+  };
+
+  // Chuyển cột nhanh (thay thế DnD trên mobile/touch, luôn khả dụng ở đơn dự án)
+  const moveTask = async (task, newStatus) => {
+    if (task.status === newStatus) return;
+    try {
+      const newProgress = STATUS_PROGRESS[newStatus] ?? (task.progress || 0);
+      const updated = await tasksApi.update(task.id, { status: newStatus, progress: newProgress });
+      setTasks((prev) => prev.map((t) => (t.id === task.id ? updated : t)));
+      message.success('Đã chuyển công việc');
+    } catch {
+      message.error('Lỗi khi chuyển công việc');
+    }
   };
 
   const onDragStart = (e, taskId) => {
@@ -174,6 +190,22 @@ export default function Kanban() {
         {task.progress > 0 && task.status !== 'done' && (
           <Progress percent={task.progress} size="small" style={{ marginTop: 8, marginBottom: 0 }} />
         )}
+        {!portfolioView && (
+          <Dropdown
+            trigger={['click']}
+            menu={{
+              items: COLUMNS.filter((c) => c.key !== task.status).map((c) => ({
+                key: c.key,
+                label: `Chuyển sang: ${c.label}`,
+                onClick: () => moveTask(task, c.key),
+              })),
+            }}
+          >
+            <button className="btn btn-ghost btn-sm" style={{ padding: 0, marginTop: 6, height: 'auto', fontSize: 12 }}>
+              <SwapOutlined /> Chuyển cột
+            </button>
+          </Dropdown>
+        )}
       </div>
     );
   };
@@ -206,7 +238,7 @@ export default function Kanban() {
             style={{ width: 130 }}
             options={[{ value: 'all', label: 'Mọi ưu tiên' }, ...Object.keys(PRIORITY_LABEL).map((p) => ({ value: p, label: PRIORITY_LABEL[p] }))]}
           />
-          <Button type="primary" icon={<PlusOutlined />} onClick={openAdd} disabled={portfolioView} title={portfolioView ? 'Chọn 1 dự án để thêm việc' : undefined}>Thêm việc</Button>
+          <button className="btn btn-primary" onClick={openAdd} disabled={portfolioView} title={portfolioView ? 'Chọn 1 dự án để thêm việc' : undefined}><PlusOutlined /> Thêm việc</button>
         </div>
       </div>
 
@@ -264,18 +296,15 @@ export default function Kanban() {
             onDragLeave={() => setDragOverCol((c) => (c === col.key ? null : c))}
             onDrop={(e) => onDrop(e, col.key)}
           >
-            <div className="kanban-column-header">
+            <div className="kanban-column-header" style={{ borderTop: `3px solid ${col.color}` }}>
               <Text strong>{col.label}</Text>
-              <Tag color={col.color}>{counts[col.key] || 0}</Tag>
+              <span className="kanban-count-badge" style={{ background: col.color, color: '#fff' }}>{counts[col.key] || 0}</span>
             </div>
 
             <div style={{ flex: 1 }}>
               {filtered.filter((t) => t.status === col.key).map(renderCard)}
               {counts[col.key] === 0 && (
-                <div className="ds-empty">
-                  <div className="ds-empty-icon">📋</div>
-                  <Text type="secondary">Không có việc</Text>
-                </div>
+                <EmptyState icon={<AppstoreOutlined />} title="Không có việc" />
               )}
             </div>
           </div>
@@ -287,7 +316,7 @@ export default function Kanban() {
         open={modalOpen}
         onOk={onSubmit}
         onCancel={() => setModalOpen(false)}
-        width={560}
+        width={isMobile ? '92%' : 560}
         okText="Lưu"
         cancelText="Hủy"
       >

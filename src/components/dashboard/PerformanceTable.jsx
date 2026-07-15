@@ -1,19 +1,21 @@
 import React from 'react';
-import { Table, Tag, Empty } from 'antd';
+import { Table, Tag } from 'antd';
+import { BarChartOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { fmtShort } from '../helpers.js';
+import EmptyState from '../shared/EmptyState.jsx';
 
 function statusOf(row) {
-  if (row.progress >= 100) return { label: 'Hoàn thành', color: '#1FA971' };
-  if (row.spi < 0.9 || row.cpi < 0.9) return { label: 'Chậm', color: '#EF4444' };
-  if (row.spi < 1 || row.cpi < 1) return { label: 'Cảnh báo', color: '#F5A623' };
-  return { label: 'Đúng tiến độ', color: '#2F5CE0' };
+  if (row.progress >= 100) return { label: 'Hoàn thành', color: 'var(--color-success)' };
+  if (row.spi < 0.9 || row.cpi < 0.9) return { label: 'Chậm', color: 'var(--color-danger)' };
+  if (row.spi < 1 || row.cpi < 1) return { label: 'Cảnh báo', color: 'var(--color-warning)' };
+  return { label: 'Đúng tiến độ', color: 'var(--color-primary)' };
 }
 
 // rows: { id, name, progress, budget, actual, forecast, spi, cpi }
 export default function PerformanceTable({ rows = [], onOpen }) {
   const navigate = useNavigate();
-  if (!rows.length) return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có dữ liệu" />;
+  if (!rows.length) return <EmptyState icon={<BarChartOutlined />} title="Chưa có dữ liệu" />;
 
   const columns = [
     {
@@ -64,7 +66,7 @@ export default function PerformanceTable({ rows = [], onOpen }) {
       key: 'spi',
       width: 64,
       align: 'center',
-      render: (v) => <span style={{ color: v < 1 ? '#EF4444' : '#1FA971', fontWeight: 600 }}>{Number(v).toFixed(2)}</span>,
+      render: (v) => <span style={{ color: v < 1 ? 'var(--color-danger)' : 'var(--color-success)', fontWeight: 600 }}>{Number(v).toFixed(2)}</span>,
     },
     {
       title: 'CPI',
@@ -72,7 +74,7 @@ export default function PerformanceTable({ rows = [], onOpen }) {
       key: 'cpi',
       width: 64,
       align: 'center',
-      render: (v) => <span style={{ color: v < 1 ? '#EF4444' : '#1FA971', fontWeight: 600 }}>{Number(v).toFixed(2)}</span>,
+      render: (v) => <span style={{ color: v < 1 ? 'var(--color-danger)' : 'var(--color-success)', fontWeight: 600 }}>{Number(v).toFixed(2)}</span>,
     },
     {
       title: '',
@@ -87,6 +89,7 @@ export default function PerformanceTable({ rows = [], onOpen }) {
 
   return (
     <Table
+      className="ds-table-premium"
       rowKey="id"
       size="small"
       pagination={false}

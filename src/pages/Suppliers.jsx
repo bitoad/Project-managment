@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Card, Table, Tag, Typography, Button, Modal, Form, Input, Select, Rate,
+  Card, Table, Tag, Typography, Button, Modal, Form, Grid, Input, Select, Rate,
   Space, message, Popconfirm, Row, Col,
 } from 'antd';
 import {
@@ -20,6 +20,8 @@ export default function Suppliers() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editSup, setEditSup] = useState(null);
   const [form] = Form.useForm();
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
 
   const load = async () => {
     try {
@@ -160,7 +162,7 @@ export default function Suppliers() {
         open={modalOpen}
         onOk={onSubmit}
         onCancel={() => setModalOpen(false)}
-        width={600}
+        width={isMobile ? '92%' : 600}
         okText="Lưu"
         cancelText="Hủy"
       >

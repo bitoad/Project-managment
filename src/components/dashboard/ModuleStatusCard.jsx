@@ -1,5 +1,6 @@
 import React from 'react';
-import { Empty } from 'antd';
+import { InboxOutlined } from '@ant-design/icons';
+import EmptyState from '../shared/EmptyState.jsx';
 
 // Props: title, icon (node), color, segments:[{label,value,color}], total, empty(bool)
 export default function ModuleStatusCard({ title, icon, color = '#2F5CE0', segments = [], total = 0, empty = false }) {
@@ -11,7 +12,7 @@ export default function ModuleStatusCard({ title, icon, color = '#2F5CE0', segme
           <span className="msc-title">{title}</span>
           <span className="msc-total dash-muted">—</span>
         </div>
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có dữ liệu" style={{ margin: '12px 0' }} />
+        <EmptyState icon={<InboxOutlined />} title="Chưa có dữ liệu" />
       </div>
     );
   }

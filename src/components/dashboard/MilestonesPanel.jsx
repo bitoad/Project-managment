@@ -1,5 +1,6 @@
 import React from 'react';
-import { Empty } from 'antd';
+import { CalendarOutlined } from '@ant-design/icons';
+import EmptyState from '../shared/EmptyState.jsx';
 
 // items: { id, title, date (ISO), owner, days (number), color }
 function ownerInitials(owner) {
@@ -10,7 +11,7 @@ function ownerInitials(owner) {
 }
 
 export default function MilestonesPanel({ items = [], onOpen }) {
-  if (!items.length) return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có mốc" />;
+  if (!items.length) return <EmptyState icon={<CalendarOutlined />} title="Chưa có mốc" />;
   return (
     <ul className="ms-list">
       {items.slice(0, 8).map((m) => {

@@ -11,6 +11,8 @@ import {
 import { sCurveApi } from '../api/api.js';
 import StatCard from '../components/StatCard.jsx';
 import { sCurveCumulative, evm } from '../../shared/formulas.js';
+import EmptyState from '../components/shared/EmptyState.jsx';
+import PageLoader from '../components/shared/PageLoader.jsx';
 
 const { Text } = Typography;
 
@@ -36,7 +38,7 @@ export default function SCurve() {
   if (loading) {
     return (
       <div className="ds-container" style={{ maxWidth: 1400, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', paddingTop: 100 }}><Spin size="large" /></div>
+        <PageLoader />
       </div>
     );
   }
@@ -50,10 +52,7 @@ export default function SCurve() {
             <div className="ds-caption">Phân tích Earned Value (EV / PV / AC)</div>
           </div>
         </div>
-        <div className="ds-empty" style={{ marginTop: 48 }}>
-          <div className="ds-empty-icon"><InboxOutlined /></div>
-          <div className="ds-empty-text">Chưa có dữ liệu S-Curve</div>
-        </div>
+        <EmptyState icon={<InboxOutlined />} title="Chưa có dữ liệu S-Curve" />
       </div>
     );
   }
@@ -139,6 +138,7 @@ export default function SCurve() {
           rowKey="week"
           size="small"
           pagination={false}
+          scroll={{ x: 800 }}
           columns={[
             { title: 'Tuần', dataIndex: 'week', key: 'w', width: 80, render: (t) => <Text strong>{t}</Text> },
             { title: 'Ngày', dataIndex: 'date', key: 'd', width: 120, render: (v) => v ? new Date(v).toLocaleDateString('vi-VN') : '-' },

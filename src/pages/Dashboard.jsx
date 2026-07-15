@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Card, Progress, message, Select, Tag, Button, Modal, Form, Input, Tooltip } from 'antd';
+import { Card, Progress, message, Select, Tag, Modal, Form, Input, Tooltip } from 'antd';
 import {
   ArrowUpOutlined,
   DollarOutlined,
@@ -36,8 +36,7 @@ import { useUser } from '../context/UserContext.jsx';
 import { useProject } from '../context/ProjectContext.jsx';
 import { fmtVND, fmtShort, fmtDate, getUrgencyColor, URGENCY_LEGEND } from '../components/helpers.js';
 import ItemWatchlist from '../components/ItemWatchlist.jsx';
-import KpiCard from '../components/shared/KpiCard.jsx';
-import KpiMiniStat from '../components/shared/KpiMiniStat.jsx';
+import StatCard from '../components/StatCard.jsx';
 import ChartCard from '../components/shared/ChartCard.jsx';
 import { fmtChart } from '../components/shared/tokens.js';
 import ProjectProgressChart from '../components/dashboard/ProjectProgressChart.jsx';
@@ -49,6 +48,10 @@ import PerformanceTable from '../components/dashboard/PerformanceTable.jsx';
 import ModuleStatusCard from '../components/dashboard/ModuleStatusCard.jsx';
 import KanbanSnapshot from '../components/dashboard/KanbanSnapshot.jsx';
 import ResourceAllocation from '../components/dashboard/ResourceAllocation.jsx';
+import DashboardHero from '../components/dashboard/DashboardHero.jsx';
+import DashboardKPIs from '../components/dashboard/DashboardKPIs.jsx';
+import QuickLinks from '../components/dashboard/QuickLinks.jsx';
+import EmptyState from '../components/shared/EmptyState.jsx';
 
 // ===== helpers =====
 const toKey = (s) => (s || '').toString().trim().toLowerCase().replace(/\s+/g, '_');
@@ -89,17 +92,6 @@ const TASK_STATUS = {
   review: { label: 'Kiểm tra', color: '#F59E0B' },
   done: { label: 'Hoàn thành', color: '#10B981' },
 };
-
-const quickLinks = [
-  { to: '/projects', label: 'Dự án', icon: <ProjectOutlined />, tone: '#2F5CE0' },
-  { to: '/ports', label: 'Cảng', icon: <AppstoreOutlined />, tone: '#1FA971' },
-  { to: '/items', label: 'Hạng mục', icon: <InboxOutlined />, tone: '#F5A623' },
-  { to: '/kanban', label: 'Kanban', icon: <UnorderedListOutlined />, tone: '#8B5CF6' },
-  { to: '/timeline', label: 'Tiến độ', icon: <CalendarOutlined />, tone: '#0EA5E9' },
-  { to: '/team', label: 'Nhóm', icon: <TeamOutlined />, tone: '#EF4444' },
-  { to: '/cost', label: 'Chi phí', icon: <DollarOutlined />, tone: '#10B981' },
-  { to: '/risk', label: 'Rủi ro', icon: <WarningOutlined />, tone: '#F5803E' },
-];
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -450,24 +442,6 @@ export default function Dashboard() {
 
   // ===== hero header: live summary chips =====
   const portCount = (view.ports || []).filter((p) => !p.virtual).length || (view.ports || []).length;
-  const heroStats = [
-    { key: 'progress', icon: <RiseOutlined />, label: 'Tiến độ TB', value: `${Math.round(view.avgProgress || 0)}%`, tone: '#2F5CE0' },
-    { key: 'budget', icon: <FundOutlined />, label: 'Ngân sách', value: `${fmtShort(view.totalPlannedCost || 0)} ₫`, tone: '#1FA971' },
-    { key: 'spent', icon: <DollarOutlined />, label: 'Đã chi', value: `${fmtShort(view.totalLoggedCost || 0)} ₫`, tone: '#F5A623' },
-    { key: 'ports', icon: <AppstoreOutlined />, label: portfolioView ? 'Dự án' : 'Cảng / gói', value: portfolioView ? (projects?.length || 0) : portCount, tone: '#8B5CF6' },
-    { key: 'items', icon: <InboxOutlined />, label: 'Hạng mục', value: totalItems, tone: '#0EA5E9' },
-    { key: 'risks', icon: <WarningOutlined />, label: 'Rủi ro mở', value: view.openRisks || 0, tone: '#EF4444' },
-  ];
-
-  const projectOptions = [
-    { value: 'all', label: 'Tất cả dự án' },
-    ...(projects || []).map((p) => ({ value: p.id, label: p.name || p.id })),
-  ];
-
-  const handleSelectProject = (v) => {
-    if (v === 'all') selectAllProjects();
-    else selectProject(v);
-  };
 
   const handleCreateProject = async () => {
     try {
@@ -592,13 +566,6 @@ export default function Dashboard() {
     }
   };
 
-  const EmptyState = ({ text }) => (
-    <div className="ds-empty">
-      <div className="ds-empty-icon">📭</div>
-      <div>{text}</div>
-    </div>
-  );
-
   if (loading) {
     return (
       <div className="dash-shell">
@@ -612,93 +579,51 @@ export default function Dashboard() {
   }
 
   const bannerTitle = portfolioView ? 'Tổng quan toàn bộ dự án' : view.projectName || view.name || projectName || 'Tổng quan';
-  const heroInitial = (bannerTitle || 'D').trim().charAt(0).toUpperCase();
   const todayStr = new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  const projectOptions = [
+    { value: 'all', label: 'Tất cả dự án' },
+    ...(projects || []).map((p) => ({ value: p.id, label: p.name || p.id })),
+  ];
+
+  const handleSelectProject = (v) => {
+    if (v === 'all') selectAllProjects();
+    else selectProject(v);
+  };
+
+  const heroStats = [
+    { key: 'progress', icon: <RiseOutlined />, label: 'Tiến độ TB', value: `${Math.round(view.avgProgress || 0)}%`, tone: '#2F5CE0' },
+    { key: 'budget', icon: <FundOutlined />, label: 'Ngân sách', value: `${fmtShort(view.totalPlannedCost || 0)} ₫`, tone: '#1FA971' },
+    { key: 'spent', icon: <DollarOutlined />, label: 'Đã chi', value: `${fmtShort(view.totalLoggedCost || 0)} ₫`, tone: '#F5A623' },
+    { key: 'ports', icon: <AppstoreOutlined />, label: portfolioView ? 'Dự án' : 'Cảng / gói', value: portfolioView ? (projects?.length || 0) : portCount, tone: '#8B5CF6' },
+    { key: 'items', icon: <InboxOutlined />, label: 'Hạng mục', value: totalItems, tone: '#0EA5E9' },
+    { key: 'risks', icon: <WarningOutlined />, label: 'Rủi ro mở', value: view.openRisks || 0, tone: '#EF4444' },
+  ];
 
   return (
     <div className="dash-shell">
       <div className="dash-grid">
         {/* ===== Hero header ===== */}
-        <section className="col-12 dash-hero">
-          <div className="dash-hero-bg" aria-hidden />
-          <div className="dash-hero-top">
-            <div className="dash-hero-id">
-              <div className="dash-hero-avatar">{portfolioView ? <ProjectOutlined /> : heroInitial}</div>
-              <div className="dash-hero-titles">
-                <div className="dash-hero-eyebrow">
-                  <span className="dash-hero-dot" /> {portfolioView ? 'Danh mục dự án' : 'Bảng điều khiển dự án'}
-                </div>
-                <h1 className="dash-hero-title">{bannerTitle}</h1>
-                <div className="dash-hero-sub">
-                  Xin chào, <b>{user?.name || user?.username || 'Người dùng'}</b>
-                  <span className="dash-hero-sep">•</span>
-                  <span className="dash-hero-date"><CalendarOutlined /> {todayStr}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="dash-hero-actions">
-              <Select
-                value={portfolioView ? 'all' : projectId}
-                onChange={handleSelectProject}
-                popupMatchSelectWidth={false}
-                className="dash-hero-select"
-                options={projectOptions}
-                suffixIcon={<FilterOutlined />}
-              />
-              <Tooltip title="Tải báo cáo tổng quan (PDF)">
-                <Button icon={<DownloadOutlined />} loading={exporting} onClick={handleExport} className="dash-hero-btn">
-                  Xuất báo cáo
-                </Button>
-              </Tooltip>
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)} className="dash-hero-btn">
-                Thêm dự án
-              </Button>
-            </div>
-          </div>
-
-          {/* live stat strip */}
-          <div className="dash-hero-stats">
-            {heroStats.map((s) => (
-              <div className="dash-hero-stat" key={s.key}>
-                <span className="dash-hero-stat-ic" style={{ color: s.tone, background: `${s.tone}1a` }}>{s.icon}</span>
-                <span className="dash-hero-stat-body">
-                  <span className="dash-hero-stat-val">{s.value}</span>
-                  <span className="dash-hero-stat-lbl">{s.label}</span>
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
+        <DashboardHero
+          portfolioView={portfolioView}
+          projectId={projectId}
+          projects={projects}
+          bannerTitle={bannerTitle}
+          user={user}
+          todayStr={todayStr}
+          heroStats={heroStats}
+          projectOptions={projectOptions}
+          onSelectProject={handleSelectProject}
+          onCreateOpen={() => setCreateOpen(true)}
+          onExport={handleExport}
+          exporting={exporting}
+        />
 
         {/* ===== R1: Executive KPIs ===== */}
-        <section className="col-12">
-          <div className="dash-kpi-grid">
-            <KpiCard icon={<FundOutlined style={{ color: '#2F5CE0' }} />} title="Ngân sách" value={fmtShort(view.totalPlannedCost || 0)} tone="blue" />
-            <KpiCard icon={<DollarOutlined style={{ color: '#F5A623' }} />} title="Đã chi" value={fmtShort(view.totalLoggedCost || 0)} tone="orange" />
-            <KpiCard icon={<DollarOutlined style={{ color: '#10B981' }} />} title="Doanh thu" value={fmtShort(view.totalRevenue || 0)} tone="green" />
-            <KpiCard icon={<ExperimentOutlined style={{ color: '#1FA971' }} />} title="Lợi nhuận" value={fmtShort(view.totalProfit || 0)} tone="green" footer={`Biên ${Math.round(view.totalProfitMargin || 0)}%`} />
-            <KpiCard icon={<ProjectOutlined style={{ color: '#2F5CE0' }} />} title="Tiến độ TB" value={`${Math.round(view.avgProgress || 0)}%`} tone="blue">
-              <Progress percent={Math.round(view.avgProgress || 0)} size="small" showInfo={false} />
-            </KpiCard>
-            <KpiCard icon={<WarningOutlined style={{ color: '#EF4444' }} />} title="Rủi ro" value={view.openRisks || 0} tone="red" footer={`${view.itemsInFab || 0} mục chế tạo`} />
-          </div>
-        </section>
+        <DashboardKPIs view={view} totalItems={totalItems} />
 
         {/* ===== Quick links ===== */}
-        <section className="col-12 ds-ql-wrap">
-          <div className="ds-ql-head">
-            <span className="ds-ql-title">Truy cập nhanh</span>
-          </div>
-          <div className="ds-quicklinks">
-            {quickLinks.map((q) => (
-              <div key={q.to} className="ds-quicklink" onClick={() => navigate(q.to)}>
-                <div className="ds-quicklink-icon" style={{ background: `${q.tone}1a`, color: q.tone }}>{q.icon}</div>
-                <span className="ds-quicklink-label">{q.label}</span>
-              </div>
-            ))}
-          </div>
-        </section>
+        <QuickLinks />
 
         {/* ===== R2: Progress + Health ===== */}
         <section className="col-8">
@@ -806,7 +731,7 @@ export default function Dashboard() {
                 })}
               </div>
             ) : (
-              <EmptyState text="Chưa có dữ liệu chi phí" />
+              <EmptyState icon={<DollarOutlined />} title="Chưa có dữ liệu chi phí" />
             )}
           </ChartCard>
         </section>

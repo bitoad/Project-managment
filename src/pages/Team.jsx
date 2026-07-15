@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Card, Table, Tag, Typography, Button, Modal, Form, Input, Select,
+  Card, Table, Tag, Typography, Button, Modal, Form, Grid, Input, Select,
   Space, message, Popconfirm, Row, Col, Avatar,
 } from 'antd';
 import {
@@ -22,6 +22,8 @@ export default function Team() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editMem, setEditMem] = useState(null);
   const [form] = Form.useForm();
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
 
   const load = async () => {
     try {
@@ -94,7 +96,7 @@ export default function Team() {
           <div className="ds-h1">Team</div>
           <div className="ds-caption">Nhân sự dự án</div>
         </div>
-        <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd} disabled={portfolioView} title={portfolioView ? 'Chọn 1 dự án để thêm thành viên' : undefined}>Thêm thành viên</Button>
+        <button className="btn btn-primary" onClick={openAdd} disabled={portfolioView} title={portfolioView ? 'Chọn 1 dự án để thêm thành viên' : undefined}><PlusOutlined /> Thêm thành viên</button>
       </div>
 
       <div className="ds-stat-grid">
@@ -183,10 +185,10 @@ export default function Team() {
             {
               title: '', key: 'action', width: 90,
               render: (_, r) => (
-                <Space>
-                  <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(r)} disabled={portfolioView} />
+                <Space size={4}>
+                  <button className="btn btn-outline btn-sm btn-icon" onClick={() => openEdit(r)} disabled={portfolioView} title="Sửa"><EditOutlined /></button>
                   <Popconfirm title="Xóa?" onConfirm={() => onDelete(r.id)} disabled={portfolioView}>
-                    <Button size="small" danger icon={<DeleteOutlined />} disabled={portfolioView} />
+                    <button className="btn btn-danger btn-sm btn-icon" disabled={portfolioView} title="Xóa"><DeleteOutlined /></button>
                   </Popconfirm>
                 </Space>
               ),
@@ -200,7 +202,7 @@ export default function Team() {
         open={modalOpen}
         onOk={onSubmit}
         onCancel={() => setModalOpen(false)}
-        width={560}
+        width={isMobile ? '92%' : 560}
         okText="Lưu"
         cancelText="Hủy"
       >

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import companyLogo from '../assets/company-logo.png';
-import { Layout, Menu, Avatar, Badge, Dropdown, Typography, Select, Modal, Input, Spin, Button, Tag, Popover, List, Empty, Drawer, Grid } from 'antd';
+import { Layout, Menu, Avatar, Badge, Dropdown, Typography, Select, Modal, Input, Spin, Button, Tag, Popover, List, Drawer, Grid } from 'antd';
 import {
   DashboardOutlined,
   AppstoreOutlined,
@@ -34,6 +34,7 @@ import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext.jsx';
 import { useUser } from '../context/UserContext.jsx';
 import { tasksApi, searchApi } from '../api/api.js';
+import EmptyState from '../components/shared/EmptyState.jsx';
 
 const { Sider, Header, Content } = Layout;
 const { Text } = Typography;
@@ -190,7 +191,7 @@ export default function AppLayout() {
         label: (
           <div>
             <div style={{ fontWeight: 600 }}>{currentUser?.name}</div>
-            <div style={{ fontSize: 12, color: '#999' }}>{currentUser?.position}</div>
+            <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>{currentUser?.position}</div>
           </div>
         ),
         disabled: true,
@@ -206,38 +207,13 @@ export default function AppLayout() {
   };
 
   const renderLogo = (showText) => (
-    <div
-      className="app-logo"
-      style={{
-        height: 64,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#fff',
-        gap: 10,
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
-      }}
-    >
-      <div
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 8,
-          background: '#fff',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 4,
-          flexShrink: 0,
-        }}
-      >
+    <div className="app-logo" style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', gap: 10, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+      <div style={{ width: 36, height: 36, borderRadius: 8, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4, flexShrink: 0 }}>
         <img src={companyLogo} alt="Golden Point" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
       </div>
       {showText && (
         <div style={{ lineHeight: 1.2 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 170 }}>
-            Golden Point Co., Ltd
-          </div>
+          <div style={{ fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 170 }}>Golden Point Co., Ltd</div>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>PM Dashboard</div>
         </div>
       )}
@@ -315,7 +291,7 @@ export default function AppLayout() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            borderBottom: '1px solid #f0f0f0',
+            borderBottom: '1px solid var(--color-border)',
             position: 'sticky',
             top: 0,
             zIndex: 9,
@@ -348,7 +324,7 @@ export default function AppLayout() {
                    value: '__all__',
                    label: (
                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 0' }}>
-                       <GlobalOutlined style={{ fontSize: 13, flexShrink: 0, color: '#2F5CE0' }} />
+                       <GlobalOutlined style={{ fontSize: 13, flexShrink: 0, color: 'var(--color-primary)' }} />
                        <span style={{ fontWeight: 600, fontSize: 13 }}>Tất cả dự án</span>
                      </div>
                    ),
@@ -367,7 +343,7 @@ export default function AppLayout() {
                  {
                    value: '__create__',
                    label: (
-                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#1677ff' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-primary)' }}>
                        <PlusOutlined /> Tạo dự án mới
                      </div>
                    ),
@@ -379,34 +355,34 @@ export default function AppLayout() {
             {/* Global Search */}
             <div ref={searchRef} style={{ position: 'relative', flex: 1, maxWidth: 420, minWidth: 160 }}>
               <Input
-                prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                prefix={<SearchOutlined style={{ color: 'var(--color-text-tertiary)' }} />}
                 placeholder="Tìm dự án, item, công việc..."
                 allowClear
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); doSearch(e.target.value); }}
                 onFocus={() => { if (searchResults) setSearchOpen(true); }}
-                style={{ borderRadius: 20 }}
+                style={{ borderRadius: 'var(--radius-sm)' }}
               />
               {searchOpen && searchResults && (
                 <div style={{
                   position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4,
-                  background: '#fff', borderRadius: 12, boxShadow: '0 6px 24px rgba(0,0,0,0.12)',
+                  background: 'var(--color-surface)', borderRadius: 12, boxShadow: '0 6px 24px rgba(0,0,0,0.12)',
                   maxHeight: 380, overflow: 'auto', zIndex: 100, padding: '8px 0',
                 }}>
                   {searchResults.projects?.length === 0 && searchResults.items?.length === 0 && searchResults.tasks?.length === 0 ? (
-                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không tìm thấy" style={{ padding: '24px 0' }} />
+                    <EmptyState icon={<SearchOutlined />} title="Không tìm thấy" />
                   ) : (
                     <>
                       {searchResults.projects?.length > 0 && (
                         <div>
-                          <div style={{ padding: '4px 16px', fontSize: 11, color: '#999', fontWeight: 600, textTransform: 'uppercase' }}>Dự án</div>
+                          <div style={{ padding: '4px 16px', fontSize: 11, color: 'var(--color-text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>Dự án</div>
                           {searchResults.projects.map((p) => (
                             <div key={p.id} style={{ padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
-                              onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--gray-50)'}
                               onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                               onClick={() => { selectProject(p.id); navigate(p.path); setSearchOpen(false); setSearchQuery(''); }}
                             >
-                              <ProjectOutlined style={{ color: '#2F5CE0', fontSize: 13 }} />
+                              <ProjectOutlined style={{ color: 'var(--color-primary)', fontSize: 13 }} />
                               <span style={{ fontSize: 13, fontWeight: 500 }}>{p.name}</span>
                             </div>
                           ))}
@@ -414,17 +390,17 @@ export default function AppLayout() {
                       )}
                       {searchResults.items?.length > 0 && (
                         <div>
-                          <div style={{ padding: '4px 16px', fontSize: 11, color: '#999', fontWeight: 600, textTransform: 'uppercase', borderTop: '1px solid #f0f0f0', marginTop: 4 }}>Items</div>
+                          <div style={{ padding: '4px 16px', fontSize: 11, color: 'var(--color-text-tertiary)', fontWeight: 600, textTransform: 'uppercase', borderTop: '1px solid var(--color-border)', marginTop: 4 }}>Items</div>
                           {searchResults.items.map((it) => (
                             <div key={it.id} style={{ padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
-                              onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--gray-50)'}
                               onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                               onClick={() => { navigate(it.path); setSearchOpen(false); setSearchQuery(''); }}
                             >
                               <ContainerOutlined style={{ color: '#722ed1', fontSize: 13 }} />
                               <div style={{ fontSize: 13 }}>
                                 <span style={{ fontWeight: 600 }}>{it.id}</span>
-                                <span style={{ color: '#999', marginLeft: 6 }}>{it.name.split('—')[1]?.trim() || ''}</span>
+                                <span style={{ color: 'var(--color-text-tertiary)', marginLeft: 6 }}>{it.name.split('—')[1]?.trim() || ''}</span>
                                 {it.port && <Tag style={{ marginLeft: 6, fontSize: 11 }}>{it.port}</Tag>}
                               </div>
                             </div>
@@ -433,10 +409,10 @@ export default function AppLayout() {
                       )}
                       {searchResults.tasks?.length > 0 && (
                         <div>
-                          <div style={{ padding: '4px 16px', fontSize: 11, color: '#999', fontWeight: 600, textTransform: 'uppercase', borderTop: '1px solid #f0f0f0', marginTop: 4 }}>Công việc</div>
+                          <div style={{ padding: '4px 16px', fontSize: 11, color: 'var(--color-text-tertiary)', fontWeight: 600, textTransform: 'uppercase', borderTop: '1px solid var(--color-border)', marginTop: 4 }}>Công việc</div>
                           {searchResults.tasks.map((t) => (
                             <div key={t.id} style={{ padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
-                              onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--gray-50)'}
                               onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                               onClick={() => { navigate(t.path); setSearchOpen(false); setSearchQuery(''); }}
                             >
@@ -462,7 +438,7 @@ export default function AppLayout() {
               content={
                 <div style={{ width: 320, maxHeight: 360, overflow: 'auto' }}>
                   {notifications.length === 0 ? (
-                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có thông báo" />
+                    <EmptyState icon={<BellOutlined />} title="Không có thông báo" />
                   ) : (
                     <List
                       size="small"
@@ -487,17 +463,17 @@ export default function AppLayout() {
             </Popover>
             <Dropdown menu={userMenu} placement="bottomRight">
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                <Avatar size="small" icon={<UserOutlined />} style={{ backgroundColor: '#1677ff' }} />
+                <Avatar size="small" icon={<UserOutlined />} style={{ backgroundColor: 'var(--color-primary)' }} />
                 <div style={{ lineHeight: 1.2 }}>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{currentUser?.name || 'User'}</div>
-                  <div style={{ fontSize: 11, color: '#999' }}>{currentUser?.position}</div>
+                  <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>{currentUser?.position}</div>
                 </div>
               </div>
             </Dropdown>
           </div>
         </Header>
 
-        <Content style={{ margin: 0, background: '#f0f2f5', minHeight: 280 }}>
+        <Content style={{ margin: 0, background: 'var(--color-bg)', minHeight: 280 }}>
           <Outlet />
         </Content>
       </Layout>
@@ -532,7 +508,7 @@ export default function AppLayout() {
             style={{ marginTop: 4 }}
           />
         </div>
-        <div style={{ marginTop: 12, padding: 12, background: '#f6ffed', borderRadius: 8, fontSize: 13 }}>
+        <div style={{ marginTop: 12, padding: 12, background: 'var(--color-success-soft)', borderRadius: 8, fontSize: 13 }}>
           💡 Sau khi tạo, bạn có thể vào trang <b>Quản lý Dự án</b> để <b>Import Excel</b> hoặc nhập tay từng hạng mục.
         </div>
       </Modal>

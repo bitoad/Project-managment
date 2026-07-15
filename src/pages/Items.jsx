@@ -5,6 +5,7 @@ import {
   Col,
   DatePicker,
   Form,
+  Grid,
   Input,
   InputNumber,
   Modal,
@@ -36,6 +37,7 @@ import { useProject } from '../context/ProjectContext.jsx';
 import StatCard from '../components/StatCard.jsx';
 import { fmtVND, PORT_COLORS, STATUS_LIST, STATUS_PROGRESS, PROC_STATUS_LIST, PROC_STATUS_PROGRESS, procStatusColor, costOf } from '../components/helpers.js';
 import { sumRevenue, sumVAT, revenueInclVAT, sumPlannedCost, sumActualCost, profit, profitMargin, itemMargin, itemTotal } from '../../shared/formulas.js';
+import EmptyState from '../components/shared/EmptyState.jsx';
 
 const { Text } = Typography;
 
@@ -50,6 +52,8 @@ export default function Items({ initialPortFilter = null }) {
   const [editItem, setEditItem] = useState(null);
   const [vatRate, setVatRate] = useState(10);
   const [form] = Form.useForm();
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
 
   const load = async () => {
     try {
@@ -186,7 +190,7 @@ export default function Items({ initialPortFilter = null }) {
             style={{ width: 160 }}
             options={[{ value: 'all', label: 'Tất cả Port' }, ...portOptions]}
           />
-          <Button className="btn-gradient" icon={<PlusOutlined />} onClick={openAdd} disabled={portfolioView} title={portfolioView ? 'Chọn 1 dự án để thêm Item' : undefined}>Thêm Item</Button>
+          <button className="btn btn-primary" onClick={openAdd} disabled={portfolioView} title={portfolioView ? 'Chọn 1 dự án để thêm Item' : undefined}><PlusOutlined /> Thêm Item</button>
         </Space>
       </div>
 
@@ -274,10 +278,7 @@ export default function Items({ initialPortFilter = null }) {
           scroll={{ x: 1150 }}
           locale={{
             emptyText: (
-              <div className="ds-empty">
-                <div className="ds-empty-icon"><InboxOutlined /></div>
-                <div className="ds-empty-text">Chưa có item nào</div>
-              </div>
+              <EmptyState icon={<InboxOutlined />} title="Chưa có item nào" />
             ),
           }}
           columns={[
@@ -336,10 +337,10 @@ export default function Items({ initialPortFilter = null }) {
               width: 90,
               fixed: 'right',
               render: (_, record) => (
-                <Space>
-                  <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(record)} disabled={portfolioView} />
+                <Space size={4}>
+                  <button className="btn btn-outline btn-sm btn-icon" onClick={() => openEdit(record)} disabled={portfolioView} title="Sửa"><EditOutlined /></button>
                   <Popconfirm title="Xóa item này?" onConfirm={() => onDelete(record.code)} disabled={portfolioView}>
-                    <Button size="small" danger icon={<DeleteOutlined />} disabled={portfolioView} />
+                    <button className="btn btn-danger btn-sm btn-icon" disabled={portfolioView} title="Xóa"><DeleteOutlined /></button>
                   </Popconfirm>
                 </Space>
               ),
@@ -353,7 +354,7 @@ export default function Items({ initialPortFilter = null }) {
         open={modalOpen}
         onOk={onSubmit}
         onCancel={() => setModalOpen(false)}
-        width={720}
+        width={isMobile ? '92%' : 720}
         okText="Lưu"
         cancelText="Hủy"
       >

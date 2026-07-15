@@ -4,6 +4,8 @@ import { FieldTimeOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { tasksApi, portsApi } from '../api/api.js';
 import { PORT_COLORS, statusColor } from '../components/helpers.js';
 import { useProject } from '../context/ProjectContext.jsx';
+import EmptyState from '../components/shared/EmptyState.jsx';
+import PageLoader from '../components/shared/PageLoader.jsx';
 
 const { Text } = Typography;
 
@@ -122,7 +124,7 @@ export default function Timeline() {
   };
 
   if (loading) {
-    return <div className="ds-container" style={{ textAlign: 'center', paddingTop: 100 }}><Spin size="large" /></div>;
+    return <div className="ds-container"><PageLoader /></div>;
   }
 
   const today = new Date();
@@ -137,7 +139,7 @@ export default function Timeline() {
           <div className="ds-h1"><FieldTimeOutlined /> Timeline</div>
           <div className="ds-caption">Tiến độ theo thời gian</div>
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           <Text type="secondary">Nhóm theo:</Text>
           <Segmented
             value={groupBy}
@@ -166,10 +168,7 @@ export default function Timeline() {
 
       {validTasks.length === 0 ? (
         <div className="ds-section">
-          <div className="ds-empty">
-            <div className="ds-empty-icon"><FieldTimeOutlined /></div>
-            <div className="ds-empty-text">Không có công việc có ngày bắt đầu &amp; kết thúc để hiển thị</div>
-          </div>
+          <EmptyState icon={<FieldTimeOutlined />} title="Không có công việc có ngày bắt đầu & kết thúc để hiển thị" />
         </div>
       ) : (
         <Card className="ds-chart-card" bordered={false} styles={{ body: { padding: 0 } }}>
@@ -289,7 +288,7 @@ export default function Timeline() {
                                 width: width,
                                 height: 24,
                                 borderRadius: 4,
-                                background: barColor,
+                                background: `linear-gradient(90deg, ${barColor} 0%, ${barColor}cc 100%)`,
                                 opacity: isDone ? 0.6 : 1,
                                 display: 'flex',
                                 alignItems: 'center',
@@ -299,9 +298,24 @@ export default function Timeline() {
                                 fontWeight: 600,
                                 overflow: 'hidden',
                                 whiteSpace: 'nowrap',
+                                boxShadow: isDone ? 'none' : '0 1px 4px rgba(0,0,0,0.15)',
                               }}
                             >
                               {task.progress || 0}%
+                              <span
+                                style={{
+                                  position: 'absolute',
+                                  right: -5,
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                  width: 10,
+                                  height: 10,
+                                  borderRadius: '50%',
+                                  background: barColor,
+                                  border: '2px solid #fff',
+                                  boxShadow: `0 0 0 2px ${barColor}`,
+                                }}
+                              />
                             </div>
                           </Tooltip>
                         </div>
@@ -329,6 +343,7 @@ export default function Timeline() {
 
               {/* Today line */}
               <div
+                className="timeline-today-pulse"
                 style={{
                   position: 'absolute',
                   left: sidebarWidth + todayOffset,
@@ -336,7 +351,7 @@ export default function Timeline() {
                   bottom: 0,
                   width: 2,
                   background: '#ff4d4f',
-                  opacity: 0.6,
+                  opacity: 0.7,
                   pointerEvents: 'none',
                 }}
               />
