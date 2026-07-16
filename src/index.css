@@ -567,18 +567,20 @@ body {
 .ant-modal .ant-select-selector,
 .ant-modal .ant-picker {
   background: rgba(255, 255, 255, 0.08) !important;
-  color: #fff !important;
-  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #f5f5f5 !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
 }
-.ant-modal .ant-select-selection-item,
-.ant-modal .ant-select-selection-placeholder,
-.ant-modal .ant-picker-input > input {
-  color: #fff !important;
+.ant-modal .ant-input-number-input,
+.ant-modal .ant-input-affix-wrapper .ant-input,
+.ant-modal .ant-picker-input > input,
+.ant-modal .ant-select-selection-item {
+  color: #f5f5f5 !important;
 }
 .ant-modal .ant-input::placeholder,
-.ant-modal .ant-input-number input::placeholder,
+.ant-modal .ant-input-number-input::placeholder,
+.ant-modal .ant-picker-input > input::placeholder,
 .ant-modal .ant-select-selection-placeholder {
-  color: rgba(255, 255, 255, 0.4) !important;
+  color: #9ca3af !important;
 }
 .ant-modal-footer .ant-btn-primary {
   box-shadow: 0 4px 14px rgba(22, 101, 52, 0.35);

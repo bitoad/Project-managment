@@ -379,7 +379,7 @@ export default function Items({ initialPortFilter = null }) {
             </Col>
             <Col span={8}>
               <Form.Item name="qty" label="Số lượng" rules={[{ required: true }]}>
-                <InputNumber min={0} style={{ width: '100%' }} />
+                <InputNumber min={0} style={{ width: '100%' }} formatter={(value) => `${value ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={(value) => value.replace(/[^\d.]/g, '')} />
               </Form.Item>
             </Col>
             <Col span={8}>
@@ -391,12 +391,12 @@ export default function Items({ initialPortFilter = null }) {
           <Row gutter={16}>
             <Col span={6}>
               <Form.Item name="unitCost" label="Đơn giá vốn" rules={[{ required: true }]}>
-                <InputNumber min={0} style={{ width: '100%' }} formatter={(value) => `${value ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
+                <InputNumber min={0} style={{ width: '100%' }} formatter={(value) => `${value ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={(value) => value.replace(/[^\d.]/g, '')} />
               </Form.Item>
             </Col>
             <Col span={6}>
               <Form.Item name="unitPrice" label="Giá bán" rules={[{ required: true }]}>
-                <InputNumber min={0} style={{ width: '100%' }} formatter={(value) => `${value ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
+                <InputNumber min={0} style={{ width: '100%' }} formatter={(value) => `${value ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={(value) => value.replace(/[^\d.]/g, '')} />
               </Form.Item>
             </Col>
             <Col span={6}>
@@ -409,14 +409,14 @@ export default function Items({ initialPortFilter = null }) {
             </Col>
             <Col span={6}>
               <Form.Item name="vatRate" label="VAT (%)">
-                <InputNumber min={0} max={100} style={{ width: '100%' }} addonAfter="%" />
+                <InputNumber min={0} max={100} style={{ width: '100%' }} addonAfter="%" formatter={(value) => `${value ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={(value) => value.replace(/[^\d.]/g, '')} />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item name="progress" label="Tiến độ (%)">
-                <InputNumber min={0} max={100} style={{ width: '100%' }} />
+                <InputNumber min={0} max={100} style={{ width: '100%' }} formatter={(value) => `${value ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={(value) => value.replace(/[^\d.]/g, '')} />
               </Form.Item>
             </Col>
             <Col span={16}>
@@ -453,7 +453,7 @@ export default function Items({ initialPortFilter = null }) {
             </Col>
             <Col span={8}>
               <Form.Item name="qty_received" label="Đã nhận (SL)">
-                <InputNumber min={0} style={{ width: '100%' }} />
+                <InputNumber min={0} style={{ width: '100%' }} formatter={(value) => `${value ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={(value) => value.replace(/[^\d.]/g, '')} />
               </Form.Item>
             </Col>
           </Row>
@@ -477,7 +477,7 @@ export default function Items({ initialPortFilter = null }) {
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item name="stock_on_hand" label="Tồn kho">
-                <InputNumber min={0} style={{ width: '100%' }} />
+                <InputNumber min={0} style={{ width: '100%' }} formatter={(value) => `${value ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={(value) => value.replace(/[^\d.]/g, '')} />
               </Form.Item>
             </Col>
           </Row>

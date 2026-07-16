@@ -765,7 +765,7 @@ export default function RiskMatrix() {
             </Col>
             <Col xs={24} md={6}>
               <Form.Item name="estimatedCostImpact" label="Tác động chi phí (VND)">
-                <InputNumber min={0} style={{ width: '100%' }} formatter={(value) => `${value ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
+                <InputNumber min={0} style={{ width: '100%' }} formatter={(value) => `${value ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={(value) => value.replace(/[^\d.]/g, '')} />
               </Form.Item>
             </Col>
           </Row>

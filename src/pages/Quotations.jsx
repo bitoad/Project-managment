@@ -208,17 +208,17 @@ export default function Quotations() {
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item name="supplierA" label="Supplier A" rules={[{ required: true }]}>
-                <InputNumber min={0} style={{ width: '100%' }} formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
+                <InputNumber min={0} style={{ width: '100%' }} formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={(value) => value.replace(/[^\d.]/g, '')} />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item name="supplierB" label="Supplier B" rules={[{ required: true }]}>
-                <InputNumber min={0} style={{ width: '100%' }} formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
+                <InputNumber min={0} style={{ width: '100%' }} formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={(value) => value.replace(/[^\d.]/g, '')} />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item name="supplierC" label="Supplier C" rules={[{ required: true }]}>
-                <InputNumber min={0} style={{ width: '100%' }} formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
+                <InputNumber min={0} style={{ width: '100%' }} formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={(value) => value.replace(/[^\d.]/g, '')} />
               </Form.Item>
             </Col>
           </Row>
