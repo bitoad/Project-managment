@@ -26,14 +26,21 @@
   /* ============================================================
      COLOR — BRAND + NEUTRAL SCALE (9 sắc độ) + SEMANTIC
      ============================================================ */
-  /* Brand — Đại Lâm Mộc (forest green) */
-  --color-primary: #166534;
-  --color-primary-hover: #0F5132;
-  --color-primary-grad: linear-gradient(135deg, #0F5132 0%, #2F9E6E 100%);
-  --color-primary-soft: rgba(22, 101, 52, 0.10);
+  /* Brand — Teal-Yellow (chủ đạo mới) */
+  --color-primary: #046754;
+  --color-primary-hover: #0A231E;
+  --color-primary-grad: linear-gradient(135deg, #046754 0%, #0C342C 100%);
+  --color-primary-soft: rgba(4, 103, 84, 0.12);
   --color-purple: #7CC9A9;
 
-  /* Green chart scale (đậm -> nhạt, đồng bộ "rừng cây") */
+  /* Teal-Yellow scale — bảng màu chủ đạo */
+  --color-ink: #0C342C;             /* text chính, sidebar nền, heading, header gradient end */
+  --color-ink-deep: #0A231E;       /* nền tối nhất: hover/pressed của ink */
+  --color-accent: #FBE045;          /* accent vàng: CTA phụ, highlight, progress, badge nổi */
+  --color-bg-subtle: #F8E7C1;      /* nền phụ sáng, badge nhẹ, hover state */
+  --accent-primary: linear-gradient(135deg, #046754, #0C342C);   /* StatCard accent chủ đạo */
+
+  /* Green chart scale (giữ neutral-teal cho chart, không phải brand) */
   --green-900: #0F5132;
   --green-700: #166534;
   --green-500: #2F9E6E;
@@ -53,7 +60,7 @@
   --gray-800: #1F2C25;
   --gray-900: #0F1A14;
 
-  /* Semantic */
+  /* Semantic — GIỮ NGUYÊN (độc lập với brand Teal-Yellow) */
   --color-success: #2F9E6E;
   --color-success-soft: rgba(47, 158, 110, 0.12);
   --color-warning: #D9A441;
@@ -74,9 +81,9 @@
   --color-border-strong: #D3E2DA;
 
   /* Sidebar */
-  --sidebar-gradient: linear-gradient(180deg, #0b1f3a 0%, #102a52 55%, #0a2347 100%);
+  --sidebar-gradient: linear-gradient(180deg, #0C342C 0%, #0A2C25 55%, #0A231E 100%);
   --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.06);
-  --shadow-card-hover: 0 8px 28px rgba(47, 92, 224, 0.18);
+  --shadow-card-hover: 0 8px 28px rgba(4, 103, 84, 0.18);
 
   /* ============================================================
      RADIUS — 1 giá trị chuẩn xuyên suốt
@@ -164,7 +171,7 @@
 .ds-table .ant-table-thead > tr > th {
   font-weight: 600;
   font-size: 13px;
-  background: #fafbfc;
+  background: var(--color-bg-subtle);
   border-bottom: 2px solid var(--color-border) !important;
   position: sticky;
   top: 0;
@@ -175,15 +182,28 @@
   border-bottom: 1px solid var(--color-border);
 }
 .ds-table .ant-table-tbody > tr:hover > td {
-  background: #f6f9ff !important;
+  background: var(--gray-25) !important;
   transition: background 0.15s;
 }
 .ds-table .ant-table-tbody > tr.ant-table-row {
   transition: background 0.15s;
 }
 
+/* Port "Quản lý" action cluster — wrap gọn trong cột, không tràn khung */
+.port-manage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+  align-items: center;
+}
+.port-manage-actions .btn {
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
 /* ============================================================
-   BADGE / TAG màu trạng thái chuẩn
+    BADGE / TAG màu trạng thái chuẩn
    Dùng Ant Tag + color token. Helper statusColor/priorityColor/procStatusColor
    đã map sẵn → chỉ cần <Tag color={statusColor[s]}>
    ============================================================ */
@@ -192,6 +212,18 @@
   font-weight: 500;
   font-size: 12px;
   padding: 2px 8px;
+}
+/* Badge nổi bật — nền accent vàng, chữ ink (WCAG AA) */
+.ds-badge-accent {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-ink);
+  flex-shrink: 0;
 }
 
 /* ============================================================
@@ -274,9 +306,9 @@
   flex-wrap: wrap;
   padding: 22px 26px;
   border-radius: var(--radius);
-  background: linear-gradient(120deg, #2F5CE0 0%, #5b82f0 55%, #8B5CF6 100%);
+  background: linear-gradient(120deg, #046754 0%, #0C342C 55%, #0A231E 100%);
   color: #fff;
-  box-shadow: 0 10px 30px rgba(47, 92, 224, 0.28);
+  box-shadow: 0 10px 30px rgba(4, 103, 84, 0.28);
   margin-bottom: var(--sp-4);
   position: relative;
   overflow: hidden;
@@ -317,7 +349,7 @@
   position: relative;
   border-radius: var(--radius) !important;
   border: 1px solid var(--color-border) !important;
-  background: linear-gradient(160deg, #ffffff 0%, #fbfcff 100%);
+  background: linear-gradient(160deg, #ffffff 0%, var(--color-bg-subtle) 100%);
   box-shadow: var(--elevation-2);
   height: 100%;
   overflow: hidden;
@@ -438,8 +470,8 @@
   opacity: 0;
   transition: background 120ms ease;
 }
-.ds-chart-scroll:hover::-webkit-scrollbar-thumb { background: #c9ced6; }
-.ds-chart-scroll::-webkit-scrollbar-thumb:hover { background: #aab1bb; }
+.ds-chart-scroll:hover::-webkit-scrollbar-thumb { background: var(--color-border-strong); }
+.ds-chart-scroll::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
 
 /* Premium table — zebra + hover + sticky header */
 .ds-table-premium .ant-table-thead > tr > th {
@@ -456,20 +488,23 @@
   z-index: 2;
 }
 .ds-table-premium .ant-table-tbody > tr:nth-child(even) > td {
-  background: #fafbfd;
+  background: var(--gray-25);
 }
 .ds-table-premium .ant-table-tbody > tr > td {
   padding: 12px;
   border-bottom: 1px solid var(--color-border);
-  transition: background 0.15s;
+  transition: background 0.15s, box-shadow 0.15s;
 }
 .ds-table-premium .ant-table-tbody > tr:hover > td {
-  background: #f0f6ff !important;
+  background: var(--gray-25) !important;
+}
+.ds-table-premium .ant-table-tbody > tr:hover > td:first-child {
+  box-shadow: inset 3px 0 0 var(--color-accent);
 }
 
 /* Skeleton loading — shimmer */
 .ds-skeleton {
-  background: linear-gradient(90deg, #f0f2f5 25%, #e6e9ef 50%, #f0f2f5 75%);
+  background: linear-gradient(90deg, #eef2ec 25%, #e2e8e0 50%, #eef2ec 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s infinite;
   border-radius: 8px;
@@ -521,7 +556,7 @@
   padding-right: 8px;
 }
 .ds-deadline-row:hover {
-  background: #f6f9ff;
+  background: var(--color-bg-subtle);
 }
 .ds-deadline-row:last-child { border-bottom: none; }
 
@@ -555,7 +590,7 @@
 .ds-quicklinks {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: var(--sp-3);
+  gap: 28px 16px;
   margin-top: var(--sp-3);
 }
 @media (max-width: 992px) { .ds-quicklinks { grid-template-columns: repeat(3, 1fr); } }
@@ -584,7 +619,7 @@
   width: 42px; height: 42px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(47, 92, 224, 0.08);
+  background: rgba(4, 103, 84, 0.08);
   color: var(--color-primary);
   font-size: 18px;
 }
@@ -608,7 +643,7 @@
 .ds-mini-action-icon {
   width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, #2F5CE0, #5b82f0);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
   color: #fff; font-size: 18px;
 }
 .ds-mini-action-title { font-size: 13px; font-weight: 600; }
@@ -637,11 +672,11 @@
   gap: 4px;
   padding: 4px 12px;
   border-radius: 20px;
-  background: rgba(47, 92, 224, 0.08);
+  background: rgba(4, 103, 84, 0.08);
   color: var(--color-primary);
   font-size: 12px;
   font-weight: 500;
-  border: 1px solid rgba(47, 92, 224, 0.15);
+  border: 1px solid rgba(4, 103, 84, 0.15);
 }
 
 /* Stat trend badge (↑↓) */
@@ -849,7 +884,7 @@
   overflow: hidden;
   padding: 24px 28px;
   border-radius: var(--radius);
-  background: linear-gradient(135deg, #0F5132 0%, #166534 55%, #2F9E6E 100%);
+  background: linear-gradient(135deg, #046754 0%, #0C342C 55%, #0A231E 100%);
   color: #fff;
   box-shadow: var(--elevation-2);
 }
@@ -980,8 +1015,8 @@
   color: var(--color-primary);
 }
 .dash-hero-btn.ant-btn-primary:hover {
-  background: #eaf0ff !important;
-  border-color: #eaf0ff !important;
+  background: var(--color-bg-subtle) !important;
+  border-color: var(--color-bg-subtle) !important;
   color: var(--color-primary-hover) !important;
 }
 
@@ -1060,8 +1095,8 @@
   gap: var(--sp-4);
   padding: 22px 26px;
   border-radius: var(--radius);
-  background: linear-gradient(120deg, #eef3ff 0%, #f3ecff 100%);
-  border: 1px solid #e6ecfb;
+  background: linear-gradient(120deg, var(--color-bg-subtle) 0%, #e8eef0 100%);
+  border: 1px solid var(--color-border-strong);
   box-shadow: var(--elevation-1);
   overflow: hidden;
 }
@@ -1204,7 +1239,7 @@
 .ds-sched-row:last-child { border-bottom: none; }
 .ds-sched-time {
   font-size: 12px; font-weight: 700; color: var(--color-primary);
-  background: rgba(47, 92, 224, 0.08);
+  background: rgba(4, 103, 84, 0.08);
   border-radius: 8px;
   padding: 6px 8px;
   min-width: 64px;
@@ -1380,6 +1415,28 @@
 .dash-gauge-label { font-size: 12px; color: var(--color-text-secondary); font-weight: 500; }
 .dash-gauge-name { font-size: 10px; color: var(--color-text-tertiary, #9aa4b2); letter-spacing: .3px; text-transform: uppercase; }
 
+/* Health sub-stats — hàng chip nhỏ dưới gauges, lấp khoảng trắng */
+.dash-health-substats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+.dash-health-substat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border-radius: 10px;
+  background: var(--color-bg-subtle);
+}
+.dash-health-substat-val { font-size: 15px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.dash-health-substat-label { font-size: 11px; color: var(--color-text-secondary); text-align: center; }
+
 /* Revenue bar mini stat row */
 .rev-mini-row { display: flex; gap: 18px; margin-bottom: 6px; }
 .rev-mini { display: flex; flex-direction: column; }
@@ -1404,7 +1461,7 @@
 .cost-bars { display: flex; flex-direction: column; gap: 3px; }
 .cost-bar { height: 6px; border-radius: 999px; }
 .cost-bar.planned { background: #cbd5e1; }
-.cost-bar.actual { background: #2F5CE0; }
+.cost-bar.actual { background: var(--color-primary); }
 .cost-vals { display: flex; justify-content: space-between; font-size: 11px; }
 .cost-vals .cost-planned-val { color: var(--color-text-secondary); }
 
@@ -1469,7 +1526,7 @@
 .ds-ql-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .ds-ql-title { font-size: 13px; font-weight: 600; }
 .ds-ql-customize { font-size: 12px; color: var(--color-primary); cursor: pointer; }
-.ds-quicklinks { display: grid; grid-template-columns: repeat(8, 1fr); gap: 12px; align-items: stretch; }
+.ds-quicklinks { display: grid; grid-template-columns: repeat(8, 1fr); gap: 28px 16px; align-items: stretch; }
 @media (max-width: 1200px) { .ds-quicklinks { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 640px) { .ds-quicklinks { grid-template-columns: repeat(2, 1fr); } }
 .ds-quicklink { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; height: 100%; padding: 14px 8px; border: 1px solid var(--color-border); border-radius: 12px; cursor: pointer; transition: all .15s; }

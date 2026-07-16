@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ComposedChart, Area, Line, ReferenceLine } from 'recharts';
 
-const COLORS = { planned: '#2F5CE0', actual: '#F5803E', grid: '#EEF1F6', axis: '#94a3b8', today: '#166534' };
+const COLORS = { planned: '#046754', actual: '#F5803E', grid: '#EEF1F6', axis: '#94a3b8', today: '#166534' };
 
 function SCurveTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;

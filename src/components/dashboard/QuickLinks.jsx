@@ -12,7 +12,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 const quickLinks = [
-  { to: '/projects', label: 'Dự án', icon: <ProjectOutlined />, accent: '#2F5CE0', accentEnd: '#6366F1' },
+  { to: '/projects', label: 'Dự án', icon: <ProjectOutlined />, accent: '#046754', accentEnd: '#0C342C' },
   { to: '/ports', label: 'Cảng', icon: <AppstoreOutlined />, accent: '#166534', accentEnd: '#1FA971' },
   { to: '/items', label: 'Hạng mục', icon: <InboxOutlined />, accent: '#D97706', accentEnd: '#F5A623' },
   { to: '/kanban', label: 'Kanban', icon: <UnorderedListOutlined />, accent: '#7C3AED', accentEnd: '#8B5CF6' },

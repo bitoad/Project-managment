@@ -6,7 +6,7 @@ import {
   CheckSquareOutlined, ClockCircleOutlined, ExclamationCircleOutlined, CheckCircleOutlined,
 } from '@ant-design/icons';
 import { tasksApi } from '../api/api.js';
-import { PORT_COLORS, priorityColor } from '../components/helpers.js';
+import { PORT_COLORS, priorityColor, TONE } from '../components/helpers.js';
 import { useUser } from '../context/UserContext.jsx';
 import { useProject } from '../context/ProjectContext.jsx';
 import PageLoader from '../components/shared/PageLoader.jsx';
@@ -14,10 +14,10 @@ import PageLoader from '../components/shared/PageLoader.jsx';
 const { Title, Text } = Typography;
 
 const STATUS_LABEL = {
-  todo: { label: 'Cần làm', color: '#8c8c8c' },
-  inprogress: { label: 'Đang làm', color: '#1677ff' },
-  review: { label: 'Kiểm tra', color: '#faad14' },
-  done: { label: 'Hoàn thành', color: '#52c41a' },
+  todo: { label: 'Cần làm', color: 'default' },
+  inprogress: { label: 'Đang làm', color: 'blue' },
+  review: { label: 'Kiểm tra', color: 'gold' },
+  done: { label: 'Hoàn thành', color: 'green' },
 };
 const PRIORITY_LABEL = { high: 'Cao', medium: 'TB', low: 'Thấp' };
 
@@ -79,7 +79,7 @@ export default function MyTasks() {
         </Col>
         <Col xs={8}>
           <Card size="small">
-            <Statistic title="Đang chờ" value={myPending} valueStyle={{ color: '#faad14' }} prefix={<ClockCircleOutlined />} />
+            <Statistic title="Đang chờ" value={myPending} valueStyle={{ color: TONE.warning }} prefix={<ClockCircleOutlined />} />
           </Card>
         </Col>
         <Col xs={8}>
@@ -87,7 +87,7 @@ export default function MyTasks() {
             <Statistic
               title="Quá hạn"
               value={myOverdue}
-              valueStyle={{ color: myOverdue > 0 ? '#ff4d4f' : '#52c41a' }}
+              valueStyle={{ color: myOverdue > 0 ? TONE.danger : TONE.success }}
               prefix={<ExclamationCircleOutlined />}
             />
           </Card>
@@ -128,7 +128,7 @@ export default function MyTasks() {
               {
                 title: 'Trạng thái', dataIndex: 'status', key: 'status', width: 120,
                 render: (s) => {
-                  const st = STATUS_LABEL[s] || { label: s, color: '#8c8c8c' };
+                  const st = STATUS_LABEL[s] || { label: s, color: 'default' };
                   return <Tag color={st.color}>{st.label}</Tag>;
                 },
               },

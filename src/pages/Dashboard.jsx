@@ -34,7 +34,7 @@ import { dashboardApi, itemsApi, costLogsApi, tasksApi, sCurveApi } from '../api
 import { sCurveCumulative } from '../../shared/formulas.js';
 import { useUser } from '../context/UserContext.jsx';
 import { useProject } from '../context/ProjectContext.jsx';
-import { fmtVND, fmtShort, fmtDate, getUrgencyColor, URGENCY_LEGEND } from '../components/helpers.js';
+import { fmtVND, fmtShort, fmtDate, getUrgencyColor, URGENCY_LEGEND, TONE, CHART_PALETTE } from '../components/helpers.js';
 import ItemWatchlist from '../components/ItemWatchlist.jsx';
 import StatCard from '../components/StatCard.jsx';
 import ChartCard from '../components/shared/ChartCard.jsx';
@@ -57,7 +57,7 @@ import EmptyState from '../components/shared/EmptyState.jsx';
 const toKey = (s) => (s || '').toString().trim().toLowerCase().replace(/\s+/g, '_');
 
 const getBarColor = (v, avg) => {
-  if (v >= avg) return '#2F5CE0';
+  if (v >= avg) return 'var(--color-primary)';
   if (v >= avg * 0.6) return '#3B82F6';
   return '#A5B4FC';
 };
@@ -87,10 +87,10 @@ const pctReached = (items, minWeight) => {
 };
 
 const TASK_STATUS = {
-  todo: { label: 'Cần làm', color: '#4B5563' },
+  todo: { label: 'Cần làm', color: 'var(--color-text-tertiary)' },
   inprogress: { label: 'Đang làm', color: '#3B82F6' },
-  review: { label: 'Kiểm tra', color: '#F59E0B' },
-  done: { label: 'Hoàn thành', color: '#10B981' },
+  review: { label: 'Kiểm tra', color: 'var(--color-warning)' },
+  done: { label: 'Hoàn thành', color: 'var(--color-success)' },
 };
 
 export default function Dashboard() {
@@ -275,7 +275,7 @@ export default function Dashboard() {
         title: urgent ? `Sắp đến hạn: ${d.title}` : `Nhắc hạn: ${d.title}`,
         link: d.kind === 'task' ? '/kanban' : '/items',
         meta: d.owner || 'Chưa gán',
-        color: d.daysLeft < 0 ? '#EF4444' : d.daysLeft <= 3 ? '#F5803E' : '#2F5CE0',
+        color: d.daysLeft < 0 ? 'var(--color-danger)' : d.daysLeft <= 3 ? 'var(--color-warning)' : 'var(--color-primary)',
         date: d.daysLeft < 0 ? `trễ ${-d.daysLeft} ngày` : `còn ${d.daysLeft} ngày`,
       });
     });
@@ -286,7 +286,7 @@ export default function Dashboard() {
         title: `Chi phí mới: ${fmtShort(c.amount)} ₫`,
         link: '/cost',
         meta: c.note || 'Chi phí',
-        color: '#10B981',
+        color: 'var(--color-success)',
         date: c.date ? new Date(c.date).toLocaleDateString('vi-VN') : '',
       });
     });
@@ -345,27 +345,27 @@ export default function Dashboard() {
     total: totalItems,
     pct: procurementPct,
     segments: [
-      seg('Thiết kế', engCount + approvedCount, '#2F5CE0'),
-      seg('Mua sắm', procCount, '#F5A623'),
-      seg('Chế tạo', fabCount, '#8B5CF6'),
-      seg('Đã giao', deliveryCount + installCount + doneCount, '#1FA971'),
+      seg('Thiết kế', engCount + approvedCount, TONE.primary),
+      seg('Mua sắm', procCount, TONE.warning),
+      seg('Chế tạo', fabCount, TONE.purple),
+      seg('Đã giao', deliveryCount + installCount + doneCount, TONE.success),
     ],
   };
   const engineeringProxy = {
     total: totalItems,
     pct: pctReached(items, 0.1),
     segments: [
-      seg('Đang vẽ', engCount, '#2F5CE0'),
-      seg('Đã duyệt', approvedCount + procCount + fabCount + deliveryCount + installCount + doneCount, '#1FA971'),
+      seg('Đang vẽ', engCount, TONE.primary),
+      seg('Đã duyệt', approvedCount + procCount + fabCount + deliveryCount + installCount + doneCount, TONE.success),
     ],
   };
   const installationProxy = {
     total: totalItems,
     pct: installPct,
     segments: [
-      seg('Chế tạo', fabCount + deliveryCount, '#8B5CF6'),
-      seg('Lắp đặt', installCount, '#F5A623'),
-      seg('Hoàn thành', doneCount, '#1FA971'),
+      seg('Chế tạo', fabCount + deliveryCount, TONE.purple),
+      seg('Lắp đặt', installCount, TONE.warning),
+      seg('Hoàn thành', doneCount, TONE.success),
     ],
   };
 
@@ -374,6 +374,15 @@ export default function Dashboard() {
     { key: 'cost', label: 'Chi phí (CPI)', name: 'CPI', value: costPct },
     { key: 'procurement', label: 'Mua sắm', name: 'Procurement', value: procurementPct },
     { key: 'fabrication', label: 'Chế tạo', name: 'Fabrication', value: fabricationPct },
+  ];
+
+  const engineeringPct = pctReached(items, 0.1);
+  const completionPct = totalItems ? Math.round((doneCount / totalItems) * 100) : 0;
+  const healthSubStats = [
+    { key: 'install', label: 'Lắp đặt', value: `${installPct}%`, color: 'var(--color-warning)' },
+    { key: 'eng', label: 'Thiết kế', value: `${engineeringPct}%`, color: 'var(--color-primary)' },
+    { key: 'done', label: 'Hoàn thành', value: `${completionPct}%`, color: 'var(--color-success)' },
+    { key: 'risk', label: 'Rủi ro mở', value: String(view.openRisks || 0), color: 'var(--color-danger)' },
   ];
 
   const perPortRows = useMemo(() => {
@@ -414,7 +423,7 @@ export default function Dashboard() {
       const o = t.owner || 'Chưa gán';
       map[o] = (map[o] || 0) + 1;
     });
-    const palette = ['#2F5CE0', '#1FA971', '#F5A623', '#8B5CF6', '#EF4444', '#3B82F6', '#14B8A6', '#F5803E'];
+    const palette = CHART_PALETTE;
     return Object.entries(map)
       .map(([name, count], i) => ({ name, count, color: palette[i % palette.length] }))
       .sort((a, b) => b.count - a.count);
@@ -592,12 +601,12 @@ export default function Dashboard() {
   };
 
   const heroStats = [
-    { key: 'progress', icon: <RiseOutlined />, label: 'Tiến độ TB', value: `${Math.round(view.avgProgress || 0)}%`, tone: '#2F5CE0' },
-    { key: 'budget', icon: <FundOutlined />, label: 'Ngân sách', value: `${fmtShort(view.totalPlannedCost || 0)} ₫`, tone: '#1FA971' },
-    { key: 'spent', icon: <DollarOutlined />, label: 'Đã chi', value: `${fmtShort(view.totalLoggedCost || 0)} ₫`, tone: '#F5A623' },
-    { key: 'ports', icon: <AppstoreOutlined />, label: portfolioView ? 'Dự án' : 'Cảng / gói', value: portfolioView ? (projects?.length || 0) : portCount, tone: '#8B5CF6' },
-    { key: 'items', icon: <InboxOutlined />, label: 'Hạng mục', value: totalItems, tone: '#0EA5E9' },
-    { key: 'risks', icon: <WarningOutlined />, label: 'Rủi ro mở', value: view.openRisks || 0, tone: '#EF4444' },
+    { key: 'progress', icon: <RiseOutlined />, label: 'Tiến độ TB', value: `${Math.round(view.avgProgress || 0)}%`, tone: TONE.primary },
+    { key: 'budget', icon: <FundOutlined />, label: 'Ngân sách', value: `${fmtShort(view.totalPlannedCost || 0)} ₫`, tone: TONE.success },
+    { key: 'spent', icon: <DollarOutlined />, label: 'Đã chi', value: `${fmtShort(view.totalLoggedCost || 0)} ₫`, tone: TONE.warning },
+    { key: 'ports', icon: <AppstoreOutlined />, label: portfolioView ? 'Dự án' : 'Cảng / gói', value: portfolioView ? (projects?.length || 0) : portCount, tone: TONE.purple },
+    { key: 'items', icon: <InboxOutlined />, label: 'Hạng mục', value: totalItems, tone: TONE.sky },
+    { key: 'risks', icon: <WarningOutlined />, label: 'Rủi ro mở', value: view.openRisks || 0, tone: TONE.danger },
   ];
 
   return (
@@ -627,30 +636,30 @@ export default function Dashboard() {
 
         {/* ===== R2: Progress + Health ===== */}
         <section className="col-8">
-          <ChartCard icon={<LineChartOutlined style={{ color: '#2F5CE0' }} />} title="Tiến độ & Chi phí (S-Curve)" extra={<Tag color="blue">EV = {fmtShort(ev)} ₫</Tag>}>
+          <ChartCard icon={<LineChartOutlined style={{ color: TONE.primary }} />} title="Tiến độ & Chi phí (S-Curve)" extra={<Tag color="blue">EV = {fmtShort(ev)} ₫</Tag>}>
             <ProjectProgressChart data={sCurveData} avgProgress={view.avgProgress || 0} />
           </ChartCard>
         </section>
         <section className="col-4">
-          <ChartCard icon={<FundOutlined style={{ color: '#1FA971' }} />} title="Chỉ số sức khỏe">
-            <ProjectHealth items={healthItems} />
+          <ChartCard icon={<FundOutlined style={{ color: TONE.success }} />} title="Chỉ số dự án">
+            <ProjectHealth items={healthItems} subStats={healthSubStats} />
           </ChartCard>
         </section>
 
         {/* ===== Charts: Revenue / Status / Cost ===== */}
         <section className="col-4">
-          <ChartCard icon={<BarChartOutlined style={{ color: '#2F5CE0' }} />} title="Doanh thu theo hạng mục" extra={<span className="dash-muted">tổng {fmtShort(view.totalRevenue || 0)} ₫</span>}>
+          <ChartCard icon={<BarChartOutlined style={{ color: TONE.primary }} />} title="Doanh thu theo hạng mục" extra={<span className="dash-muted">tổng {fmtShort(view.totalRevenue || 0)} ₫</span>}>
             <div className="rev-mini-row">
               <div className="rev-mini">
                 <span className="rev-mini-val">{fmtShort(revenueStats?.total || 0)}</span>
                 <span className="rev-mini-lbl">Tổng</span>
               </div>
               <div className="rev-mini">
-                <span className="rev-mini-val" style={{ color: '#10B981' }}>{fmtShort(revenueStats?.max?.value || 0)}</span>
+                <span className="rev-mini-val" style={{ color: TONE.success }}>{fmtShort(revenueStats?.max?.value || 0)}</span>
                 <span className="rev-mini-lbl">Cao nhất</span>
               </div>
               <div className="rev-mini">
-                <span className="rev-mini-val" style={{ color: '#F5A623' }}>{fmtShort(revenueStats?.min?.value || 0)}</span>
+                <span className="rev-mini-val" style={{ color: TONE.warning }}>{fmtShort(revenueStats?.min?.value || 0)}</span>
                 <span className="rev-mini-lbl">Thấp nhất</span>
               </div>
             </div>
@@ -658,14 +667,14 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData.costByItem} margin={{ top: 18, right: 6, left: -18, bottom: 0 }}>
                   <CartesianGrid vertical={false} stroke="#eef1f5" />
-                  <XAxis dataKey="code" tick={{ fontSize: 10, fill: '#8B95A5' }} axisLine={false} tickLine={false} interval={0} angle={-35} textAnchor="end" height={54} />
-                  <YAxis tick={{ fontSize: 10, fill: '#8B95A5' }} tickFormatter={(v) => fmtChart(v)} axisLine={false} tickLine={false} width={42} />
+                  <XAxis dataKey="code" tick={{ fontSize: 10, fill: TONE.muted }} axisLine={false} tickLine={false} interval={0} angle={-35} textAnchor="end" height={54} />
+                  <YAxis tick={{ fontSize: 10, fill: TONE.muted }} tickFormatter={(v) => fmtChart(v)} axisLine={false} tickLine={false} width={42} />
                   <RTooltip formatter={(v) => `${fmtVND(v)} ₫`} />
                   <Bar dataKey="actual" radius={[4, 4, 0, 0]} maxBarSize={36}>
                     {chartData.costByItem.map((d, i) => (
                       <Cell key={i} fill={getBarColor(d.actual, revenueStats?.avg || 1)} />
                     ))}
-                    <LabelList dataKey="actual" position="top" formatter={(v) => fmtChart(v)} style={{ fontSize: 9, fill: '#8B95A5' }} />
+                    <LabelList dataKey="actual" position="top" formatter={(v) => fmtChart(v)} style={{ fontSize: 9, fill: TONE.muted }} />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -673,13 +682,13 @@ export default function Dashboard() {
           </ChartCard>
         </section>
         <section className="col-4">
-          <ChartCard icon={<PieChartOutlined style={{ color: '#8B5CF6' }} />} title="Trạng thái hạng mục">
+          <ChartCard icon={<PieChartOutlined style={{ color: TONE.purple }} />} title="Trạng thái hạng mục">
             <div className="donut-wrap">
               <ResponsiveContainer width="100%" height={230}>
                 <PieChart>
                   <Pie data={chartData.pie} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="60%" outerRadius="85%" paddingAngle={2} stroke="none">
                     {chartData.pie.map((e, i) => (
-                      <Cell key={i} fill={['#4B5563', '#3B82F6', '#F59E0B', '#10B981', '#EF4444', '#8B5CF6'][i % 6]} />
+                      <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />
                     ))}
                   </Pie>
                   <RTooltip formatter={(v) => `${v} mục`} />
@@ -693,7 +702,7 @@ export default function Dashboard() {
             <div className="donut-legend">
               {chartData.pie.map((e, i) => (
                 <span key={i} className="donut-leg-item">
-                  <span className="donut-leg-dot" style={{ background: ['#4B5563', '#3B82F6', '#F59E0B', '#10B981', '#EF4444', '#8B5CF6'][i % 6] }} />
+                  <span className="donut-leg-dot" style={{ background: CHART_PALETTE[i % CHART_PALETTE.length] }} />
                   {e.name} <b>{e.value}</b> ({chartData.pieTotal ? Math.round((e.value / chartData.pieTotal) * 100) : 0}%)
                 </span>
               ))}
@@ -702,7 +711,7 @@ export default function Dashboard() {
         </section>
         <section className="col-4">
           <ChartCard
-            icon={<InboxOutlined style={{ color: '#F5A623' }} />}
+            icon={<InboxOutlined style={{ color: TONE.warning }} />}
             title="Chi phí theo hạng mục"
             extra={
               <Select size="small" value={sortBy} onChange={setSortBy} style={{ width: 120 }} options={[{ value: 'variance', label: 'Chênh lệch' }, { value: 'value', label: 'Giá trị' }]} />
@@ -738,26 +747,26 @@ export default function Dashboard() {
 
         {/* ===== R3: Risk / Notifications / Milestones ===== */}
         <section className="col-5">
-          <ChartCard icon={<WarningOutlined style={{ color: '#EF4444' }} />} title="Cảnh báo rủi ro" extra={<a className="dash-link" onClick={() => navigate('/risk')}>Xem tất cả</a>}>
+          <ChartCard icon={<WarningOutlined style={{ color: TONE.danger }} />} title="Cảnh báo rủi ro" extra={<a className="dash-link" onClick={() => navigate('/risk')}>Xem tất cả</a>}>
             <div className="dash-table">
               <RiskAlertsTable risks={view.highRisks || []} />
             </div>
           </ChartCard>
         </section>
         <section className="col-4">
-          <ChartCard icon={<FilePdfOutlined style={{ color: '#2F5CE0' }} />} title="Thông báo mới">
+          <ChartCard icon={<FilePdfOutlined style={{ color: TONE.primary }} />} title="Thông báo mới">
             <NotificationsTimeline items={notifications} />
           </ChartCard>
         </section>
         <section className="col-3">
-          <ChartCard icon={<CalendarOutlined style={{ color: '#0EA5E9' }} />} title="Mốc sắp tới" extra={<a className="dash-link" onClick={() => navigate('/timeline')}>Tiến độ</a>}>
+          <ChartCard icon={<CalendarOutlined style={{ color: TONE.sky }} />} title="Mốc sắp tới" extra={<a className="dash-link" onClick={() => navigate('/timeline')}>Tiến độ</a>}>
             <MilestonesPanel items={milestones} onOpen={() => navigate('/timeline')} />
           </ChartCard>
         </section>
 
         {/* ===== R4: Performance by port ===== */}
         <section className="col-12">
-          <ChartCard icon={<BarChartOutlined style={{ color: '#2F5CE0' }} />} title="Hiệu suất theo cảng / gói thầu" extra={<a className="dash-link" onClick={() => navigate('/cost')}>Chi tiết</a>}>
+          <ChartCard icon={<BarChartOutlined style={{ color: TONE.primary }} />} title="Hiệu suất theo cảng / gói thầu" extra={<a className="dash-link" onClick={() => navigate('/cost')}>Chi tiết</a>}>
             <div className="dash-table">
               <PerformanceTable rows={perPortRows} onOpen={() => navigate('/cost')} />
             </div>
@@ -766,29 +775,29 @@ export default function Dashboard() {
 
         {/* ===== R5: Module status (proxies) ===== */}
         <section className="col-4">
-          <ChartCard icon={<ShopOutlined style={{ color: '#F5A623' }} />} title="Mua sắm">
-            <ModuleStatusCard title="Procurement" icon={<ShopOutlined />} color="#F5A623" segments={procurementProxy.segments} total={procurementProxy.total} empty={totalItems === 0} />
+          <ChartCard icon={<ShopOutlined style={{ color: TONE.warning }} />} title="Mua sắm">
+            <ModuleStatusCard title="Procurement" icon={<ShopOutlined />} color={TONE.warning} segments={procurementProxy.segments} total={procurementProxy.total} empty={totalItems === 0} />
           </ChartCard>
         </section>
         <section className="col-4">
-          <ChartCard icon={<SolutionOutlined style={{ color: '#2F5CE0' }} />} title="Thiết kế">
-            <ModuleStatusCard title="Engineering" icon={<SolutionOutlined />} color="#2F5CE0" segments={engineeringProxy.segments} total={engineeringProxy.total} empty={totalItems === 0} />
+          <ChartCard icon={<SolutionOutlined style={{ color: TONE.primary }} />} title="Thiết kế">
+            <ModuleStatusCard title="Engineering" icon={<SolutionOutlined />} color={TONE.primary} segments={engineeringProxy.segments} total={engineeringProxy.total} empty={totalItems === 0} />
           </ChartCard>
         </section>
         <section className="col-4">
-          <ChartCard icon={<CheckSquareOutlined style={{ color: '#1FA971' }} />} title="Lắp đặt & Nghiệm thu">
-            <ModuleStatusCard title="Installation" icon={<CheckSquareOutlined />} color="#1FA971" segments={installationProxy.segments} total={installationProxy.total} empty={totalItems === 0} />
+          <ChartCard icon={<CheckSquareOutlined style={{ color: TONE.success }} />} title="Lắp đặt & Nghiệm thu">
+            <ModuleStatusCard title="Installation" icon={<CheckSquareOutlined />} color={TONE.success} segments={installationProxy.segments} total={installationProxy.total} empty={totalItems === 0} />
           </ChartCard>
         </section>
 
         {/* ===== R6: Kanban + Resource ===== */}
         <section className="col-6">
-          <ChartCard icon={<UnorderedListOutlined style={{ color: '#8B5CF6' }} />} title="Tác vụ Kanban" extra={<a className="dash-link" onClick={() => navigate('/kanban')}>Mở bảng</a>}>
+          <ChartCard icon={<UnorderedListOutlined style={{ color: TONE.purple }} />} title="Tác vụ Kanban" extra={<a className="dash-link" onClick={() => navigate('/kanban')}>Mở bảng</a>}>
             <KanbanSnapshot counts={kanbanCounts} onOpen={() => navigate('/kanban')} />
           </ChartCard>
         </section>
         <section className="col-6">
-          <ChartCard icon={<TeamOutlined style={{ color: '#EF4444' }} />} title="Phân bổ nguồn lực (theo người phụ trách)">
+          <ChartCard icon={<TeamOutlined style={{ color: TONE.danger }} />} title="Phân bổ nguồn lực (theo người phụ trách)">
             <ResourceAllocation data={resourceData} />
           </ChartCard>
         </section>

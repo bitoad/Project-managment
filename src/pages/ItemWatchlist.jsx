@@ -48,7 +48,7 @@ export default function ItemWatchlistPage() {
       </div>
 
       <div className="ds-stat-grid">
-        <StatCard icon={<ContainerOutlined />} accent="linear-gradient(135deg,#2F5CE0,#5b82f0)" title="Tổng số Item" value={items.length} />
+        <StatCard icon={<ContainerOutlined />} accent="var(--accent-primary)" title="Tổng số Item" value={items.length} />
         <StatCard icon={<DollarOutlined />} accent="linear-gradient(135deg,#722ed1,#9254de)" title="Tổng chi phí đã ghi" value={fmtVND(totalCost)} formatter={(v) => v} />
         <StatCard icon={<WarningOutlined />} accent="linear-gradient(135deg,#EF4444,#ff7875)" title="Cần làm rõ" value={needAction} valueStyle={{ color: '#EF4444' }} />
         <StatCard icon={<CheckCircleOutlined />} accent="linear-gradient(135deg,#1FA971,#3cc995)" title="Đã ổn" value={items.length - needAction} valueStyle={{ color: '#1FA971' }} />

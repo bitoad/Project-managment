@@ -7,7 +7,7 @@ import {
   FileSearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined, InfoCircleOutlined,
 } from '@ant-design/icons';
 import { quotationsApi } from '../api/api.js';
-import { fmtVND } from '../components/helpers.js';
+import { fmtVND, TONE } from '../components/helpers.js';
 import { useProject } from '../context/ProjectContext.jsx';
 import { quotationBest, quotationTotalBest } from '../../shared/formulas.js';
 
@@ -93,7 +93,7 @@ export default function Quotations() {
 
       <Row gutter={[16, 16]} style={{ marginTop: 16, marginBottom: 8 }}>
         <Col xs={8}><Card size="small"><Statistic title="Số mục báo giá" value={quotes.length} /></Card></Col>
-        <Col xs={8}><Card size="small"><Statistic title="Tổng giá trị (giá tốt nhất)" value={fmtVND(totalBest)} valueStyle={{ color: '#52c41a' }} /></Card></Col>
+        <Col xs={8}><Card size="small"><Statistic title="Tổng giá trị (giá tốt nhất)" value={fmtVND(totalBest)} valueStyle={{ color: TONE.success }} /></Card></Col>
         <Col xs={8}><Card size="small"><Statistic title="Đã chốt" value={quotes.filter(q => q.selected).length} /></Card></Col>
       </Row>
 
@@ -115,7 +115,7 @@ export default function Quotations() {
             {
               title: 'Supplier A', dataIndex: 'supplierA', key: 'sA', width: 120, align: 'right',
               render: (v, r) => (
-                <Text style={{ color: r.selected === 'Supplier A' ? '#52c41a' : undefined, fontWeight: r.selected === 'Supplier A' ? 700 : 400 }}>
+                <Text style={{ color: r.selected === 'Supplier A' ? TONE.success : undefined, fontWeight: r.selected === 'Supplier A' ? 700 : 400 }}>
                   {fmtVND(v)}
                 </Text>
               ),
@@ -123,7 +123,7 @@ export default function Quotations() {
             {
               title: 'Supplier B', dataIndex: 'supplierB', key: 'sB', width: 120, align: 'right',
               render: (v, r) => (
-                <Text style={{ color: r.selected === 'Supplier B' ? '#52c41a' : undefined, fontWeight: r.selected === 'Supplier B' ? 700 : 400 }}>
+                <Text style={{ color: r.selected === 'Supplier B' ? TONE.success : undefined, fontWeight: r.selected === 'Supplier B' ? 700 : 400 }}>
                   {fmtVND(v)}
                 </Text>
               ),
@@ -131,7 +131,7 @@ export default function Quotations() {
             {
               title: 'Supplier C', dataIndex: 'supplierC', key: 'sC', width: 120, align: 'right',
               render: (v, r) => (
-                <Text style={{ color: r.selected === 'Supplier C' ? '#52c41a' : undefined, fontWeight: r.selected === 'Supplier C' ? 700 : 400 }}>
+                <Text style={{ color: r.selected === 'Supplier C' ? TONE.success : undefined, fontWeight: r.selected === 'Supplier C' ? 700 : 400 }}>
                   {fmtVND(v)}
                 </Text>
               ),

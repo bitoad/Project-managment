@@ -35,7 +35,7 @@ import { itemsApi, costLogsApi, metaApi } from '../api/api.js';
 import dayjs from 'dayjs';
 import { useProject } from '../context/ProjectContext.jsx';
 import StatCard from '../components/StatCard.jsx';
-import { fmtVND, PORT_COLORS, STATUS_LIST, STATUS_PROGRESS, PROC_STATUS_LIST, PROC_STATUS_PROGRESS, procStatusColor, costOf } from '../components/helpers.js';
+import { fmtVND, PORT_COLORS, STATUS_LIST, STATUS_PROGRESS, PROC_STATUS_LIST, PROC_STATUS_PROGRESS, procStatusColor, costOf, TONE, cardListColumns } from '../components/helpers.js';
 import { sumRevenue, sumVAT, revenueInclVAT, sumPlannedCost, sumActualCost, profit, profitMargin, itemMargin, itemTotal } from '../../shared/formulas.js';
 import EmptyState from '../components/shared/EmptyState.jsx';
 
@@ -197,27 +197,27 @@ export default function Items({ initialPortFilter = null }) {
       <div className="ds-stat-grid">
         <StatCard
           icon={<ProfileOutlined />}
-          accent="linear-gradient(135deg,#2F5CE0,#5b82f0)"
+           accent="var(--accent-primary)"
           title="Tổng Items"
           value={filteredItems.length}
-          valueStyle={{ color: '#2F5CE0' }}
+          valueStyle={{ color: TONE.primary }}
           footer={<>{filteredItems.length} hạng mục</>}
         />
         <StatCard
           icon={<DollarOutlined />}
-          accent="linear-gradient(135deg,#2F5CE0,#5b82f0)"
+           accent="var(--accent-primary)"
           title="Tổng doanh thu"
           value={totalRevenue}
           formatter={(v) => fmtVND(v)}
-          valueStyle={{ color: '#2F5CE0' }}
+          valueStyle={{ color: TONE.primary }}
         />
         <StatCard
           icon={<DollarOutlined />}
-          accent="linear-gradient(135deg,#2F5CE0,#5b82f0)"
+           accent="var(--accent-primary)"
           title="Tổng (gồm VAT)"
           value={totalRevenueInclVAT}
           formatter={(v) => fmtVND(v)}
-          valueStyle={{ color: '#2F5CE0' }}
+          valueStyle={{ color: TONE.primary }}
         />
         <StatCard
           icon={<PercentageOutlined />}
@@ -225,7 +225,7 @@ export default function Items({ initialPortFilter = null }) {
           title="Thuế VAT"
           value={totalVAT}
           formatter={(v) => fmtVND(v)}
-          valueStyle={{ color: '#fa8c16' }}
+          valueStyle={{ color: TONE.warning }}
         />
         <StatCard
           icon={<CalculatorOutlined />}
@@ -249,7 +249,7 @@ export default function Items({ initialPortFilter = null }) {
           title="Lợi nhuận thực tế"
           value={totalProfit}
           formatter={(v) => fmtVND(v)}
-          valueStyle={{ color: totalProfit >= 0 ? '#1FA971' : '#EF4444' }}
+          valueStyle={{ color: totalProfit >= 0 ? TONE.success : TONE.danger }}
         />
         <StatCard
           icon={<PercentageOutlined />}
@@ -257,21 +257,21 @@ export default function Items({ initialPortFilter = null }) {
           title="Biên lợi nhuận"
           value={totalMargin}
           formatter={(v) => `${v.toFixed(1)}%`}
-          valueStyle={{ color: totalMargin >= 0 ? '#1FA971' : '#EF4444' }}
+          valueStyle={{ color: totalMargin >= 0 ? TONE.success : TONE.danger }}
         />
         <StatCard
           icon={<ClockCircleOutlined />}
           accent={itemsWithDeadline === filteredItems.length ? 'linear-gradient(135deg,#1FA971,#3cc995)' : 'linear-gradient(135deg,#faad14,#ffd666)'}
           title="Deadline"
           value={`${itemsWithDeadline}/${filteredItems.length}`}
-          valueStyle={{ color: itemsWithDeadline === filteredItems.length ? '#1FA971' : '#faad14' }}
-          footer={<>{overdueItems > 0 ? <span style={{ color: '#ff4d4f' }}>{overdueItems} quá hạn</span> : 'Không quá hạn'}</>}
+          valueStyle={{ color: itemsWithDeadline === filteredItems.length ? TONE.success : TONE.warning }}
+          footer={<>{overdueItems > 0 ? <span style={{ color: TONE.danger }}>{overdueItems} quá hạn</span> : 'Không quá hạn'}</>}
         />
       </div>
 
       <Card className="ds-chart-card" bordered={false} style={{ marginTop: 16 }}>
         <Table
-          className="ds-table-premium"
+          className="ds-table-premium card-list"
           dataSource={filteredItems}
           rowKey={(record) => record.__key || record.code}
           loading={loading}
@@ -281,7 +281,7 @@ export default function Items({ initialPortFilter = null }) {
               <EmptyState icon={<InboxOutlined />} title="Chưa có item nào" />
             ),
           }}
-          columns={[
+          columns={cardListColumns([
             ...(portfolioView
               ? [{ title: 'Dự án', dataIndex: 'projectName', key: 'projectName', width: 160, ellipsis: true, fixed: 'left' }]
               : []),
@@ -311,12 +311,12 @@ export default function Items({ initialPortFilter = null }) {
             { title: 'SL', dataIndex: 'qty', key: 'qty', width: 70, align: 'right', render: (value) => <span className="ds-num">{value}</span> },
             { title: 'ĐVT', dataIndex: 'unit', key: 'unit', width: 70 },
             { title: 'Đơn giá vốn', dataIndex: 'internalCost', key: 'internalCost', width: 140, align: 'right', render: (_, record) => <span className="ds-num">{fmtVND(costOf(record))}</span> },
-            { title: 'Giá bán', dataIndex: 'unitPrice', key: 'unitPrice', width: 140, align: 'right', render: (value) => <Text strong className="ds-num" style={{ color: '#1677ff' }}>{fmtVND(value)}</Text> },
+            { title: 'Giá bán', dataIndex: 'unitPrice', key: 'unitPrice', width: 140, align: 'right', render: (value) => <Text strong className="ds-num" style={{ color: TONE.primary }}>{fmtVND(value)}</Text> },
             { title: 'Tổng vốn (kế hoạch)', key: 'totalCost', width: 150, align: 'right', render: (_, record) => <span className="ds-num">{fmtVND((record.qty || 0) * costOf(record))}</span> },
             { title: 'Chi phí thực tế', key: 'actualCost', width: 150, align: 'right', render: (_, record) => {
               const actual = costByItem[record.code] || 0;
               const planned = (record.qty || 0) * costOf(record);
-              const color = actual > planned ? '#ff4d4f' : actual < planned ? '#faad14' : '#52c41a';
+              const color = actual > planned ? TONE.danger : actual < planned ? TONE.warning : TONE.success;
               return <Text strong className="ds-num" style={{ color }}>{fmtVND(actual)}</Text>;
             } },
             { title: 'Tổng bán', key: 'totalRevenue', width: 150, align: 'right',               render: (_, record) => <span className="ds-num">{fmtVND(itemTotal(record))}</span> },
@@ -327,7 +327,7 @@ export default function Items({ initialPortFilter = null }) {
               align: 'right',
               render: (_, record) => {
                 const margin = itemMargin(record);
-                return <Text strong className="ds-num" style={{ color: margin >= 0 ? '#52c41a' : '#ff4d4f' }}>{margin.toFixed(1)}%</Text>;
+                return <Text strong className="ds-num" style={{ color: margin >= 0 ? TONE.success : TONE.danger }}>{margin.toFixed(1)}%</Text>;
               },
             },
             { title: 'Trạng thái', dataIndex: 'status', key: 'status', width: 120, render: (status) => <Tag>{status}</Tag> },
@@ -345,7 +345,7 @@ export default function Items({ initialPortFilter = null }) {
                 </Space>
               ),
             },
-          ]}
+          ])}
         />
       </Card>
 
@@ -492,22 +492,22 @@ export default function Items({ initialPortFilter = null }) {
               const margin = itemMargin({ unitPrice: price, internalCost: cost, unitCost: cost });
               const profitVal = profit(revenue, (cost || 0) * qty);
               return (
-                <Row gutter={16} style={{ background: '#f5f7fa', padding: '12px 16px', borderRadius: 8, marginTop: 4 }}>
+                <Row gutter={16} style={{ background: 'var(--color-surface-2)', padding: '12px 16px', borderRadius: 8, marginTop: 4 }}>
                   <Col span={6}>
                     <Text type="secondary" style={{ fontSize: 12 }}>Thành tiền bán</Text>
                     <div><Text strong>{fmtVND(revenue)}</Text></div>
                   </Col>
                   <Col span={6}>
                     <Text type="secondary" style={{ fontSize: 12 }}>Thuế VAT ({v}%)</Text>
-                    <div><Text strong style={{ color: '#fa8c16' }}>{fmtVND(vat)}</Text></div>
+                    <div><Text strong style={{ color: TONE.warning }}>{fmtVND(vat)}</Text></div>
                   </Col>
                   <Col span={6}>
                     <Text type="secondary" style={{ fontSize: 12 }}>Biên lợi nhuận</Text>
-                    <div><Text strong style={{ color: margin >= 0 ? '#52c41a' : '#ff4d4f' }}>{margin.toFixed(1)}%</Text></div>
+                    <div><Text strong style={{ color: margin >= 0 ? TONE.success : TONE.danger }}>{margin.toFixed(1)}%</Text></div>
                   </Col>
                   <Col span={6}>
                     <Text type="secondary" style={{ fontSize: 12 }}>Lợi nhuận dự kiến</Text>
-                    <div><Text strong style={{ color: '#1677ff' }}>{fmtVND(profitVal)}</Text></div>
+                    <div><Text strong style={{ color: TONE.primary }}>{fmtVND(profitVal)}</Text></div>
                   </Col>
                 </Row>
               );

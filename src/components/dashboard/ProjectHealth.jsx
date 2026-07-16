@@ -2,7 +2,7 @@ import React from 'react';
 import { Progress } from 'antd';
 
 // Health gauges: schedule / cost / procurement / engineering. value = 0-100.
-export default function ProjectHealth({ items = [] }) {
+export default function ProjectHealth({ items = [], subStats = [] }) {
   return (
     <div className="dash-metric-strip">
       {items.map((m) => {
@@ -13,7 +13,7 @@ export default function ProjectHealth({ items = [] }) {
             <Progress
               type="dashboard"
               percent={v}
-              size={92}
+              size={96}
               strokeColor={color}
               format={(p) => (
                 <span style={{ fontSize: 18, fontWeight: 700, color }}>
@@ -27,6 +27,16 @@ export default function ProjectHealth({ items = [] }) {
           </div>
         );
       })}
+      {subStats.length > 0 && (
+        <div className="dash-health-substats">
+          {subStats.map((s) => (
+            <div className="dash-health-substat" key={s.key}>
+              <span className="dash-health-substat-val" style={{ color: s.color || 'var(--color-text)' }}>{s.value}</span>
+              <span className="dash-health-substat-label">{s.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

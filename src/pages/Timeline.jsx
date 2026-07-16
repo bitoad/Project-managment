@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Card, Typography, Spin, message, Select, Tag, Segmented, Tooltip } from 'antd';
 import { FieldTimeOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { tasksApi, portsApi } from '../api/api.js';
-import { PORT_COLORS, statusColor } from '../components/helpers.js';
+import { PORT_COLORS, statusColor, TONE } from '../components/helpers.js';
 import { useProject } from '../context/ProjectContext.jsx';
 import EmptyState from '../components/shared/EmptyState.jsx';
 import PageLoader from '../components/shared/PageLoader.jsx';
@@ -192,7 +192,7 @@ export default function Timeline() {
                           borderRight: '1px solid #f5f5f5',
                           fontSize: 11,
                           fontWeight: 600,
-                          color: '#333',
+                          color: TONE.ink,
                         }}
                       >
                         {w.label}
@@ -217,12 +217,12 @@ export default function Timeline() {
                             textAlign: 'center',
                             borderRight: '1px solid #f5f5f5',
                             fontSize: 10,
-                            color: d.getDay() === 0 || d.getDay() === 6 ? '#ff4d4f' : '#666',
-                            background: d.getDay() === 0 || d.getDay() === 6 ? '#fafafa' : 'transparent',
+                            color: d.getDay() === 0 || d.getDay() === 6 ? TONE.danger : TONE.textSecondary,
+                            background: d.getDay() === 0 || d.getDay() === 6 ? 'var(--color-surface-2)' : 'transparent',
                           }}
                         >
                           {isFirstOfMonth && (
-                            <div style={{ fontWeight: 700, color: '#1677ff', fontSize: 11 }}>
+                            <div style={{ fontWeight: 700, color: TONE.primary, fontSize: 11 }}>
                               Th{d.getMonth() + 1}
                             </div>
                           )}
@@ -252,7 +252,7 @@ export default function Timeline() {
                     const offset = dayOffset(task.startDate);
                     const width = barWidth(task.startDate, task.endDate);
                     const isDone = task.status === 'done';
-                    const barColor = isDone ? '#52c41a' : PORT_COLORS[task.portId] || '#1677ff';
+                    const barColor = isDone ? TONE.success : PORT_COLORS[task.portId] || TONE.primary;
                     return (
                       <div key={task.id} style={{ display: 'flex', borderBottom: '1px solid #f5f5f5', height: ROW_HEIGHT }}>
                         <div
@@ -350,7 +350,7 @@ export default function Timeline() {
                   top: 0,
                   bottom: 0,
                   width: 2,
-                  background: '#ff4d4f',
+                  background: TONE.danger,
                   opacity: 0.7,
                   pointerEvents: 'none',
                 }}
@@ -361,16 +361,16 @@ export default function Timeline() {
           {/* Legend */}
           <div style={{ padding: '12px 16px', borderTop: '1px solid #f0f0f0', display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 12 }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ display: 'inline-block', width: 12, height: 12, background: '#52c41a', borderRadius: 2 }} /> Hoàn thành
+              <span style={{ display: 'inline-block', width: 12, height: 12, background: TONE.success, borderRadius: 2 }} /> Hoàn thành
             </span>
             {ports.map((p) => (
               <span key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ display: 'inline-block', width: 12, height: 12, background: PORT_COLORS[p.id] || '#1677ff', borderRadius: 2 }} />
+                <span style={{ display: 'inline-block', width: 12, height: 12, background: PORT_COLORS[p.id] || TONE.primary, borderRadius: 2 }} />
                 {p.id}
               </span>
             ))}
             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ display: 'inline-block', width: 2, height: 14, background: '#ff4d4f' }} /> Hôm nay
+              <span style={{ display: 'inline-block', width: 2, height: 14, background: TONE.danger }} /> Hôm nay
             </span>
           </div>
         </Card>

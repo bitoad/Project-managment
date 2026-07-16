@@ -3,7 +3,7 @@ import { InboxOutlined } from '@ant-design/icons';
 import EmptyState from '../shared/EmptyState.jsx';
 
 // Props: title, icon (node), color, segments:[{label,value,color}], total, empty(bool)
-export default function ModuleStatusCard({ title, icon, color = '#2F5CE0', segments = [], total = 0, empty = false }) {
+export default function ModuleStatusCard({ title, icon, color = 'var(--color-primary)', segments = [], total = 0, empty = false }) {
   if (empty) {
     return (
       <div className="msc">

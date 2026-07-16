@@ -2,6 +2,7 @@ import React from 'react';
 import { Table, Tag } from 'antd';
 import { WarningOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { cardListColumns } from '../helpers.js';
 import EmptyState from '../shared/EmptyState.jsx';
 
 const RISK_COLOR = { critical: 'var(--color-danger)', high: 'var(--color-warning)', medium: 'var(--color-accent)', low: 'var(--color-success)' };
@@ -11,7 +12,7 @@ export default function RiskAlertsTable({ risks = [], onViewAll }) {
   const navigate = useNavigate();
   if (!risks.length) return <EmptyState icon={<WarningOutlined />} title="Không có rủi ro" />;
 
-  const columns = [
+  const columns = cardListColumns([
     {
       title: 'Rủi ro',
       dataIndex: 'title',
@@ -47,11 +48,11 @@ export default function RiskAlertsTable({ risks = [], onViewAll }) {
       width: 96,
       render: (d) => <span className="dash-muted">{d ? new Date(d).toLocaleDateString('vi-VN') : '—'}</span>,
     },
-  ];
+  ]);
 
   return (
     <Table
-      className="ds-table-premium"
+      className="ds-table-premium card-list"
       rowKey="id"
       size="small"
       pagination={false}

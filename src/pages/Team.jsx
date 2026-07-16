@@ -8,7 +8,7 @@ import {
   IdcardOutlined, PhoneOutlined,
 } from '@ant-design/icons';
 import { teamApi, tasksApi } from '../api/api.js';
-import { PORT_LIST, PORT_COLORS } from '../components/helpers.js';
+import { PORT_LIST, PORT_COLORS, cardListColumns, TONE } from '../components/helpers.js';
 import { useProject } from '../context/ProjectContext.jsx';
 import StatCard from '../components/StatCard.jsx';
 
@@ -102,10 +102,10 @@ export default function Team() {
       <div className="ds-stat-grid">
         <StatCard
           icon={<TeamOutlined />}
-          accent="linear-gradient(135deg,#2F5CE0,#5b82f0)"
+           accent="var(--accent-primary)"
           title="Tổng nhân sự"
           value={members.length}
-          valueStyle={{ color: '#2F5CE0' }}
+          valueStyle={{ color: TONE.primary }}
         />
         <StatCard
           icon={<TeamOutlined />}
@@ -119,26 +119,26 @@ export default function Team() {
           accent="linear-gradient(135deg,#1FA971,#3cc995)"
           title="Kỹ thuật"
           value={members.filter(m => ['Technician', 'CAD', 'QC'].includes(m.role)).length}
-          valueStyle={{ color: '#1FA971' }}
+          valueStyle={{ color: TONE.success }}
         />
         <StatCard
           icon={<TeamOutlined />}
           accent="linear-gradient(135deg,#FA8C16,#ffa940)"
           title="Tổng công việc"
           value={tasks.length}
-          valueStyle={{ color: '#FA8C16' }}
+          valueStyle={{ color: TONE.warning }}
         />
       </div>
 
-      <Card className="ds-chart-card" style={{ marginTop: 16 }} title={<span className="ds-card-head-icon"><TeamOutlined style={{ color: '#2F5CE0' }} /> Danh sách nhân sự</span>}>
+      <Card className="ds-chart-card" style={{ marginTop: 16 }} title={<span className="ds-card-head-icon"><TeamOutlined style={{ color: TONE.primary }} /> Danh sách nhân sự</span>}>
         <Table
-          className="ds-table-premium"
+          className="ds-table-premium card-list"
           dataSource={members}
           rowKey={(r) => r.__key || r.id}
           loading={loading}
           scroll={{ x: 1000 }}
           pagination={false}
-          columns={[
+          columns={cardListColumns([
             ...(portfolioView
               ? [{ title: 'Dự án', dataIndex: 'projectName', key: 'projectName', width: 160, ellipsis: true }]
               : []),
@@ -193,7 +193,7 @@ export default function Team() {
                 </Space>
               ),
             },
-          ]}
+          ])}
         />
       </Card>
 

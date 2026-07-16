@@ -9,7 +9,7 @@ import {
 } from '@ant-design/icons';
 import { tasksApi } from '../api/api.js';
 import { useProject } from '../context/ProjectContext.jsx';
-import { PORT_COLORS, priorityColor, STATUS_PROGRESS } from '../components/helpers.js';
+import { PORT_COLORS, priorityColor, STATUS_PROGRESS, TONE } from '../components/helpers.js';
 import StatCard from '../components/StatCard.jsx';
 import EmptyState from '../components/shared/EmptyState.jsx';
 
@@ -17,9 +17,9 @@ const { Text } = Typography;
 
 const COLUMNS = [
   { key: 'todo', label: 'Cần làm', color: '#8c8c8c' },
-  { key: 'inprogress', label: 'Đang làm', color: '#1677ff' },
-  { key: 'review', label: 'Kiểm tra', color: '#faad14' },
-  { key: 'done', label: 'Hoàn thành', color: '#52c41a' },
+  { key: 'inprogress', label: 'Đang làm', color: TONE.primary },
+  { key: 'review', label: 'Kiểm tra', color: TONE.warning },
+  { key: 'done', label: 'Hoàn thành', color: TONE.success },
 ];
 
 const PRIORITY_LABEL = { high: 'Cao', medium: 'TB', low: 'Thấp' };
@@ -161,7 +161,7 @@ export default function Kanban() {
         onDragStart={(e) => onDragStart(e, task.id)}
         style={{
           opacity: dragging === task.id ? 0.5 : 1,
-          borderLeft: `3px solid ${priorityColor[task.priority] || '#d9d9d9'}`,
+          borderLeft: `3px solid ${priorityColor[task.priority] || TONE.border}`,
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -178,10 +178,10 @@ export default function Kanban() {
           {portfolioView && task.projectName && <Tag style={{ fontSize: 11 }}>{task.projectName}</Tag>}
           <Tag color={priorityColor[task.priority]} style={{ fontSize: 11 }}>{PRIORITY_LABEL[task.priority]}</Tag>
         </div>
-        <div style={{ marginTop: 8, fontSize: 12, color: '#8c8c8c' }}>
+        <div style={{ marginTop: 8, fontSize: 12, color: TONE.textMuted }}>
           <UserOutlined /> {task.owner}
           {task.endDate && (
-            <span style={{ marginLeft: 12, color: isOverdue ? '#ff4d4f' : '#8c8c8c' }}>
+            <span style={{ marginLeft: 12, color: isOverdue ? TONE.danger : TONE.textMuted }}>
               <CalendarOutlined /> {dayjs(task.endDate).format('DD/MM/YYYY')}
               {isOverdue && <Tag color="red" style={{ fontSize: 10, marginLeft: 4, lineHeight: '16px' }}>Quá hạn</Tag>}
             </span>
@@ -217,28 +217,28 @@ export default function Kanban() {
           <div className="ds-h1">Kanban</div>
           <div className="ds-caption">Quản lý công việc theo luồng</div>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <Input
             allowClear
             prefix={<SearchOutlined />}
             placeholder="Tìm tên / người làm / item"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ width: 200 }}
+            style={{ width: 220, height: 38 }}
           />
           <Select
             value={filterPort}
             onChange={setFilterPort}
-            style={{ width: 140 }}
+            style={{ width: 160, height: 38 }}
             options={[{ value: 'all', label: 'Tất cả Port' }, ...portOptions]}
           />
           <Select
             value={filterPriority}
             onChange={setFilterPriority}
-            style={{ width: 130 }}
+            style={{ width: 150, height: 38 }}
             options={[{ value: 'all', label: 'Mọi ưu tiên' }, ...Object.keys(PRIORITY_LABEL).map((p) => ({ value: p, label: PRIORITY_LABEL[p] }))]}
           />
-          <button className="btn btn-primary" onClick={openAdd} disabled={portfolioView} title={portfolioView ? 'Chọn 1 dự án để thêm việc' : undefined}><PlusOutlined /> Thêm việc</button>
+          <button className="btn btn-primary" onClick={openAdd} disabled={portfolioView} title={portfolioView ? 'Chọn 1 dự án để thêm việc' : undefined} style={{ height: 38, display: 'inline-flex', alignItems: 'center' }}><PlusOutlined /> Thêm việc</button>
         </div>
       </div>
 
@@ -250,12 +250,12 @@ export default function Kanban() {
                 type="dashboard"
                 percent={filtered.length ? Math.round((counts.done / filtered.length) * 100) : 0}
                 size={92}
-                strokeColor="#52c41a"
+                strokeColor={TONE.success}
               />
               <div>
-                <div style={{ fontSize: 13, color: '#8c8c8c' }}>Tỷ lệ hoàn thành</div>
+                <div style={{ fontSize: 13, color: TONE.textMuted }}>Tỷ lệ hoàn thành</div>
                 <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--font-num)' }}>
-                  {counts.done}/{filtered.length} <span style={{ fontSize: 13, color: '#8c8c8c', fontWeight: 400 }}>việc</span>
+                  {counts.done}/{filtered.length} <span style={{ fontSize: 13, color: TONE.textMuted, fontWeight: 400 }}>việc</span>
                 </div>
               </div>
             </div>
@@ -265,7 +265,7 @@ export default function Kanban() {
               {COLUMNS.map((c) => (
                 <div key={c.key} style={{ textAlign: 'center', minWidth: 72 }}>
                   <div style={{ color: c.color, fontWeight: 700, fontSize: 18, fontFamily: 'var(--font-num)' }}>{counts[c.key]}</div>
-                  <div style={{ fontSize: 12, color: '#8c8c8c' }}>{c.label}</div>
+                  <div style={{ fontSize: 12, color: TONE.textMuted }}>{c.label}</div>
                 </div>
               ))}
             </div>

@@ -9,7 +9,7 @@ export default function NotificationsTimeline({ items = [] }) {
     <ul className="nt-list">
       {items.slice(0, 7).map((n) => (
         <li className="nt-item" key={n.id}>
-          <span className="nt-dot" style={{ background: n.color || '#2F5CE0' }} />
+          <span className="nt-dot" style={{ background: n.color || 'var(--color-primary)' }} />
           <div className="nt-body">
             <div className="nt-title">{n.title}</div>
             <div className="nt-meta">

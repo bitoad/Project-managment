@@ -2,7 +2,7 @@ import React from 'react';
 import { Table, Tag } from 'antd';
 import { BarChartOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { fmtShort } from '../helpers.js';
+import { fmtShort, cardListColumns } from '../helpers.js';
 import EmptyState from '../shared/EmptyState.jsx';
 
 function statusOf(row) {
@@ -17,7 +17,7 @@ export default function PerformanceTable({ rows = [], onOpen }) {
   const navigate = useNavigate();
   if (!rows.length) return <EmptyState icon={<BarChartOutlined />} title="Chưa có dữ liệu" />;
 
-  const columns = [
+  const columns = cardListColumns([
     {
       title: 'Cảng / Gói thầu',
       dataIndex: 'name',
@@ -85,11 +85,11 @@ export default function PerformanceTable({ rows = [], onOpen }) {
         return <Tag color={s.color} style={{ fontWeight: 600 }}>{s.label}</Tag>;
       },
     },
-  ];
+  ]);
 
   return (
     <Table
-      className="ds-table-premium"
+      className="ds-table-premium card-list"
       rowKey="id"
       size="small"
       pagination={false}

@@ -55,5 +55,13 @@ for (const p of projects) {
   migrateProject(p.id);
 }
 
+// Migrate users from users.json → SQLite (__global__)
+const usersPath = path.join(__dirname, 'users.json');
+if (fs.existsSync(usersPath)) {
+  const users = JSON.parse(fs.readFileSync(usersPath, 'utf-8'));
+  saveEntity('__global__', 'users', users);
+  console.log(`\n[users] ${users.length} users migrated to __global__`);
+}
+
 close();
 console.log('\nMigration complete.');

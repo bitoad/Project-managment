@@ -75,20 +75,17 @@ export function createProject(name, description) {
   const idx = getIndex();
   const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now().toString(36);
 
-  // Create project row in SQLite
   const createdAt = new Date().toISOString();
   sqliteCreateProject(id, name, description || '', createdAt);
 
-  // Also create empty data.json for backwards compatibility
-  const projectDir = path.join(PROJECTS_DIR, id);
-  fs.mkdirSync(projectDir, { recursive: true });
-  const seed = JSON.parse(fs.readFileSync(SEED_PATH, 'utf-8'));
-  seed.meta.projectName = name;
-  seed.meta.createdAt = createdAt;
-  seed.ports = []; seed.items = []; seed.suppliers = []; seed.supplierPorts = [];
-  seed.risks = []; seed.tasks = []; seed.costLogs = []; seed.supplierQuotations = [];
-  seed.sCurve = []; seed.team = []; seed.documents = [];
-  writeJsonAtomic(path.join(projectDir, 'data.json'), JSON.stringify(seed, null, 2));
+  // Initialize empty entities in SQLite
+  const entities = [
+    'ports', 'items', 'suppliers', 'supplierPorts',
+    'risks', 'tasks', 'team', 'costLogs', 'supplierQuotations', 'sCurve', 'documents',
+  ];
+  for (const e of entities) saveEntity(id, e, []);
+  saveEntity(id, 'meta', [{ projectName: name, createdAt }]);
+  saveEntity(id, 'settings', [{}]);
 
   const project = { id, name, description: description || '', createdAt };
   idx.push(project);
@@ -118,11 +115,7 @@ export function updateProject(id, updates) {
 export function deleteProject(id) {
   dbCache.delete(id);
   sqliteDeleteProject(id);
-  // Also delete JSON dir
-  const projectDir = path.join(PROJECTS_DIR, id);
-  if (fs.existsSync(projectDir)) {
-    fs.rmSync(projectDir, { recursive: true });
-  }
+  // Delete from JSON index
   const idx = getIndex().filter(p => p.id !== id);
   saveIndex(idx);
 }
@@ -208,7 +201,7 @@ function writeJsonAtomic(filePath, dataStr) {
 
 function save(projectId, data) {
   dbCache.set(projectId, data);
-  // Save each entity to SQLite
+  // SQLite is primary persistence
   const entities = [
     'ports', 'items', 'suppliers', 'supplierPorts',
     'risks', 'tasks', 'team', 'costLogs', 'supplierQuotations', 'sCurve', 'documents',
@@ -216,16 +209,8 @@ function save(projectId, data) {
   for (const e of entities) {
     saveEntity(projectId, e, data[e] || []);
   }
-  // Save meta and settings as single-element arrays
   if (data.meta) saveEntity(projectId, 'meta', [data.meta]);
   if (data.settings) saveEntity(projectId, 'settings', [data.settings]);
-  // Also write JSON for backwards compatibility
-  return withWriteLock(projectId, () => {
-    const dbPath = getDbPath(projectId);
-    const dir = path.dirname(dbPath);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    writeJsonAtomic(dbPath, JSON.stringify(data, null, 2));
-  });
 }
 
 // Helper ID
@@ -294,15 +279,10 @@ export function deletePort(projectId, id) {
   const db = ensureDb(projectId);
   const exists = db.ports.some(p => p.id === id);
   if (!exists) return false;
-  const linkedItems = db.items.filter(i => i.port === id || i.portId === id).length;
-  const linkedTasks = db.tasks.filter(t => t.portId === id).length;
-  const linkedCosts = db.costLogs.filter(c => c.portId === id).length;
-  if (linkedItems > 0 || linkedTasks > 0 || linkedCosts > 0) {
-    const err = new Error('PORT_HAS_LINKED_DATA');
-    err.code = 'PORT_HAS_LINKED_DATA';
-    err.details = { items: linkedItems, tasks: linkedTasks, costLogs: linkedCosts };
-    throw err;
-  }
+  // Cascade: xóa luôn dữ liệu liên kết (item / task / costLog / supplierPort)
+  db.items = db.items.filter(i => i.port !== id && i.portId !== id);
+  db.tasks = db.tasks.filter(t => t.portId !== id);
+  db.costLogs = db.costLogs.filter(c => c.portId !== id);
   db.ports = db.ports.filter(p => p.id !== id);
   db.supplierPorts = db.supplierPorts.filter(sp => sp.portId !== id);
   save(projectId, db);
@@ -338,6 +318,17 @@ export function updateItem(projectId, code, updates) {
 
 export function deleteItem(projectId, code) {
   const db = ensureDb(projectId);
+  const exists = db.items.some(i => i.code === code);
+  if (!exists) return false;
+  const linkedCosts = db.costLogs.filter(c => c.itemCode === code).length;
+  const linkedTasks = db.tasks.filter(t => t.itemCode === code).length;
+  const linkedQuotes = db.supplierQuotations.filter(q => q.itemCode === code).length;
+  if (linkedCosts > 0 || linkedTasks > 0 || linkedQuotes > 0) {
+    const err = new Error('ITEM_HAS_LINKED_DATA');
+    err.code = 'ITEM_HAS_LINKED_DATA';
+    err.details = { costLogs: linkedCosts, tasks: linkedTasks, quotations: linkedQuotes };
+    throw err;
+  }
   db.items = db.items.filter(i => i.code !== code);
   save(projectId, db);
 }
@@ -369,6 +360,15 @@ export function updateSupplier(projectId, id, updates) {
 
 export function deleteSupplier(projectId, id) {
   const db = ensureDb(projectId);
+  const exists = db.suppliers.some(s => s.id === id);
+  if (!exists) return false;
+  const linkedPorts = db.supplierPorts.filter(sp => sp.supplierId === id).length;
+  if (linkedPorts > 0) {
+    const err = new Error('SUPPLIER_HAS_LINKED_DATA');
+    err.code = 'SUPPLIER_HAS_LINKED_DATA';
+    err.details = { supplierPorts: linkedPorts };
+    throw err;
+  }
   db.suppliers = db.suppliers.filter(s => s.id !== id);
   save(projectId, db);
 }
@@ -630,16 +630,16 @@ export function deleteDocument(projectId, id) {
 }
 
 // ============ USERS (P0 real authentication) ============
-// Global user store (not per-project). Passwords hashed with bcrypt.
+// Users stored globally in SQLite under project_id='__global__', entity='users'.
+// Passwords hashed with bcrypt.
+const GLOBAL_PROJECT = '__global__';
+
 export function getUsers() {
-  if (!fs.existsSync(USERS_PATH)) return [];
-  return JSON.parse(fs.readFileSync(USERS_PATH, 'utf-8'));
+  return loadEntity(GLOBAL_PROJECT, 'users');
 }
 
 function saveUsers(users) {
-  return withWriteLock('__USERS__', () => {
-    writeJsonAtomic(USERS_PATH, JSON.stringify(users, null, 2));
-  });
+  saveEntity(GLOBAL_PROJECT, 'users', users);
 }
 
 export function getUserByUsername(username) {
@@ -870,6 +870,27 @@ export function getAggregateDashboard(projectIds) {
       overdueTasks: p.overdueTasks,
     })),
   };
+}
+
+// ============ AUDIT LOG ============
+// Ghi nhật ký mọi thay đổi dữ liệu (ai, làm gì, khi nào, trên bản ghi nào).
+// Lưu trong SQLite dưới project_id + entity='audit'.
+export function logAudit(projectId, action, entity, recordId, details = {}) {
+  const logs = loadEntity(projectId, 'audit');
+  logs.push({
+    id: 'AUD-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6),
+    ts: new Date().toISOString(),
+    action,
+    entity,
+    recordId,
+    details,
+  });
+  saveEntity(projectId, 'audit', logs);
+}
+
+export function getAuditLogs(projectId, limit = 200) {
+  const logs = loadEntity(projectId, 'audit');
+  return logs.sort((a, b) => new Date(b.ts) - new Date(a.ts)).slice(0, limit);
 }
 
 // ============ AUTO-MIGRATE KHI IMPORT ============

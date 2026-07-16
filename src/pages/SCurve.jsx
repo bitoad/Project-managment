@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { sCurveApi } from '../api/api.js';
 import StatCard from '../components/StatCard.jsx';
+import { TONE, cardListColumns } from '../components/helpers.js';
 import { sCurveCumulative, evm } from '../../shared/formulas.js';
 import EmptyState from '../components/shared/EmptyState.jsx';
 import PageLoader from '../components/shared/PageLoader.jsx';
@@ -83,22 +84,22 @@ export default function SCurve() {
           title="Cum. Planned (PV)"
           value={last.cumPlan || 0}
           suffix="%"
-          valueStyle={{ color: '#fa8c16' }}
+          valueStyle={{ color: TONE.warning }}
         />
         <StatCard
           icon={<LineChartOutlined />}
-          accent="linear-gradient(135deg,#2F5CE0,#5b82f0)"
+           accent="var(--accent-primary)"
           title="Cum. Actual (EV)"
           value={last.cumActual || 0}
           suffix="%"
-          valueStyle={{ color: '#2F5CE0' }}
+          valueStyle={{ color: TONE.primary }}
         />
         <StatCard
           icon={Number(spi) >= 1 ? <RiseOutlined /> : <FallOutlined />}
           accent={Number(spi) >= 1 ? 'linear-gradient(135deg,#1FA971,#3cc995)' : 'linear-gradient(135deg,#EF4444,#ff7875)'}
           title="SPI"
           value={spi}
-          valueStyle={{ color: Number(spi) >= 1 ? '#52c41a' : '#ff4d4f' }}
+          valueStyle={{ color: Number(spi) >= 1 ? TONE.success : TONE.danger }}
           trend={{ dir: Number(spi) >= 1 ? 'up' : 'down', value: '', label: Number(spi) >= 1 ? '>= kế hoạch' : '< kế hoạch' }}
         />
       </div>
@@ -133,24 +134,24 @@ export default function SCurve() {
 
       <Card className="ds-chart-card" bordered={false} title="Bảng dữ liệu chi tiết" style={{ marginTop: 16 }}>
         <Table
-          className="ds-table-premium"
+          className="ds-table-premium card-list"
           dataSource={data}
           rowKey="week"
           size="small"
           pagination={false}
           scroll={{ x: 800 }}
-          columns={[
+          columns={cardListColumns([
             { title: 'Tuần', dataIndex: 'week', key: 'w', width: 80, render: (t) => <Text strong>{t}</Text> },
             { title: 'Ngày', dataIndex: 'date', key: 'd', width: 120, render: (v) => v ? new Date(v).toLocaleDateString('vi-VN') : '-' },
             { title: 'KH tuần (%)', dataIndex: 'planned', key: 'p', width: 110, align: 'right', render: (v) => <span className="ds-num">{v}%</span> },
             { title: 'TH tuần (%)', dataIndex: 'actual', key: 'a', width: 110, align: 'right', render: (v) => <span className="ds-num">{(v || 0)}%</span> },
-            { title: 'Cum. Plan', dataIndex: 'cumPlan', key: 'cp', width: 110, align: 'right', render: (v) => <Text style={{ color: '#fa8c16' }} className="ds-num">{v}%</Text> },
-            { title: 'Cum. Actual', dataIndex: 'cumActual', key: 'ca', width: 110, align: 'right', render: (v) => <Text strong style={{ color: '#1677ff' }} className="ds-num">{v}%</Text> },
+             { title: 'Cum. Plan', dataIndex: 'cumPlan', key: 'cp', width: 110, align: 'right', render: (v) => <Text style={{ color: TONE.warning }} className="ds-num">{v}%</Text> },
+             { title: 'Cum. Actual', dataIndex: 'cumActual', key: 'ca', width: 110, align: 'right', render: (v) => <Text strong style={{ color: TONE.primary }} className="ds-num">{v}%</Text> },
             {
               title: 'Variance', dataIndex: 'variance', key: 'v', width: 100, align: 'right',
               render: (v) => <Tag color={v >= 0 ? 'green' : 'red'}>{v >= 0 ? '+' : ''}{v}%</Tag>,
             },
-          ]}
+          ])}
         />
       </Card>
     </div>

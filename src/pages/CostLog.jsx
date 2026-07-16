@@ -28,7 +28,7 @@ import {
 import dayjs from 'dayjs';
 import { costLogsApi, itemsApi } from '../api/api.js';
 import { useProject } from '../context/ProjectContext.jsx';
-import { COST_TYPES, fmtVND, PORT_COLORS } from '../components/helpers.js';
+import { COST_TYPES, fmtVND, PORT_COLORS, cardListColumns } from '../components/helpers.js';
 import { sumActualCost } from '../../shared/formulas.js';
 import StatCard from '../components/StatCard.jsx';
 
@@ -197,7 +197,7 @@ export default function CostLog({ initialPortFilter = null }) {
       <div className="ds-stat-grid" style={{ marginTop: 16 }}>
         <StatCard
           icon={<DollarOutlined />}
-          accent="linear-gradient(135deg,#2F5CE0,#5b82f0)"
+           accent="var(--accent-primary)"
           title="Số bản ghi"
           value={filteredLogs.length}
           formatter={(v) => `${v}`}
@@ -235,13 +235,13 @@ export default function CostLog({ initialPortFilter = null }) {
 
       <Card className="ds-chart-card" bordered={false} style={{ marginTop: 16 }} title="Danh sách chi phí">
         <Table
-          className="ds-table-premium"
+          className="ds-table-premium card-list"
           dataSource={filteredLogs}
           rowKey={(record) => record.__key || record.id}
           loading={loading}
           scroll={{ x: 1000 }}
           pagination={{ pageSize: 15 }}
-          columns={[
+          columns={cardListColumns([
             {
               title: 'Ngày',
               dataIndex: 'date',
@@ -300,7 +300,7 @@ export default function CostLog({ initialPortFilter = null }) {
                 </Space>
               ),
             },
-          ]}
+          ])}
         />
       </Card>
 

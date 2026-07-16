@@ -3,7 +3,7 @@ import { Table, Tag, Progress, Segmented, Tooltip } from 'antd';
 import {
   WarningOutlined, CheckCircleOutlined, RightOutlined, InboxOutlined,
 } from '@ant-design/icons';
-import { fmtVND, PORT_COLORS, statusColor } from './helpers.js';
+import { fmtVND, PORT_COLORS, statusColor, cardListColumns } from './helpers.js';
 import { costOf } from '../../shared/formulas.js';
 import EmptyState from './shared/EmptyState.jsx';
 
@@ -46,7 +46,7 @@ export default function ItemWatchlist({ items = [], costLogs = [], compact = fal
     return compact ? list.slice(0, 8) : list;
   }, [rows, filter, compact]);
 
-  const columns = [
+  const columns = cardListColumns([
     {
       title: 'Item',
       dataIndex: 'code',
@@ -100,7 +100,7 @@ export default function ItemWatchlist({ items = [], costLogs = [], compact = fal
           <Tag color="success" icon={<CheckCircleOutlined />}>Ổn</Tag>
         ),
     },
-  ];
+  ]);
 
   if (rows.length === 0) {
     return <EmptyState icon={<InboxOutlined />} title="Chưa có item nào" />;
@@ -125,7 +125,7 @@ export default function ItemWatchlist({ items = [], costLogs = [], compact = fal
         )}
       </div>
       <Table
-        className="ds-table-premium"
+        className="ds-table-premium card-list"
         dataSource={shown}
         rowKey="key"
         size="small"

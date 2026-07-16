@@ -9,6 +9,7 @@ import {
 } from '@ant-design/icons';
 import { useProject } from '../context/ProjectContext.jsx';
 import { projectsApi, dashboardApi } from '../api/api.js';
+import { TONE } from '../components/helpers.js';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -168,7 +169,7 @@ export default function Projects() {
                 <Tag color="purple">{importResult.summary.team} Nhân sự</Tag>
                 <Tag color="cyan">{importResult.summary.sCurve} S-Curve points</Tag>
               </Space>
-              <div style={{ marginTop: 8, fontSize: 12, color: '#888' }}>
+              <div style={{ marginTop: 8, fontSize: 12, color: TONE.textMuted }}>
                 Sheets đã đọc: {importResult.summary.sheets.join(', ')}
               </div>
             </div>
@@ -270,7 +271,7 @@ export default function Projects() {
             <Paragraph>
               <Text strong>Cách 1: Import từ Excel (nhanh nhất)</Text>
             </Paragraph>
-            <ol style={{ paddingLeft: 20, fontSize: 13, color: '#555', lineHeight: 1.8 }}>
+            <ol style={{ paddingLeft: 20, fontSize: 13, color: TONE.textSecondary, lineHeight: 1.8 }}>
               <li>Chuẩn bị file Excel (.xlsx) theo cấu trúc chuẩn</li>
               <li>Bấm nút <Tag color="green">Import</Tag> cạnh dự án</li>
               <li>Chọn file Excel → app tự đọc tất cả sheets</li>
@@ -285,7 +286,7 @@ export default function Projects() {
             <Paragraph>
               <Text strong>Cách 2: Nhập tay trên web</Text>
             </Paragraph>
-            <ol style={{ paddingLeft: 20, fontSize: 13, color: '#555', lineHeight: 1.8 }}>
+            <ol style={{ paddingLeft: 20, fontSize: 13, color: TONE.textSecondary, lineHeight: 1.8 }}>
               <li>Chọn dự án ở dropdown header</li>
               <li>Vào trang <Text strong>Item Master</Text> → bấm "Thêm Item"</li>
               <li>Vào <Text strong>Cost Log</Text> → "Thêm chi phí"</li>

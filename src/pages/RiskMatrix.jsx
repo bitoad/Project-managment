@@ -42,7 +42,7 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { portsApi, risksApi, teamApi } from '../api/api.js';
-import { PORT_COLORS, PORT_LIST, riskColor } from '../components/helpers.js';
+import { PORT_COLORS, PORT_LIST, riskColor, TONE, cardListColumns } from '../components/helpers.js';
 import { useProject } from '../context/ProjectContext.jsx';
 import StatCard from '../components/StatCard.jsx';
 import { InboxOutlined } from '@ant-design/icons';
@@ -348,7 +348,7 @@ export default function RiskMatrix() {
       <div className="ds-stat-grid">
         <StatCard
           icon={<AuditOutlined />}
-          accent="linear-gradient(135deg,#2F5CE0,#5b82f0)"
+           accent="var(--accent-primary)"
           title="Tổng rủi ro"
           value={stats.total}
         />
@@ -357,14 +357,14 @@ export default function RiskMatrix() {
           accent="linear-gradient(135deg,#EF4444,#ff7875)"
           title="Đang mở"
           value={stats.open}
-          valueStyle={{ color: '#ff4d4f' }}
+          valueStyle={{ color: TONE.danger }}
         />
         <StatCard
           icon={<WarningOutlined />}
           accent="linear-gradient(135deg,#FA8C16,#ffc069)"
           title="Cao / nghiêm trọng"
           value={stats.high}
-          valueStyle={{ color: '#fa541c' }}
+          valueStyle={{ color: TONE.warning }}
           footer={<>{stats.severe} rủi ro nghiêm trọng</>}
         />
         <StatCard
@@ -407,7 +407,7 @@ export default function RiskMatrix() {
             }
           >
             <div style={{ display: 'grid', gridTemplateColumns: '44px 1fr', gap: 8, alignItems: 'stretch' }}>
-              <div style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', textAlign: 'center', fontWeight: 700, color: '#6b7280', letterSpacing: 1 }}>
+              <div style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', textAlign: 'center', fontWeight: 700, color: TONE.textMuted, letterSpacing: 1 }}>
                 TÁC ĐỘNG (I) ↑
               </div>
               <div>
@@ -431,7 +431,7 @@ export default function RiskMatrix() {
                               style={{
                                 minHeight: 78,
                                 width: '100%',
-                                border: isSelected ? '3px solid #111827' : '1px solid rgba(255,255,255,0.55)',
+                                border: isSelected ? `3px solid ${TONE.ink}` : '1px solid rgba(255,255,255,0.55)',
                                 background: `linear-gradient(135deg, ${riskColor(score)} 0%, ${riskColor(score)}cc 100%)`,
                                 opacity: cellRisks.length ? 1 : 0.4,
                                 cursor: 'pointer',
@@ -470,7 +470,7 @@ export default function RiskMatrix() {
           </Card>
         </Col>
         <Col xs={24} xl={10}>
-          <Card className="ds-chart-card" bordered={false} title={<span className="ds-card-head-icon"><WarningOutlined style={{ color: '#ff4d4f' }} /> Rủi ro ưu tiên</span>}>
+          <Card className="ds-chart-card" bordered={false} title={<span className="ds-card-head-icon"><WarningOutlined style={{ color: TONE.danger }} /> Rủi ro ưu tiên</span>}>
             {enrichedRisks.filter((risk) => risk.status === 'open').sort((a, b) => b.score - a.score).slice(0, 5).length === 0 ? (
               <EmptyState icon={<InboxOutlined />} title="Không có rủi ro đang mở" />
             ) : (
@@ -547,9 +547,9 @@ export default function RiskMatrix() {
         </Space>
       </Card>
 
-      <Card className="ds-chart-card" bordered={false} title={<span className="ds-card-head-icon"><TableOutlined style={{ color: '#2F5CE0' }} /> Risk Register</span>} style={{ marginTop: 16 }}>
+      <Card className="ds-chart-card" bordered={false} title={<span className="ds-card-head-icon"><TableOutlined style={{ color: TONE.primary }} /> Risk Register</span>} style={{ marginTop: 16 }}>
         <Table
-          className="ds-table-premium"
+          className="ds-table-premium card-list"
           dataSource={filteredRisks}
           rowKey={(record) => record.__key || record.id}
           loading={loading}
@@ -558,7 +558,7 @@ export default function RiskMatrix() {
           onRow={(record) => ({
             onDoubleClick: () => setDrawerRisk(record),
           })}
-          columns={[
+          columns={cardListColumns([
             ...(portfolioView
               ? [{ title: 'Dự án', dataIndex: 'projectName', key: 'projectName', width: 160, ellipsis: true, fixed: 'left' }]
               : []),
@@ -702,7 +702,7 @@ export default function RiskMatrix() {
                 </Space>
               ),
             },
-          ]}
+          ])}
         />
       </Card>
 

@@ -16,12 +16,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       locale={viVN}
       theme={{
         token: {
-          colorPrimary: '#1677ff',
           borderRadius: 8,
           fontFamily: "'Segoe UI', 'Inter', system-ui, sans-serif",
         },
         components: {
-          Layout: { headerBg: '#fff', siderBg: '#001529' },
+          Layout: { headerBg: '#fff' },
         },
       }}
     >

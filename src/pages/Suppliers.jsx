@@ -7,7 +7,7 @@ import {
   ShopOutlined, PlusOutlined, EditOutlined, DeleteOutlined, PhoneOutlined, MailOutlined,
 } from '@ant-design/icons';
 import { suppliersApi } from '../api/api.js';
-import { PORT_LIST } from '../components/helpers.js';
+import { PORT_LIST, TONE, cardListColumns } from '../components/helpers.js';
 import { useProject } from '../context/ProjectContext.jsx';
 import StatCard from '../components/StatCard.jsx';
 
@@ -89,28 +89,28 @@ export default function Suppliers() {
       <div className="ds-stat-grid">
         <StatCard
           icon={<ShopOutlined />}
-          accent="linear-gradient(135deg,#2F5CE0,#5b82f0)"
+           accent="var(--accent-primary)"
           title="Tổng nhà cung cấp"
           value={totalSuppliers}
-          valueStyle={{ color: '#2F5CE0' }}
+          valueStyle={{ color: TONE.primary }}
         />
         <StatCard
           icon={<ShopOutlined />}
           accent="linear-gradient(135deg,#1FA971,#3cc995)"
           title="Đang hoạt động"
           value={activeSuppliers}
-          valueStyle={{ color: '#1FA971' }}
+          valueStyle={{ color: TONE.success }}
         />
       </div>
 
       <Card className="ds-section" bordered={false} style={{ marginTop: 0 }}>
         <Table
-          className="ds-table-premium"
+          className="ds-table-premium card-list"
           dataSource={suppliers}
           rowKey={(r) => r.__key || r.id}
           loading={loading}
           scroll={{ x: 900 }}
-          columns={[
+          columns={cardListColumns([
             ...(portfolioView
               ? [{ title: 'Dự án', dataIndex: 'projectName', key: 'projectName', width: 160, ellipsis: true }]
               : []),
@@ -153,7 +153,7 @@ export default function Suppliers() {
                 </Space>
               ),
             },
-          ]}
+          ])}
         />
       </Card>
 

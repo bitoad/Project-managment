@@ -20,7 +20,7 @@ const StatCard = ({ icon, accent, title, value, valueStyle, formatter, suffix, p
           valueStyle={{ ...valueStyle, fontFamily: 'var(--font-num)', fontVariantNumeric: 'tabular-nums' }}
         />
         {progress != null && (
-          <Progress percent={progress} showInfo={false} size="small" strokeColor={valueStyle?.color || '#2F5CE0'} style={{ marginTop: 6, marginBottom: 0 }} />
+          <Progress percent={progress} showInfo={false} size="small" strokeColor={valueStyle?.color || 'var(--color-primary)'} style={{ marginTop: 6, marginBottom: 0 }} />
         )}
         {trend ? (
           <div className="ds-kpi-footer" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>

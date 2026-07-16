@@ -38,7 +38,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { costLogsApi, itemsApi, portsApi, supplierPortsApi, suppliersApi, tasksApi } from '../api/api.js';
 import { useProject } from '../context/ProjectContext.jsx';
-import { fmtDate, fmtVND, PORT_COLORS, statusColor, STATUS_LIST } from '../components/helpers.js';
+import { fmtDate, fmtVND, PORT_COLORS, statusColor, STATUS_LIST, TONE, cardListColumns } from '../components/helpers.js';
 import { sumRevenue, sumPlannedCost, sumActualCost, sumContractValue } from '../../shared/formulas.js';
 import StatCard from '../components/StatCard.jsx';
 
@@ -231,19 +231,13 @@ export default function Ports() {
     try {
       await portsApi.remove(record.id);
       setPorts((prev) => prev.filter((p) => p.id !== record.id));
-      message.success(`Đã xóa Port ${record.id}`);
+      // Cascade: xóa luôn dữ liệu con liên kết khỏi state local
+      setItems((prev) => prev.filter((it) => it.port !== record.id && it.portId !== record.id));
+      setTasks((prev) => prev.filter((t) => t.portId !== record.id));
+      setCostLogs((prev) => prev.filter((c) => c.portId !== record.id));
+      message.success(`Đã xóa Port ${record.id} và dữ liệu liên kết`);
     } catch (e) {
-      const status = e?.response?.status;
-      const details = e?.response?.data?.details;
-      if (status === 409 && details) {
-        const parts = [];
-        if (details.items) parts.push(`${details.items} item`);
-        if (details.tasks) parts.push(`${details.tasks} công việc`);
-        if (details.costLogs) parts.push(`${details.costLogs} chi phí`);
-        message.error(`Không thể xóa: Port đang có ${parts.join(', ')} liên kết`);
-      } else {
-        message.error('Lỗi khi xóa');
-      }
+      message.error('Lỗi khi xóa');
     }
   };
 
@@ -340,7 +334,7 @@ export default function Ports() {
       <div className="ds-stat-grid">
         <StatCard
           icon={<AppstoreOutlined />}
-          accent="linear-gradient(135deg,#2F5CE0,#5b82f0)"
+           accent="var(--accent-primary)"
           title="Tổng số Port"
           value={stats.total}
         />
@@ -349,7 +343,7 @@ export default function Ports() {
           accent="linear-gradient(135deg,#1FA971,#3cc995)"
           title="Đã ký hợp đồng"
           value={stats.signed}
-          valueStyle={{ color: '#1FA971' }}
+          valueStyle={{ color: TONE.success }}
         />
         <StatCard
           icon={<DollarOutlined />}
@@ -363,7 +357,7 @@ export default function Ports() {
           accent="linear-gradient(135deg,#EF4444,#ff7875)"
           title="Quá hạn"
           value={stats.overdue}
-          valueStyle={{ color: '#EF4444' }}
+          valueStyle={{ color: TONE.danger }}
         />
       </div>
 
@@ -409,7 +403,7 @@ export default function Ports() {
 
       <Card className="ds-chart-card" bordered={false} title="Danh sách Port" style={{ marginTop: 16 }}>
         <Table
-          className="ds-table-premium"
+          className="ds-table-premium card-list"
           dataSource={filteredPorts}
           rowKey={(record) => record.__key || record.id}
           loading={loading}
@@ -421,7 +415,7 @@ export default function Ports() {
               <DownOutlined
                 rotate={expanded ? 180 : 0}
                 onClick={(event) => onExpand(record, event)}
-                style={{ color: '#8c8c8c', cursor: 'pointer' }}
+                style={{ color: TONE.textMuted, cursor: 'pointer' }}
               />
             ),
             expandedRowRender: (record) => (
@@ -445,7 +439,7 @@ export default function Ports() {
               </div>
             ),
           }}
-          columns={[
+          columns={cardListColumns([
             ...(portfolioView
               ? [{ title: 'Dự án', dataIndex: 'projectName', key: 'projectName', width: 160, ellipsis: true, fixed: 'left' }]
               : []),
@@ -564,10 +558,10 @@ export default function Ports() {
             {
               title: 'Quản lý',
               key: 'manage',
-              width: 280,
+              width: 300,
               fixed: 'right',
               render: (_, record) => (
-                <Space size={4}>
+                <div className="port-manage-actions">
                   <button className="btn btn-outline btn-sm" onClick={() => navigate(getPortManageUrl(record.id, 'items'))} disabled={portfolioView}>
                     <ProfileOutlined /> Item
                   </button>
@@ -579,7 +573,7 @@ export default function Ports() {
                   </button>
                   <Popconfirm
                     title={`Xóa Port ${record.id}?`}
-                    description={record.hasChildren ? 'Port đang có item/công việc/chi phí liên kết, cần xóa hết trước' : 'Hành động này không thể hoàn tác'}
+                    description="Xóa luôn toàn bộ Item, Công việc, Chi phí thuộc Port này (không thể hoàn tác)"
                     okText="Xóa"
                     cancelText="Hủy"
                     okButtonProps={{ danger: true }}
@@ -588,15 +582,15 @@ export default function Ports() {
                   >
                     <button
                       className="btn btn-danger btn-sm"
-                      disabled={portfolioView || record.hasChildren}
+                      disabled={portfolioView}
                     >
                       <DeleteOutlined /> Xóa
                     </button>
                   </Popconfirm>
-                </Space>
+                </div>
               ),
             },
-          ]}
+          ])}
         />
       </Card>
 

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card, Input, Button, Checkbox, List, Tag, Spin, Empty, Typography, Space, Avatar, message } from 'antd';
 import { RobotOutlined, UserOutlined, SendOutlined, LinkOutlined } from '@ant-design/icons';
 import { researchApi } from '../api/api.js';
+import { TONE } from '../components/helpers.js';
 
 const { Text, Paragraph } = Typography;
 const SOURCE_OPTIONS = [
@@ -21,7 +22,7 @@ function RefItem({ item: r, type }) {
           </a>
           <Tag>{r.retrievedVia}</Tag>
         </Space>
-        <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
+        <div style={{ fontSize: 12, color: TONE.textMuted, marginTop: 2 }}>
           {r.source} {r.excerpt ? '— ' + r.excerpt : ''}
         </div>
       </div>
@@ -31,7 +32,7 @@ function RefItem({ item: r, type }) {
 
 function AssistantMessage({ data, error }) {
   if (error) {
-    return <div style={{ color: '#cf1322' }}>⚠️ {error}</div>;
+    return <div style={{ color: TONE.danger }}>⚠️ {error}</div>;
   }
   const refs = [
     ...(data.datasheets || []).map((r) => ({ r, type: 'datasheet' })),
@@ -103,13 +104,13 @@ export default function AISearch() {
           <Space direction="vertical" style={{ width: '100%' }} size={16}>
             {messages.map((m, i) => (
               <div key={i} style={{ display: 'flex', gap: 8, justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
-                {m.role === 'assistant' && <Avatar style={{ backgroundColor: '#2F5CE0' }} icon={<RobotOutlined />} />}
+                {m.role === 'assistant' && <Avatar style={{ backgroundColor: TONE.primary }} icon={<RobotOutlined />} />}
                 <div
                   style={{
                     maxWidth: '82%',
                     padding: 12,
                     borderRadius: 12,
-                    background: m.role === 'user' ? '#2F5CE0' : '#f5f7fb',
+                    background: m.role === 'user' ? TONE.primary : 'var(--color-surface-2)',
                     color: m.role === 'user' ? '#fff' : 'inherit',
                   }}
                 >
@@ -119,7 +120,7 @@ export default function AISearch() {
                     <AssistantMessage data={m.data} error={m.error} />
                   )}
                 </div>
-                {m.role === 'user' && <Avatar style={{ backgroundColor: '#999' }} icon={<UserOutlined />} />}
+                {m.role === 'user' && <Avatar style={{ backgroundColor: TONE.textMuted }} icon={<UserOutlined />} />}
               </div>
             ))}
             {loading && <Spin style={{ margin: 8 }} />}

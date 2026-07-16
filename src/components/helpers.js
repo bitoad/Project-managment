@@ -139,7 +139,7 @@ export const COST_TYPES = [
   'Subcontractor', 'Overhead', 'Design', 'Testing & Inspection', 'Temporary Work', 'Contingency',
 ];
 
-// Port colors (đồng bộ với seed)
+// Port colors — Ant Tag preset tokens (hợp lệ cho cả <Tag color> và inline CSS background/strokeColor)
 export const PORT_COLORS = {
   'PORT 1': '#1677ff',
   'PORT 2': '#52c41a',
@@ -149,3 +149,43 @@ export const PORT_COLORS = {
   'PORT 6': '#13c2c2',
   'PORT 7': '#fa8c16',
 };
+
+// Bảng màu tập trung (khớp theme.css / DESIGN.md PART 1) — dùng thay inline hex trong chart/icon/tone.
+// Trả CSS var string để đồng bộ theme, tránh hardcode rải rác.
+export const CHART_COLORS = {
+  primary: 'var(--color-primary)',
+  success: 'var(--color-success)',
+  warning: 'var(--color-warning)',
+  danger: 'var(--color-danger)',
+  purple: '#8B5CF6',   // brand-gradient accent (dùng hạn chế)
+  sky: '#0EA5E9',      // brand-gradient accent (dùng hạn chế)
+  muted: 'var(--color-text-tertiary)',
+};
+// Palette cố định cho biểu đồ (thứ tự theo DESIGN.md chart-palette)
+export const CHART_PALETTE = [
+  'var(--color-primary)',
+  'var(--color-success)',
+  'var(--color-warning)',
+  '#8B5CF6',
+  'var(--color-danger)',
+  '#3B82F6',
+];
+// Tone cho KPI/stat icon (dùng làm style color)
+export const TONE = {
+  primary: 'var(--color-primary)',
+  success: 'var(--color-success)',
+  warning: 'var(--color-warning)',
+  danger: 'var(--color-danger)',
+  purple: '#8B5CF6',
+  sky: '#0EA5E9',
+  gray: 'var(--color-text-tertiary)',
+};
+
+// Inject data-label vào mỗi column để CSS card-list (mobile <=640px)
+// có thể hiển thị tên cột trên từng dòng. Trả về mảng mới, không mutate.
+export const cardListColumns = (columns) =>
+  (columns || []).map((col) => {
+    if (!col || col.onCell) return col;
+    const label = typeof col.title === 'string' ? col.title : (col.key || col.dataIndex || '');
+    return { ...col, onCell: () => ({ 'data-label': label }) };
+  });

@@ -9,7 +9,7 @@ import {
   FileExcelOutlined, DownloadOutlined,
 } from '@ant-design/icons';
 import { documentsApi } from '../api/api.js';
-import { PORT_LIST, PORT_COLORS } from '../components/helpers.js';
+import { PORT_LIST, PORT_COLORS, TONE } from '../components/helpers.js';
 import { useProject } from '../context/ProjectContext.jsx';
 
 const { Title, Text } = Typography;
@@ -118,9 +118,9 @@ export default function Documents() {
 
       <Row gutter={[16, 16]} style={{ marginTop: 20, marginBottom: 8 }}>
         <Col xs={6}><Card size="small"><Statistic title="Tổng tài liệu" value={docs.length} /></Card></Col>
-        <Col xs={6}><Card size="small"><Statistic title="Bản vẽ/SX" value={docs.filter(d => ['Drawing', 'Shopdrawing'].includes(d.type)).length} valueStyle={{ color: '#1677ff' }} /></Card></Col>
-        <Col xs={6}><Card size="small"><Statistic title="MTO/BOM" value={docs.filter(d => ['MTO', 'BOM'].includes(d.type)).length} valueStyle={{ color: '#52c41a' }} /></Card></Col>
-        <Col xs={6}><Card size="small"><Statistic title="Hợp đồng" value={docs.filter(d => d.type === 'Contract').length} valueStyle={{ color: '#ff4d4f' }} /></Card></Col>
+        <Col xs={6}><Card size="small"><Statistic title="Bản vẽ/SX" value={docs.filter(d => ['Drawing', 'Shopdrawing'].includes(d.type)).length} valueStyle={{ color: TONE.primary }} /></Card></Col>
+        <Col xs={6}><Card size="small"><Statistic title="MTO/BOM" value={docs.filter(d => ['MTO', 'BOM'].includes(d.type)).length} valueStyle={{ color: TONE.success }} /></Card></Col>
+        <Col xs={6}><Card size="small"><Statistic title="Hợp đồng" value={docs.filter(d => d.type === 'Contract').length} valueStyle={{ color: TONE.danger }} /></Card></Col>
       </Row>
 
       <Card style={{ marginTop: 16 }}>

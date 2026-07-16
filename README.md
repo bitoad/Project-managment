@@ -117,3 +117,8 @@ project-management-app/
 - Lần đầu chạy: tự migrate `data.json` cũ → `projects/block-b-gas/`
 - Toàn bộ giao diện **Tiếng Việt**
 - Để reset dữ liệu 1 dự án: Sửa dự án → "Reset dữ liệu"
+# Apple Inspired Design System Analysis
+
+Design system details have been moved to: https://getdesign.md/apple/design-md
+
+You can also view previews, dark mode examples, and download options on getdesign.md.

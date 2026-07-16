@@ -124,6 +124,7 @@ export default function AppLayout() {
   const [tasks, setTasks] = useState([]);
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
+  const isTablet = screens.md && !screens.lg;
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
@@ -229,6 +230,41 @@ export default function AppLayout() {
     navigate('/dashboard');
   };
 
+  const bottomNavItems = [
+    { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dash' },
+    { key: '/ports', icon: <AppstoreOutlined />, label: 'Ports' },
+    { key: '/kanban', icon: <ScheduleOutlined />, label: 'Kanban' },
+    { key: '/risks', icon: <WarningOutlined />, label: 'Rủi ro' },
+    { key: '__more__', icon: <MenuUnfoldOutlined />, label: 'Thêm' },
+  ];
+
+  const renderBottomNav = () => (
+    <nav className="app-bottom-nav">
+      {bottomNavItems.map((it) => {
+        const active = it.key !== '__more__' && location.pathname === it.key;
+        if (it.key === '__more__') {
+          return (
+            <button key={it.key} type="button" className="bn-item" onClick={() => setMobileNavOpen(true)}>
+              <span className="bn-icon">{it.icon}</span>
+              <span>{it.label}</span>
+            </button>
+          );
+        }
+        return (
+          <button
+            key={it.key}
+            type="button"
+            className={`bn-item${active ? ' active' : ''}`}
+            onClick={() => navigate(it.key)}
+          >
+            <span className="bn-icon">{it.icon}</span>
+            <span>{it.label}</span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -238,12 +274,12 @@ export default function AppLayout() {
   }
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ minHeight: '100vh' }} className={isMobile ? 'app-layout-mobile' : ''}>
       {!isMobile && (
         <Sider
           trigger={null}
           collapsible
-          collapsed={collapsed}
+          collapsed={isTablet ? true : collapsed}
           width={240}
           className="app-sider"
           style={{ overflow: 'auto', height: '100vh', position: 'sticky', top: 0, left: 0 }}
@@ -298,8 +334,8 @@ export default function AppLayout() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-            <span style={{ fontSize: 18, cursor: 'pointer', flexShrink: 0 }} onClick={() => (isMobile ? setMobileNavOpen(true) : toggleCollapsed())}>
-              {collapsed || isMobile ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            <span style={{ fontSize: 18, cursor: 'pointer', flexShrink: 0 }} onClick={() => (isMobile ? setMobileNavOpen(true) : (isTablet ? null : toggleCollapsed()))}>
+              {collapsed || isMobile || isTablet ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             </span>
 
              {/* Project Selector — compact */}
@@ -511,7 +547,8 @@ export default function AppLayout() {
         <div style={{ marginTop: 12, padding: 12, background: 'var(--color-success-soft)', borderRadius: 8, fontSize: 13 }}>
           💡 Sau khi tạo, bạn có thể vào trang <b>Quản lý Dự án</b> để <b>Import Excel</b> hoặc nhập tay từng hạng mục.
         </div>
-      </Modal>
+        </Modal>
+      {isMobile && renderBottomNav()}
     </Layout>
   );
 }

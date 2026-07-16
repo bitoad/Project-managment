@@ -40,6 +40,46 @@ const uploadsDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 app.use('/uploads', express.static(uploadsDir));
 
+// Capture response body để middleware audit có thể lấy recordId khi tạo mới.
+app.use((req, res, next) => {
+  const origJson = res.json.bind(res);
+  res.json = (body) => {
+    res._body = body;
+    return origJson(body);
+  };
+  next();
+});
+
+// ============ AUDIT LOG MIDDLEWARE ============
+// Ghi nhật ký mọi request ghi (POST/PUT/DELETE thành công) vào SQLite.
+const AUDIT_ENTITY = {
+  projects: 'project', ports: 'port', items: 'item', tasks: 'task',
+  'cost-logs': 'cost', suppliers: 'supplier', quotations: 'quotation',
+  risks: 'risk', team: 'team', documents: 'document', 's-curve': 'item',
+};
+app.use((req, res, next) => {
+  if (!['POST', 'PUT', 'DELETE'].includes(req.method) || !req.path.startsWith('/api/')) {
+    return next();
+  }
+  res.on('finish', () => {
+    if (res.statusCode >= 400) return; // chỉ log khi thành công
+    const m = req.path.match(/^\/api\/([^/]+)(?:\/([^/]+))?/);
+    const entityKey = m && m[1];
+    const entity = AUDIT_ENTITY[entityKey] || entityKey;
+    const action = req.method === 'POST' ? 'create' : req.method === 'PUT' ? 'update' : 'delete';
+    let recordId = m && m[2];
+    if (!recordId && req.method === 'POST' && res._body) {
+      recordId = res._body.code || res._body.id || res._body.username;
+    }
+    const pid = req.projectId || getProjectId(req);
+    db.logAudit(pid, action, entity, recordId, {
+      user: req.user?.username || 'system',
+      path: req.path,
+    });
+  });
+  next();
+});
+
 // Cấu hình multer cho upload file — chỉ chấp nhận extension trong allowlist (P2).
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsDir),
@@ -180,6 +220,18 @@ function requireAuth(req, res, next) {
 // Role & permission matrix (modeled only — NOT enforced on routes yet; see ADR-014).
 app.get('/api/rbac', requireAuth, (req, res) => {
   res.json({ roles: ROLES, permissions: PERMISSIONS, matrix: ROLE_PERMISSIONS });
+});
+
+// ============ AUDIT LOG ============
+app.get('/api/audit', requireAuth, resolveScope, (req, res) => {
+  if (req.portfolio) {
+    const all = db.getProjects();
+    const merged = all.flatMap((p) => db.getAuditLogs(p.id).map((l) => ({ ...l, projectId: p.id, projectName: p.name })));
+    merged.sort((a, b) => new Date(b.ts) - new Date(a.ts));
+    return res.json(merged.slice(0, 200));
+  }
+  const pid = getProjectId(req);
+  res.json(db.getAuditLogs(pid));
 });
 
 // Require a valid session for every /api request except the auth routes themselves.
@@ -885,6 +937,9 @@ app.use((err, req, res, next) => {
     return res.status(400).json({ error: 'Dữ liệu không hợp lệ', details: err.details });
   }
   if (err.code === 'PORT_HAS_LINKED_DATA') {
+    return res.status(409).json({ error: err.message, details: err.details });
+  }
+  if (err.code === 'ITEM_HAS_LINKED_DATA' || err.code === 'SUPPLIER_HAS_LINKED_DATA') {
     return res.status(409).json({ error: err.message, details: err.details });
   }
   if (err.name === 'MulterError') {
