@@ -391,12 +391,12 @@ export default function Items({ initialPortFilter = null }) {
           <Row gutter={16}>
             <Col span={6}>
               <Form.Item name="unitCost" label="Đơn giá vốn" rules={[{ required: true }]}>
-                <InputNumber min={0} style={{ width: '100%' }} formatter={(value) => `${value || ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
+                <InputNumber min={0} style={{ width: '100%' }} formatter={(value) => `${value ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
               </Form.Item>
             </Col>
             <Col span={6}>
               <Form.Item name="unitPrice" label="Giá bán" rules={[{ required: true }]}>
-                <InputNumber min={0} style={{ width: '100%' }} formatter={(value) => `${value || ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
+                <InputNumber min={0} style={{ width: '100%' }} formatter={(value) => `${value ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
               </Form.Item>
             </Col>
             <Col span={6}>

@@ -343,7 +343,7 @@ export default function CostLog({ initialPortFilter = null }) {
             </Col>
             <Col span={16}>
               <Form.Item name="unitPrice" label="Đơn giá (VND)" rules={[{ required: true }]}>
-                <InputNumber min={0} style={{ width: '100%' }} formatter={(value) => `${value || ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
+                <InputNumber min={0} style={{ width: '100%' }} formatter={(value) => `${value ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
               </Form.Item>
             </Col>
           </Row>
