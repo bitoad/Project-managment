@@ -409,7 +409,7 @@ export default function Items({ initialPortFilter = null }) {
             </Col>
             <Col span={6}>
               <Form.Item name="vatRate" label="VAT (%)">
-                <InputNumber min={0} max={100} style={{ width: '100%' }} addonAfter="%" formatter={(value) => `${value ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={(value) => value.replace(/[^\d.]/g, '')} />
+                <InputNumber min={0} max={100} style={{ width: '100%' }} formatter={(value) => `${value ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={(value) => value.replace(/[^\d.]/g, '')} />
               </Form.Item>
             </Col>
           </Row>
