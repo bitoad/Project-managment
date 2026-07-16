@@ -566,21 +566,42 @@ body {
 .ant-modal .ant-input-affix-wrapper,
 .ant-modal .ant-select-selector,
 .ant-modal .ant-picker {
-  background: rgba(255, 255, 255, 0.08) !important;
-  color: #f5f5f5 !important;
-  border-color: rgba(255, 255, 255, 0.28) !important;
+  background: #1F2937 !important;
+  color: #E5E7EB !important;
+  border-color: #374151 !important;
+}
+.ant-modal .ant-input:hover,
+.ant-modal .ant-input-number:hover,
+.ant-modal .ant-input-affix-wrapper:hover,
+.ant-modal .ant-select-selector:hover,
+.ant-modal .ant-picker:hover {
+  border-color: #4B5563 !important;
+}
+.ant-modal .ant-input:focus,
+.ant-modal .ant-input-focused,
+.ant-modal .ant-input-number-focused,
+.ant-modal .ant-input-affix-wrapper-focused,
+.ant-modal .ant-select-focused .ant-select-selector,
+.ant-modal .ant-picker-focused {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(4, 103, 84, 0.35) !important;
 }
 .ant-modal .ant-input-number-input,
 .ant-modal .ant-input-affix-wrapper .ant-input,
 .ant-modal .ant-picker-input > input,
 .ant-modal .ant-select-selection-item {
-  color: #f5f5f5 !important;
+  color: #E5E7EB !important;
 }
 .ant-modal .ant-input::placeholder,
 .ant-modal .ant-input-number-input::placeholder,
 .ant-modal .ant-picker-input > input::placeholder,
 .ant-modal .ant-select-selection-placeholder {
-  color: #9ca3af !important;
+  color: #6B7280 !important;
+}
+.ant-modal .ant-picker-suffix,
+.ant-modal .ant-picker-suffix .anticon,
+.ant-modal .ant-picker-clear {
+  color: #9CA3AF !important;
 }
 .ant-modal-footer .ant-btn-primary {
   box-shadow: 0 4px 14px rgba(22, 101, 52, 0.35);
@@ -600,6 +621,24 @@ body {
 .ant-modal .ant-select-dropdown .ant-select-item-option-active,
 .ant-modal .ant-select-dropdown .ant-select-item-option-selected {
   background: rgba(255, 255, 255, 0.12) !important;
+}
+.ant-modal .ant-picker-dropdown .ant-picker-header,
+.ant-modal .ant-picker-dropdown .ant-picker-header button {
+  color: #E5E7EB !important;
+  border-color: #374151 !important;
+}
+.ant-modal .ant-picker-dropdown .ant-picker-cell {
+  color: #9CA3AF !important;
+}
+.ant-modal .ant-picker-dropdown .ant-picker-cell-selected .ant-picker-cell-inner {
+  background: var(--color-primary) !important;
+  color: #fff !important;
+}
+.ant-modal .ant-picker-dropdown .ant-picker-cell-today .ant-picker-cell-inner::before {
+  border-color: var(--color-primary) !important;
+}
+.ant-modal input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
 }
 
 /* ============ TAG POLISH ============ */
