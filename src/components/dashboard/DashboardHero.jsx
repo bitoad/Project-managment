@@ -61,7 +61,7 @@ export default function DashboardHero({
           />
           <Tooltip title="Tải báo cáo tổng quan (PDF)">
             <button
-              className={`btn btn-outline${exporting ? ' btn-loading' : ''}`}
+              className={`btn btn-gradient dash-hero-export${exporting ? ' btn-loading' : ''}`}
               onClick={onExport}
             >
               <DownloadOutlined /> Xuất báo cáo

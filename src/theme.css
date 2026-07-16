@@ -1020,6 +1020,25 @@
   color: var(--color-primary-hover) !important;
 }
 
+.dash-hero-export {
+  height: 38px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff !important;
+  background: var(--color-primary-grad) !important;
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(4, 103, 84, 0.35);
+}
+.dash-hero-export:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(4, 103, 84, 0.45);
+}
+
 .dash-hero-stats {
   margin-top: 20px;
   display: grid;
