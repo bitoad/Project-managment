@@ -1035,8 +1035,13 @@
   box-shadow: 0 4px 14px rgba(4, 103, 84, 0.35);
 }
 .dash-hero-export:hover {
+  background: linear-gradient(135deg, #0A231E 0%, #046754 100%) !important;
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(4, 103, 84, 0.45);
+}
+.dash-hero-export:active {
+  transform: translateY(0);
+  background: var(--color-primary-hover) !important;
 }
 
 .dash-hero-stats {
