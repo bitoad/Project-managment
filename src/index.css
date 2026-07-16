@@ -603,6 +603,12 @@ body {
 .ant-modal .ant-picker-clear {
   color: #9CA3AF !important;
 }
+.ant-modal .ant-input-number-group-addon,
+.ant-modal .ant-input-group-addon {
+  background: #374151 !important;
+  color: #E5E7EB !important;
+  border-color: #374151 !important;
+}
 .ant-modal-footer .ant-btn-primary {
   box-shadow: 0 4px 14px rgba(22, 101, 52, 0.35);
 }
